@@ -45,13 +45,13 @@ replay_pid*
 
 *.iws
 
-out/
+out/*
+target/*
 
 .idea/*
-
-*.iml
 modules.xml
 .idea/misc.xml
-*.ipr
 
 .idea/sonarlint
+
+test_server/*
