@@ -76,7 +76,6 @@ public class PlotGenerator extends Generator {
 
     @Override
     public void generateChunk(int chunkX, int chunkZ) {
-        final long startMs = System.currentTimeMillis();
         final FullChunk fullChunk = this.chunkManager.getChunk(chunkX, chunkZ);
         fullChunk.setGenerated();
 
@@ -91,7 +90,6 @@ public class PlotGenerator extends Generator {
         this.preGenerateChunk(plotManager, fullChunk, shapes, GENERATE_ALLOWED, true);
         final Schematic schematic = plotManager.getPlotChunk().getSchematic();
         if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, GENERATE_ALLOWED);
-        System.out.println("Es dauerte " + (System.currentTimeMillis() - startMs) + "ms!");
     }
 
     public void regenerateChunk(PlotManager plotManager, FullChunk fullChunk, boolean resend) {
