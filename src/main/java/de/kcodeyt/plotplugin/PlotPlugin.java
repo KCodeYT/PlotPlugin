@@ -52,6 +52,7 @@ public class PlotPlugin extends PluginBase {
     @Getter
     private Language language;
 
+    @Getter
     private Map<String, PlotManager> plotManagerMap;
     private PlayerManager playerManager;
 
