@@ -189,6 +189,17 @@ public class Plot {
         }
     }
 
+    public int getRelativeDir(PlotVector other) {
+        final int x = this.plotVector.getX() - other.getX();
+        final int z = this.plotVector.getZ() - other.getZ();
+
+        if(x == 0 && z == 1) return 0;
+        if(x == -1 && z == 0) return 1;
+        if(x == 0 && z == -1) return 2;
+        if(x == 1 && z == 0) return 3;
+        return -1;
+    }
+
     public void recalculateOrigin() {
         if(this.hasNoMerges()) {
             this.origin = this;

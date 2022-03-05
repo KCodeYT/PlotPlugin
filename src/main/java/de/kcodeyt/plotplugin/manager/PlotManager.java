@@ -318,9 +318,16 @@ public class PlotManager {
     }
 
     public boolean startMerge(Plot plot, int dir) {
+        return this.startMerge(plot, dir, new HashSet<>());
+    }
+
+    public boolean startMerge(Plot plot, int dir, Set<PlotMerged> mergedSet) {
         if(!plot.hasOwner()) return false;
 
-        int max = 8;
+        final PlotMerged plotMerged = new PlotMerged(plot, dir);
+        if(mergedSet.contains(plotMerged)) return false;
+        mergedSet.add(plotMerged);
+
         final Set<Plot> visited = new HashSet<>();
         final Set<PlotVector> merged = new HashSet<>();
         final Set<Plot> connected = this.getConnectedPlots(plot);
@@ -340,23 +347,36 @@ public class PlotManager {
         });
 
         boolean toReturn = false;
-        while((current = frontier.poll()) != null && max >= 0) {
-            if(visited.contains(current)) continue;
+        while((current = frontier.poll()) != null) {
+            if(!visited.add(current)) continue;
 
-            visited.add(current);
-            Set<Plot> plots;
+            Set<Plot> nextPlots;
             for(int iDir = 0; iDir < 4; iDir++) {
                 if((dir == -1 || dir == iDir) && !current.isMerged(iDir)) {
                     final Plot other = this.getPlotById(current.getRelative(iDir));
-                    if(other.isOwner(plot.getOwner()) && (other.getBasePlot().equals(current.getBasePlot())
-                            || (plots = this.getConnectedPlots(other)).size() <= max && frontier.
-                            addAll(plots) && (max -= plots.size()) != -1)) {
+                    if(other.isOwner(plot.getOwner()) && (other.getBasePlot().equals(current.getBasePlot()) ||
+                            (nextPlots = this.getConnectedPlots(other)).size() > 0 && frontier.addAll(nextPlots))) {
                         this.mergePlot(other, current, whenDone);
                         merged.add(current.getPlotVector());
                         merged.add(other.getPlotVector());
                         toReturn = true;
                     }
                 }
+            }
+        }
+
+        int relativeDir;
+        for(Plot visitedPlot0 : visited) {
+            for(Plot visitedPlot1 : visited) {
+                if(!visitedPlot0.equals(visitedPlot1)) continue;
+
+                relativeDir = visitedPlot0.getRelativeDir(visitedPlot1.getPlotVector());
+                if(!visitedPlot0.isMerged(relativeDir))
+                    this.startMerge(visitedPlot0, relativeDir, mergedSet);
+
+                relativeDir = visitedPlot1.getRelativeDir(visitedPlot0.getPlotVector());
+                if(!visitedPlot1.isMerged(relativeDir))
+                    this.startMerge(visitedPlot1, relativeDir, mergedSet);
             }
         }
 
