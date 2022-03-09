@@ -36,8 +36,6 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -83,7 +81,7 @@ public class Schematic {
                     final int bX = x & 15;
                     final int bZ = z & 15;
                     final ShapeType shapeType = shapes[(bZ << 4) | bX];
-                    if(!allowedShapes.isAllowed(shapeType)) continue;
+                    if(allowedShapes.isDisallowed(shapeType)) continue;
 
                     fullChunk.setBlockStateAtLayer(bX, y, bZ, 0, schematicBlock.getLayer0());
                     fullChunk.setBlockStateAtLayer(bX, y, bZ, 1, schematicBlock.getLayer1());
@@ -102,7 +100,7 @@ public class Schematic {
                     final int bX = x & 15;
                     final int bZ = z & 15;
                     final ShapeType shapeType = shapes[(bZ << 4) | bX];
-                    if(!allowedShapes.isAllowed(shapeType)) continue;
+                    if(allowedShapes.isDisallowed(shapeType)) continue;
 
                     taskHelper.addSyncTask(() -> {
                         try {

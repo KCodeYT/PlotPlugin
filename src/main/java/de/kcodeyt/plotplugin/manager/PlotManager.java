@@ -118,69 +118,20 @@ public class PlotManager {
         Plot plot;
         if((plot = this.getPlot(x, z)) != null) return plot;
 
-        plot = this.getDiffPlot(x, z);
+        final int roadSize = this.levelSettings.getRoadSize();
+        if((plot = this.getPlot(x - roadSize, z)) != null && plot.isMerged(1)) return plot;
+        if((plot = this.getPlot(x, z - roadSize)) != null && plot.isMerged(2)) return plot;
+        if((plot = this.getPlot(x - roadSize, z - roadSize)) != null && plot.isMerged(5))
+            return plot;
 
-        final Plot plotNearby = this.getPlotNN(x, z);
-        final int[] directions = this.getDirections(plot, plotNearby);
-
-        Plot current = plot;
-        boolean isMerged = true;
-        for(int direction : directions) {
-            if(!current.isMerged(direction)) {
-                isMerged = false;
-                break;
-            }
-
-            current = this.getPlotById(plot.getRelative(direction));
-        }
-
-        if(isMerged) return plotNearby;
         return null;
     }
 
     public Plot getPlot(int x, int z) {
         final PlotVector plotVector = this.getPlotVectorByPos(x, z);
-        if(plotVector == null)
-            return null;
+        if(plotVector == null) return null;
+
         return this.getPlotById(plotVector.getX(), plotVector.getZ());
-    }
-
-    private Plot getPlotNN(int x, int z) {
-        final PlotVector plotVector = this.getPlotVectorByPosNN(x, z);
-        return this.getPlotById(plotVector.getX(), plotVector.getZ());
-    }
-
-    private Plot getDiffPlot(int x, int z) {
-        final int plotSize = this.levelSettings.getPlotSize();
-        final int totalSize = plotSize + this.levelSettings.getRoadSize();
-        final int posX, posZ, difX, difZ;
-
-        if(x >= 0) {
-            posX = (int) Math.floor((float) x / totalSize);
-            difX = x % totalSize;
-        } else {
-            posX = (int) Math.ceil((float) (x - plotSize + 1) / totalSize);
-            difX = Math.abs((x - plotSize + 1) % totalSize);
-        }
-
-        if(z >= 0) {
-            posZ = (int) Math.floor((float) z / totalSize);
-            difZ = z % totalSize;
-        } else {
-            posZ = (int) Math.ceil((float) (z - plotSize + 1) / totalSize);
-            difZ = Math.abs((z - plotSize + 1) % totalSize);
-        }
-
-        final int addX = x >= 0 ? 1 : -1;
-        final int addZ = z >= 0 ? 1 : -1;
-
-        final Plot plot;
-        if(difX > plotSize - 1 && difZ > plotSize - 1) plot = this.getPlotByPlotPos(posX + addX, posZ + addZ);
-        else if(difX > plotSize - 1) plot = this.getPlotByPlotPos(posX + addX, posZ);
-        else if(difZ > plotSize - 1) plot = this.getPlotByPlotPos(posX, posZ + addZ);
-        else plot = this.getPlotByPlotPos(posX, posZ);
-
-        return plot;
     }
 
     private PlotVector getPlotVectorByPos(int x, int z) {
@@ -207,20 +158,6 @@ public class PlotManager {
         if((difX > plotSize - 1) || (difZ > plotSize - 1)) {
             return null;
         }
-
-        return new PlotVector(posX, posZ);
-    }
-
-    private PlotVector getPlotVectorByPosNN(int x, int z) {
-        final int plotSize = this.levelSettings.getPlotSize();
-        final int totalSize = plotSize + this.levelSettings.getRoadSize();
-        final int posX, posZ;
-
-        if(x >= 0) posX = (int) Math.floor((float) x / totalSize);
-        else posX = (int) Math.ceil((float) (x - plotSize + 1) / totalSize);
-
-        if(z >= 0) posZ = (int) Math.floor((float) z / totalSize);
-        else posZ = (int) Math.ceil((float) (z - plotSize + 1) / totalSize);
 
         return new PlotVector(posX, posZ);
     }
@@ -314,74 +251,46 @@ public class PlotManager {
                 }
             }
         }
+
         return tmpSet;
     }
 
     public boolean startMerge(Plot plot, int dir) {
-        return this.startMerge(plot, dir, new HashSet<>());
-    }
-
-    public boolean startMerge(Plot plot, int dir, Set<PlotMerged> mergedSet) {
         if(!plot.hasOwner()) return false;
 
-        final PlotMerged plotMerged = new PlotMerged(plot, dir);
-        if(mergedSet.contains(plotMerged)) return false;
-        mergedSet.add(plotMerged);
+        final Plot relativePlot = this.getPlotById(plot.getRelative(dir));
 
-        final Set<Plot> visited = new HashSet<>();
-        final Set<PlotVector> merged = new HashSet<>();
-        final Set<Plot> connected = this.getConnectedPlots(plot);
-        for(Plot current : connected) merged.add(current.getPlotVector());
+        final List<Plot> plots = new ArrayList<>();
+        plots.addAll(this.getConnectedPlots(plot));
+        plots.addAll(this.getConnectedPlots(relativePlot));
 
-        final Queue<Plot> frontier = new ArrayDeque<>(connected);
-        Plot current;
         final WhenDone whenDone = new WhenDone(() -> {
-            this.finishPlotMerge(merged);
+            this.finishPlotMerge(plots);
             plot.recalculateOrigin();
 
-            for(PlotVector plotVector : merged)
-                if(!plotVector.equals(plot.getPlotVector()))
-                    this.mergePlotData(plot, this.getPlotById(plotVector));
+            for(Plot other : plots)
+                if(!other.equals(plot)) this.mergePlotData(plot, other);
 
             this.savePlots();
         });
 
-        boolean toReturn = false;
-        while((current = frontier.poll()) != null) {
-            if(!visited.add(current)) continue;
-
-            Set<Plot> nextPlots;
-            for(int iDir = 0; iDir < 4; iDir++) {
-                if((dir == -1 || dir == iDir) && !current.isMerged(iDir)) {
-                    final Plot other = this.getPlotById(current.getRelative(iDir));
-                    if(other.isOwner(plot.getOwner()) && (other.getBasePlot().equals(current.getBasePlot()) ||
-                            (nextPlots = this.getConnectedPlots(other)).size() > 0 && frontier.addAll(nextPlots))) {
-                        this.mergePlot(other, current, whenDone);
-                        merged.add(current.getPlotVector());
-                        merged.add(other.getPlotVector());
-                        toReturn = true;
-                    }
-                }
-            }
-        }
-
         int relativeDir;
-        for(Plot visitedPlot0 : visited) {
-            for(Plot visitedPlot1 : visited) {
-                if(!visitedPlot0.equals(visitedPlot1)) continue;
+        for(Plot toMerge0 : plots) {
+            for(Plot toMerge1 : plots) {
+                if(toMerge0.equals(toMerge1)) continue;
 
-                relativeDir = visitedPlot0.getRelativeDir(visitedPlot1.getPlotVector());
-                if(!visitedPlot0.isMerged(relativeDir))
-                    this.startMerge(visitedPlot0, relativeDir, mergedSet);
+                relativeDir = toMerge0.getRelativeDir(toMerge1.getPlotVector());
+                if(relativeDir != -1 && !toMerge0.isMerged(relativeDir))
+                    this.mergePlot(toMerge0, toMerge1, whenDone);
 
-                relativeDir = visitedPlot1.getRelativeDir(visitedPlot0.getPlotVector());
-                if(!visitedPlot1.isMerged(relativeDir))
-                    this.startMerge(visitedPlot1, relativeDir, mergedSet);
+                relativeDir = toMerge1.getRelativeDir(toMerge0.getPlotVector());
+                if(relativeDir != -1 && !toMerge1.isMerged(relativeDir))
+                    this.mergePlot(toMerge1, toMerge0, whenDone);
             }
         }
 
         whenDone.start();
-        return toReturn;
+        return true;
     }
 
     private void mergePlotData(Plot plotA, Plot plotB) {
@@ -409,13 +318,12 @@ public class PlotManager {
         }
     }
 
-    private void finishPlotMerge(Set<PlotVector> plots) {
+    private void finishPlotMerge(List<Plot> plots) {
         final BlockState claimBlock = this.levelSettings.getClaimPlotState();
         final BlockState wallBlock = this.levelSettings.getWallPlotState();
         final BlockState wallFillingBlock = this.levelSettings.getWallFillingState();
 
-        for(final PlotVector plotVector : plots) {
-            final Plot plot = this.getPlotById(plotVector);
+        for(Plot plot : plots) {
             this.changeBorder(plot, plot.hasOwner() ? claimBlock : wallBlock);
             this.changeWall(plot, wallFillingBlock);
         }
@@ -1010,23 +918,6 @@ public class PlotManager {
                     player.getLevel().requestChunk(fullChunk.getX(), fullChunk.getZ(), player);
             }));
         });
-    }
-
-    private int[] getDirections(Plot plotA, Plot plotB) {
-        final int xA = plotA.getPlotVector().getX();
-        final int zA = plotA.getPlotVector().getZ();
-        final int xB = plotB.getPlotVector().getX();
-        final int zB = plotB.getPlotVector().getZ();
-
-        final List<Integer> directions = new ArrayList<>();
-        if(xA < xB) directions.add(1);
-        else if(xA > xB) directions.add(3);
-        if(zA < zB) directions.add(2);
-        else if(zA > zB) directions.add(0);
-
-        final int[] intArray = new int[directions.size()];
-        for(int i = 0; i < directions.size(); i++) intArray[i] = directions.get(i);
-        return intArray;
     }
 
     public ShapeType[] getShapes(int x, int z) {

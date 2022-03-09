@@ -101,13 +101,13 @@ public class PlotGenerator extends Generator {
         for(Entity entity : new ArrayList<>(fullChunk.getEntities().values())) {
             if(entity instanceof Player) continue;
 
-            if(!REGENERATE_ALLOWED.isAllowed(shapes[((entity.getFloorZ() & 15) << 4) | (entity.getFloorX() & 15)]))
+            if(REGENERATE_ALLOWED.isDisallowed(shapes[((entity.getFloorZ() & 15) << 4) | (entity.getFloorX() & 15)]))
                 continue;
             toClose0.add(entity);
         }
 
         for(BlockEntity blockEntity : new ArrayList<>(fullChunk.getBlockEntities().values())) {
-            if(!REGENERATE_ALLOWED.isAllowed(shapes[((blockEntity.getFloorZ() & 15) << 4) | (blockEntity.getFloorX() & 15)]))
+            if(REGENERATE_ALLOWED.isDisallowed(shapes[((blockEntity.getFloorZ() & 15) << 4) | (blockEntity.getFloorX() & 15)]))
                 continue;
             toClose1.add(blockEntity);
         }
@@ -143,7 +143,7 @@ public class PlotGenerator extends Generator {
         for(int xBlock = 0; xBlock < 16; ++xBlock) {
             for(int zBlock = 0; zBlock < 16; ++zBlock) {
                 final ShapeType shapeType = shapes[(zBlock << 4) | xBlock];
-                if(!allowedShapes.isAllowed(shapeType)) continue;
+                if(allowedShapes.isDisallowed(shapeType)) continue;
 
                 if(shapeType == ShapeType.PLOT) fullChunk.setBiomeId(xBlock, zBlock, levelSettings.getPlotBiome());
                 else fullChunk.setBiomeId(xBlock, zBlock, levelSettings.getRoadBiome());

@@ -17,6 +17,7 @@
 package de.kcodeyt.plotplugin.util;
 
 import de.kcodeyt.plotplugin.manager.PlotManager;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Setter
 @Getter
+@EqualsAndHashCode(exclude = {"plotManager", "origin"})
 public class Plot {
 
     public static Plot fromConfig(PlotManager plotManager, Map<String, Object> plotMap) {
@@ -165,8 +167,8 @@ public class Plot {
                 i = direction - 4;
                 i2 = direction - 3;
                 return this.isMerged(i2) && this.isMerged(i) && this.plotManager.getPlotById(this.getRelative(i)).isMerged(i2) && this.plotManager.getPlotById(this.getRelative(i2)).isMerged(i);
-
         }
+
         return false;
     }
 

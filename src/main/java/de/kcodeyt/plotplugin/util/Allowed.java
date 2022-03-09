@@ -27,11 +27,11 @@ public class Allowed<C> {
         this.alloweds = alloweds;
     }
 
-    public boolean isAllowed(C c) {
-        for(final Object allowed : this.alloweds)
+    public boolean isDisallowed(C c) {
+        for(Object allowed : this.alloweds)
             if(Objects.equals(allowed, c))
-                return true;
-        return false;
+                return false;
+        return true;
     }
 
 }
