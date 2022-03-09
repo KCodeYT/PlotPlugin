@@ -17,8 +17,6 @@
 package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
-import cn.nukkit.blockstate.BlockState;
-import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.command.SubCommand;
@@ -54,32 +52,28 @@ public class SettingCommand extends SubCommand {
         }
 
         switch(configName.toLowerCase()) {
-            case "damage":
-            {
+            case "damage" -> {
                 final boolean damageValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.DAMAGE.getConfig().set(plot, damageValue);
                 plotManager.savePlots();
                 player.sendMessage(this.translate("config-damage", this.translate(damageValue ? "activated" : "deactivated")));
                 return true;
             }
-            case "pve":
-            {
+            case "pve" -> {
                 final boolean pveValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.PVE.getConfig().set(plot, pveValue);
                 plotManager.savePlots();
                 player.sendMessage(this.translate("config-pve", this.translate(pveValue ? "activated" : "deactivated")));
                 return false;
             }
-            case "pvp":
-            {
+            case "pvp" -> {
                 final boolean pvpValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.PVP.getConfig().set(plot, pvpValue);
                 plotManager.savePlots();
                 player.sendMessage(this.translate("config-pvp", this.translate(pvpValue ? "activated" : "deactivated")));
                 return false;
             }
-            default:
-            {
+            default -> {
                 player.sendMessage(this.translate("config-help-title"));
                 player.sendMessage(this.translate("config-help-damage"));
                 player.sendMessage(this.translate("config-help-pve"));

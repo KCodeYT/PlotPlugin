@@ -38,7 +38,6 @@ import lombok.Getter;
 
 import java.io.File;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class PlotManager {
 
@@ -294,11 +293,11 @@ public class PlotManager {
     }
 
     private void mergePlotData(Plot plotA, Plot plotB) {
-        plotA.getHelpers().addAll(plotB.getHelpers().stream().filter(helperId -> !plotA.isHelper(helperId)).collect(Collectors.toList()));
+        plotA.getHelpers().addAll(plotB.getHelpers().stream().filter(helperId -> !plotA.isHelper(helperId)).toList());
         plotB.getHelpers().clear();
         plotB.getHelpers().addAll(plotA.getHelpers());
 
-        plotA.getDeniedPlayers().addAll(plotB.getDeniedPlayers().stream().filter(deniedId -> !plotA.isDenied(deniedId)).collect(Collectors.toList()));
+        plotA.getDeniedPlayers().addAll(plotB.getDeniedPlayers().stream().filter(deniedId -> !plotA.isDenied(deniedId)).toList());
         plotB.getDeniedPlayers().clear();
         plotB.getDeniedPlayers().addAll(plotA.getDeniedPlayers());
 

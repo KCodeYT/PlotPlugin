@@ -19,7 +19,6 @@ package de.kcodeyt.plotplugin.util;
 import cn.nukkit.block.Block;
 import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.biome.Biome;
 import cn.nukkit.level.biome.EnumBiome;
 import lombok.Getter;
 import lombok.Setter;

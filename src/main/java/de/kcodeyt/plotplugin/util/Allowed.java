@@ -20,15 +20,15 @@ import java.util.Objects;
 
 public class Allowed<C> {
 
-    private final Object[] alloweds;
+    private final Object[] allowed;
 
     @SafeVarargs
-    public Allowed(C... alloweds) {
-        this.alloweds = alloweds;
+    public Allowed(C... allowed) {
+        this.allowed = allowed;
     }
 
     public boolean isDisallowed(C c) {
-        for(Object allowed : this.alloweds)
+        for(Object allowed : this.allowed)
             if(Objects.equals(allowed, c))
                 return false;
         return true;

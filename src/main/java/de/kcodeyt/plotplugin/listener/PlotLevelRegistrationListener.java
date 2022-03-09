@@ -43,7 +43,7 @@ public class PlotLevelRegistrationListener implements Listener {
             final PlotLevelRegistration registration = this.plugin.getLevelRegistrationMap().get(player);
 
             switch(registration.getState()) {
-                case DIMENSION: {
+                case DIMENSION -> {
                     final int dimension;
                     try {
                         dimension = Integer.parseInt(event.getMessage());
@@ -52,9 +52,8 @@ public class PlotLevelRegistrationListener implements Listener {
                     }
 
                     registration.getLevelSettings().setDimension(dimension);
-                    break;
                 }
-                case PLOT_BIOME: {
+                case PLOT_BIOME -> {
                     final int biome;
                     try {
                         biome = Integer.parseInt(event.getMessage());
@@ -63,9 +62,8 @@ public class PlotLevelRegistrationListener implements Listener {
                     }
 
                     registration.getLevelSettings().setPlotBiome(biome);
-                    break;
                 }
-                case ROAD_BIOME: {
+                case ROAD_BIOME -> {
                     final int biome;
                     try {
                         biome = Integer.parseInt(event.getMessage());
@@ -74,57 +72,48 @@ public class PlotLevelRegistrationListener implements Listener {
                     }
 
                     registration.getLevelSettings().setRoadBiome(biome);
-                    break;
                 }
-                case FIRST_LAYER: {
+                case FIRST_LAYER -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setFirstLayerBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setFirstLayerBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case MIDDLE_LAYER: {
+                case MIDDLE_LAYER -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setMiddleLayerBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setMiddleLayerBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case LAST_LAYER: {
+                case LAST_LAYER -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setLastLayerBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setLastLayerBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case ROAD: {
+                case ROAD -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setRoadBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setRoadBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case ROAD_FILLING: {
+                case ROAD_FILLING -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setRoadFillingBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setRoadFillingBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case WALL_UNOWNED: {
+                case WALL_UNOWNED -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setWallPlotBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setWallPlotBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case WALL_CLAIMED: {
+                case WALL_CLAIMED -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setClaimPlotBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setClaimPlotBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case WALL_FILLING: {
+                case WALL_FILLING -> {
                     final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
                     registration.getLevelSettings().setWallFillingBlockId(blockState.getBlockId());
                     registration.getLevelSettings().setWallFillingBlockMeta(blockState.getHugeDamage().intValue());
-                    break;
                 }
-                case PLOT_SIZE: {
+                case PLOT_SIZE -> {
                     final int number;
                     try {
                         number = Integer.parseInt(event.getMessage());
@@ -133,9 +122,8 @@ public class PlotLevelRegistrationListener implements Listener {
                     }
 
                     registration.getLevelSettings().setPlotSize(number);
-                    break;
                 }
-                case ROAD_SIZE: {
+                case ROAD_SIZE -> {
                     final int number;
                     try {
                         number = Integer.parseInt(event.getMessage());
@@ -144,9 +132,8 @@ public class PlotLevelRegistrationListener implements Listener {
                     }
 
                     registration.getLevelSettings().setRoadSize(number);
-                    break;
                 }
-                case GROUND_HEIGHT: {
+                case GROUND_HEIGHT -> {
                     final int number;
                     try {
                         number = Integer.parseInt(event.getMessage());
@@ -155,7 +142,6 @@ public class PlotLevelRegistrationListener implements Listener {
                     }
 
                     registration.getLevelSettings().setGroundHeight(number);
-                    break;
                 }
             }
 
@@ -175,65 +161,65 @@ public class PlotLevelRegistrationListener implements Listener {
 
             registration.setState(states[nextStage]);
             switch(registration.getState()) {
-                case PLOT_BIOME:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-plot-biome", registration.getLevelSettings().getPlotBiome()));
-                    break;
-                case ROAD_BIOME:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-road-biome", registration.getLevelSettings().getRoadBiome()));
-                    break;
-
-                case FIRST_LAYER:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-first-layer",
-                            registration.getLevelSettings().getFirstLayerBlockId() + ":" +
-                                    registration.getLevelSettings().getFirstLayerBlockMeta()));
-                    break;
-                case MIDDLE_LAYER:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-middle-layer",
-                            registration.getLevelSettings().getMiddleLayerBlockId() + ":" +
-                                    registration.getLevelSettings().getMiddleLayerBlockMeta()));
-                    break;
-                case LAST_LAYER:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-last-layer",
-                            registration.getLevelSettings().getLastLayerBlockId() + ":" +
-                                    registration.getLevelSettings().getLastLayerBlockMeta()));
-                    break;
-
-                case ROAD:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-road",
-                            registration.getLevelSettings().getRoadBlockId() + ":" +
-                                    registration.getLevelSettings().getRoadBlockMeta()));
-                    break;
-                case ROAD_FILLING:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-road-filling",
-                            registration.getLevelSettings().getRoadFillingBlockId() + ":" +
-                                    registration.getLevelSettings().getRoadFillingBlockMeta()));
-                    break;
-
-                case WALL_UNOWNED:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-wall-unowned",
-                            registration.getLevelSettings().getWallPlotBlockId() + ":" +
-                                    registration.getLevelSettings().getWallPlotBlockMeta()));
-                    break;
-                case WALL_CLAIMED:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-wall-claimed",
-                            registration.getLevelSettings().getClaimPlotBlockId() + ":" +
-                                    registration.getLevelSettings().getClaimPlotBlockMeta()));
-                    break;
-                case WALL_FILLING:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-wall-filling",
-                            registration.getLevelSettings().getWallFillingBlockId() + ":" +
-                                    registration.getLevelSettings().getWallFillingBlockMeta()));
-                    break;
-
-                case PLOT_SIZE:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-plot-size", registration.getLevelSettings().getPlotSize()));
-                    break;
-                case ROAD_SIZE:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-road-size", registration.getLevelSettings().getRoadSize()));
-                    break;
-                case GROUND_HEIGHT:
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-ground-height", registration.getLevelSettings().getGroundHeight()));
-                    break;
+                case PLOT_BIOME -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-plot-biome",
+                        registration.getLevelSettings().getPlotBiome()
+                ));
+                case ROAD_BIOME -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-road-biome",
+                        registration.getLevelSettings().getRoadBiome()));
+                case FIRST_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-first-layer",
+                        registration.getLevelSettings().getFirstLayerBlockId() + ":" +
+                                registration.getLevelSettings().getFirstLayerBlockMeta()
+                ));
+                case MIDDLE_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-middle-layer",
+                        registration.getLevelSettings().getMiddleLayerBlockId() + ":" +
+                                registration.getLevelSettings().getMiddleLayerBlockMeta()
+                ));
+                case LAST_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-last-layer",
+                        registration.getLevelSettings().getLastLayerBlockId() + ":" +
+                                registration.getLevelSettings().getLastLayerBlockMeta()
+                ));
+                case ROAD -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-road",
+                        registration.getLevelSettings().getRoadBlockId() + ":" +
+                                registration.getLevelSettings().getRoadBlockMeta()
+                ));
+                case ROAD_FILLING -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-road-filling",
+                        registration.getLevelSettings().getRoadFillingBlockId() + ":" +
+                                registration.getLevelSettings().getRoadFillingBlockMeta()
+                ));
+                case WALL_UNOWNED -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-wall-unowned",
+                        registration.getLevelSettings().getWallPlotBlockId() + ":" +
+                                registration.getLevelSettings().getWallPlotBlockMeta()
+                ));
+                case WALL_CLAIMED -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-wall-claimed",
+                        registration.getLevelSettings().getClaimPlotBlockId() + ":" +
+                                registration.getLevelSettings().getClaimPlotBlockMeta()
+                ));
+                case WALL_FILLING -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-wall-filling",
+                        registration.getLevelSettings().getWallFillingBlockId() + ":" +
+                                registration.getLevelSettings().getWallFillingBlockMeta()
+                ));
+                case PLOT_SIZE -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-plot-size",
+                        registration.getLevelSettings().getPlotSize()
+                ));
+                case ROAD_SIZE -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-road-size",
+                        registration.getLevelSettings().getRoadSize()
+                ));
+                case GROUND_HEIGHT -> player.sendMessage(this.plugin.getLanguage().translate(
+                        "generate-ground-height",
+                        registration.getLevelSettings().getGroundHeight()
+                ));
             }
         }
     }

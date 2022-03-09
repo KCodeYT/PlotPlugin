@@ -103,12 +103,14 @@ public class PlotGenerator extends Generator {
 
             if(REGENERATE_ALLOWED.isDisallowed(shapes[((entity.getFloorZ() & 15) << 4) | (entity.getFloorX() & 15)]))
                 continue;
+
             toClose0.add(entity);
         }
 
         for(BlockEntity blockEntity : new ArrayList<>(fullChunk.getBlockEntities().values())) {
             if(REGENERATE_ALLOWED.isDisallowed(shapes[((blockEntity.getFloorZ() & 15) << 4) | (blockEntity.getFloorX() & 15)]))
                 continue;
+
             toClose1.add(blockEntity);
         }
 
@@ -188,29 +190,22 @@ public class PlotGenerator extends Generator {
         final int zBlock = blockVector.getFloorZ() & 15;
         final ShapeType shapeType = shapes[(zBlock << 4) | xBlock];
 
-        if(yBlock == 0) {
+        if(yBlock == 0)
             return levelSettings.getFirstLayerState();
-        } else if(yBlock < levelSettings.getGroundHeight()) {
-            switch(shapeType) {
-                case PLOT:
-                    return levelSettings.getMiddleLayerState();
-                case WALL:
-                    return levelSettings.getWallFillingState();
-                case ROAD:
-                    return levelSettings.getRoadFillingState();
-            }
-        } else if(yBlock == levelSettings.getGroundHeight()) {
-            switch(shapeType) {
-                case PLOT:
-                    return levelSettings.getLastLayerState();
-                case WALL:
-                    return levelSettings.getWallFillingState();
-                case ROAD:
-                    return levelSettings.getRoadState();
-            }
-        } else if(yBlock == levelSettings.getGroundHeight() + 1) {
+        else if(yBlock < levelSettings.getGroundHeight())
+            return switch(shapeType) {
+                case PLOT -> levelSettings.getMiddleLayerState();
+                case WALL -> levelSettings.getWallFillingState();
+                case ROAD -> levelSettings.getRoadFillingState();
+            };
+        else if(yBlock == levelSettings.getGroundHeight())
+            return switch(shapeType) {
+                case PLOT -> levelSettings.getLastLayerState();
+                case WALL -> levelSettings.getWallFillingState();
+                case ROAD -> levelSettings.getRoadState();
+            };
+        else if(yBlock == levelSettings.getGroundHeight() + 1)
             if(shapeType == ShapeType.WALL) return levelSettings.getWallPlotState();
-        }
 
         return BlockState.AIR;
     }

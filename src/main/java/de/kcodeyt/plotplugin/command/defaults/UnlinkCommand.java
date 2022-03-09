@@ -17,11 +17,8 @@
 package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
-import cn.nukkit.math.BlockFace;
 import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.command.SubCommand;
-import de.kcodeyt.plotplugin.event.PlotMergeEvent;
-import de.kcodeyt.plotplugin.event.PlotPreMergeEvent;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 

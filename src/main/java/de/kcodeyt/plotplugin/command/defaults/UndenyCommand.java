@@ -23,7 +23,6 @@ import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
-import de.kcodeyt.plotplugin.util.Utils;
 
 import java.util.UUID;
 

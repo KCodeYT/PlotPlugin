@@ -32,8 +32,8 @@ public class Plot {
     public static Plot fromConfig(PlotManager plotManager, Map<String, Object> plotMap) {
         final String ownerString = (String) plotMap.getOrDefault("owner", "null");
         final Plot plot = new Plot(plotManager, Plot.getPlotVectorFromConfig(plotMap), ownerString.equals("null") ? null : UUID.fromString(ownerString));
-        plot.helpers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("helpers"), new ArrayList<>())).stream().map(UUID::fromString).collect(Collectors.toList()));
-        plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).collect(Collectors.toList()));
+        plot.helpers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("helpers"), new ArrayList<>())).stream().map(UUID::fromString).toList());
+        plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.config.putAll(Plot.<Map<String, Object>>getOrDefault(plotMap.get("config"), new HashMap<>()));
         for(int i = 0; i < plot.mergedPlots.length; i++)
             plot.mergedPlots[i] = (Boolean) ((List<?>) plotMap.getOrDefault("merges", new ArrayList<>())).get(i);
@@ -177,18 +177,13 @@ public class Plot {
     }
 
     public PlotVector getRelative(int direction) {
-        switch(direction) {
-            case 0:
-                return this.plotVector.add(0, -1);
-            case 1:
-                return this.plotVector.add(1, 0);
-            case 2:
-                return this.plotVector.add(0, 1);
-            case 3:
-                return this.plotVector.add(-1, 0);
-            default:
-                return this.plotVector;
-        }
+        return switch(direction) {
+            case 0 -> this.plotVector.add(0, -1);
+            case 1 -> this.plotVector.add(1, 0);
+            case 2 -> this.plotVector.add(0, 1);
+            case 3 -> this.plotVector.add(-1, 0);
+            default -> this.plotVector;
+        };
     }
 
     public int getRelativeDir(PlotVector other) {

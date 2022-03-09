@@ -17,7 +17,6 @@
 package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
-import cn.nukkit.command.Command;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;

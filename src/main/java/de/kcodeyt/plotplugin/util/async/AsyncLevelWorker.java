@@ -24,8 +24,10 @@ import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.math.BlockVector3;
 import de.kcodeyt.plotplugin.util.WhenDone;
 
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.ArrayDeque;
+import java.util.HashSet;
+import java.util.Queue;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class AsyncLevelWorker {

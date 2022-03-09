@@ -120,9 +120,7 @@ public class Schematic {
     }
 
     public synchronized void init(File file) {
-        try {
-            final FileInputStream fileInputStream = new FileInputStream(file);
-
+        try(final FileInputStream fileInputStream = new FileInputStream(file)) {
             final byte[] bytes = new byte[fileInputStream.available()];
             final BinaryStream binaryStream = new BinaryStream(this.decompress(Arrays.copyOf(bytes, fileInputStream.read(bytes))));
             final int blocks = binaryStream.getVarInt();
@@ -154,17 +152,13 @@ public class Schematic {
                 byteArrayInputStream.close();
                 this.addBlockEntity(new BlockVector3(x, y, z), type, compoundTag);
             }
-
-            fileInputStream.close();
         } catch(IOException | DataFormatException e) {
             e.printStackTrace();
         }
     }
 
     public synchronized void save(File file) {
-        try {
-            final FileOutputStream fileOutputStream = new FileOutputStream(file);
-
+        try(final FileOutputStream fileOutputStream = new FileOutputStream(file)) {
             synchronized(this.blocks) {
                 final BinaryStream binaryStream = new BinaryStream();
                 binaryStream.putVarInt(this.blocks.size());
@@ -200,9 +194,6 @@ public class Schematic {
 
                 fileOutputStream.write(this.compress(binaryStream.getBuffer()));
             }
-
-            fileOutputStream.flush();
-            fileOutputStream.close();
         } catch(IOException e) {
             e.printStackTrace();
         }

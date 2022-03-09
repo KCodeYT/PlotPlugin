@@ -23,8 +23,6 @@ import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.generator.PlotGenerator;
 import de.kcodeyt.plotplugin.manager.PlotManager;
-import de.kcodeyt.plotplugin.util.Allowed;
-import de.kcodeyt.plotplugin.util.ShapeType;
 import de.kcodeyt.plotplugin.util.async.TaskExecutor;
 
 public class RegenRoadCommand extends SubCommand {

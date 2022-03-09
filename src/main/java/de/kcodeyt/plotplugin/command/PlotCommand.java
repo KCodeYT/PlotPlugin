@@ -64,12 +64,10 @@ public class PlotCommand extends Command {
         final String subName = args.length > 0 ? args[0] : "";
         args = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
 
-        if(!(sender instanceof Player)) {
+        if(!(sender instanceof final Player player)) {
             sender.sendMessage("Sorry, this command is only available for players!");
             return false;
         }
-
-        final Player player = (Player) sender;
 
         for(SubCommand subCommand : this.subCommands) {
             if(!subCommand.hasPermission(player)) continue;

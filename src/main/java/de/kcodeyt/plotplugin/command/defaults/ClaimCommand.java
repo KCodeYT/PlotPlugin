@@ -17,7 +17,6 @@
 package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
-import cn.nukkit.blockstate.BlockState;
 import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.event.PlotClaimEvent;

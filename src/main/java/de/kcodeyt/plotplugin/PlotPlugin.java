@@ -89,8 +89,7 @@ public class PlotPlugin extends PluginBase {
         final Server server = this.getServer();
 
         for(Object o : this.worldsConfig.getList("levels", new ArrayList<>())) {
-            if(o instanceof String) {
-                final String levelName = (String) o;
+            if(o instanceof final String levelName) {
                 final PlotManager plotManager = new PlotManager(this, levelName);
                 this.plotManagerMap.put(levelName, plotManager);
 
