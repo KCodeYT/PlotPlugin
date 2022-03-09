@@ -35,10 +35,6 @@ public class AddHelperCommand extends SubCommand {
 
     @Override
     public boolean execute(Player player, String[] args) {
-
-        player.getFoodData().setFoodSaturationLevel(0);
-        player.getFoodData().setLevel(0);
-        if(true) return true;
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
