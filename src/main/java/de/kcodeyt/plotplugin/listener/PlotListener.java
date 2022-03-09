@@ -274,22 +274,44 @@ public class PlotListener implements Listener {
         final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel());
         if(plotManager != null) {
             final Plot blockPlot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
-            for(Block movingBlock : event.getDestroyedBlocks()) {
+
+            for(Block movingBlock : event.getBlocks()) {
                 final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ());
+
                 if(blockPlot != null && movingBlockPlot == null) {
                     event.setCancelled(true);
-                    break;
+                    return;
                 }
 
                 if(blockPlot == null && movingBlockPlot != null) {
                     event.setCancelled(true);
-                    break;
+                    return;
                 }
 
                 final ShapeType[] shapes = plotManager.getShapes(movingBlock.getChunkX() << 4, movingBlock.getChunkZ() << 4);
                 if(shapes[((movingBlock.getFloorZ() & 15) << 4) | (movingBlock.getFloorX() & 15)] == ShapeType.WALL) {
                     event.setCancelled(true);
-                    break;
+                    return;
+                }
+            }
+
+            for(Block movingBlock : event.getDestroyedBlocks()) {
+                final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ());
+
+                if(blockPlot != null && movingBlockPlot == null) {
+                    event.setCancelled(true);
+                    return;
+                }
+
+                if(blockPlot == null && movingBlockPlot != null) {
+                    event.setCancelled(true);
+                    return;
+                }
+
+                final ShapeType[] shapes = plotManager.getShapes(movingBlock.getChunkX() << 4, movingBlock.getChunkZ() << 4);
+                if(shapes[((movingBlock.getFloorZ() & 15) << 4) | (movingBlock.getFloorX() & 15)] == ShapeType.WALL) {
+                    event.setCancelled(true);
+                    return;
                 }
             }
         }
