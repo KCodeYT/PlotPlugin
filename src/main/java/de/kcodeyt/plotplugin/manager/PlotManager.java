@@ -255,8 +255,6 @@ public class PlotManager {
     }
 
     public boolean startMerge(Plot plot, int dir) {
-        if(!plot.hasOwner()) return false;
-
         final Plot relativePlot = this.getPlotById(plot.getRelative(dir));
 
         final List<Plot> plots = new ArrayList<>();

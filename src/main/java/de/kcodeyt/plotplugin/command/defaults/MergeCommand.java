@@ -46,6 +46,11 @@ public class MergeCommand extends SubCommand {
         final Plot rPlot = plotManager.getPlotById(plot.getRelative(dir));
 
         if(player.hasPermission("plot.command.admin.merge") || (plot.isOwner(player.getUniqueId()) && rPlot.isOwner(player.getUniqueId()))) {
+            if(plot.isMerged(dir)) {
+                player.sendMessage(this.translate("merge-failure-already-merged"));
+                return false;
+            }
+
             final PlotPreMergeEvent plotPreMergeEvent = new PlotPreMergeEvent(player, plot, dir);
             this.plugin.getServer().getPluginManager().callEvent(plotPreMergeEvent);
             if(plotPreMergeEvent.isCancelled()) return false;
