@@ -37,7 +37,9 @@ import de.kcodeyt.plotplugin.util.async.TaskExecutor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -81,7 +83,52 @@ public class PlotPlugin extends PluginBase {
         this.worldsConfig = new Config(new File(this.getDataFolder(), "worlds.yml"), Config.YAML);
         this.playersConfig = new Config(new File(this.getDataFolder(), "players.yml"), Config.YAML);
 
-        this.language = new Language(new File(this.getDataFolder(), "lang/de_DE.txt"));
+        final File langDir = new File(this.getDataFolder(), "lang");
+        if(!langDir.exists()) {
+            if(!langDir.mkdirs()) {
+                this.getLogger().error("Could not create the language directory for this plugin!");
+                return;
+            }
+
+            try(final InputStreamReader inputReader = new InputStreamReader(this.getResource("lang"));
+                final BufferedReader bufferedReader = new BufferedReader(inputReader)) {
+                String line;
+                while((line = bufferedReader.readLine()) != null)
+                    this.saveResource("lang/" + line);
+            } catch(Exception e) {
+                this.getLogger().error("Could not find the language resources of this plugin!", e);
+                return;
+            }
+        }
+
+        this.saveResource("config.yml");
+        final Config config = this.getConfig();
+
+        if(!config.exists("lang")) {
+            config.set("lang", "de_DE"); // currently, using germany as default
+            config.save();
+        }
+
+        final String language = config.getString("lang");
+        File languageFile = new File(langDir, language + ".txt");
+
+        if(!languageFile.exists()) {
+            if(!language.equals("de_DE")) {
+                languageFile = new File(langDir, "de_DE.txt");
+
+                if(!languageFile.exists()) {
+                    this.getLogger().error("Could not find the default language file!");
+                    return;
+                }
+            } else {
+                this.getLogger().error("Could not find the default language file!");
+            }
+
+            return;
+        }
+
+        this.language = new Language(languageFile);
+        this.getLogger().info("This plugin is using the " + languageFile.getName() + " language file!");
 
         this.plotManagerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         this.levelRegistrationMap = new HashMap<>();

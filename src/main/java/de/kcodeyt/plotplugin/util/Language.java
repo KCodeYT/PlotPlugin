@@ -30,6 +30,7 @@ public class Language {
     public Language(File file) {
         this.file = file;
         this.config = new Config(this.file, Config.PROPERTIES);
+        this.init(this.config.getKeys().toArray(new String[0]));
     }
 
     public void init(String[] messages) {
@@ -47,6 +48,7 @@ public class Language {
             this.config.set(messageId, messageId);
             this.config.save(this.file);
         }
+
         for(int i = 0; i < params.length; i++)
             message = message.replace("{" + i + "}", Objects.toString(params[0]));
         return message.replaceAll("&", "" + TextFormat.ESCAPE);
