@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 public class PlotPlugin extends PluginBase {
 
+    private static final String DEFAULT_LANGUAGE = "en_US";
     public static PlotPlugin INSTANCE;
 
     private Config worldsConfig;
@@ -105,7 +106,7 @@ public class PlotPlugin extends PluginBase {
         final Config config = this.getConfig();
 
         if(!config.exists("lang")) {
-            config.set("lang", "de_DE"); // currently, using germany as default
+            config.set("lang", DEFAULT_LANGUAGE);
             config.save();
         }
 
@@ -113,8 +114,8 @@ public class PlotPlugin extends PluginBase {
         File languageFile = new File(langDir, language + ".txt");
 
         if(!languageFile.exists()) {
-            if(!language.equals("de_DE")) {
-                languageFile = new File(langDir, "de_DE.txt");
+            if(!language.equals(DEFAULT_LANGUAGE)) {
+                languageFile = new File(langDir, DEFAULT_LANGUAGE + ".txt");
 
                 if(!languageFile.exists()) {
                     this.getLogger().error("Could not find the default language file!");
