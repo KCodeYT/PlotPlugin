@@ -48,7 +48,7 @@ generate-road-size=&6&lCitybuild &8&l» &r&aWähle die Größe der Wege &r&7(&r&
 generate-success-default=&6&lCitybuild &8&l» &r&aDie Welt mit dem Namen &6{0}&r&a erstellt und sie als Standard Plotwelt registriert!
 generate-success=&6&lCitybuild &8&l» &r&aDie Welt mit dem Namen &6{0}&r&a erstellt und sie nicht als Standard Plotwelt registriert!
 generate-failure=&6&lCitybuild &8&l» &r&cDie Welt konnte nicht erstellt werden!
-reload-success=&6&lCitybuild &8&l» &r&aDie Welten und Sprachenkonfigurationen wurden erfolgreich neugeladen!
+reload-success=&6&lCitybuild &8&l» &r&aDie Welten und Sprachen konfigurationen wurden erfolgreich neu geladen!
 home-success-own=&6&lCitybuild &8&l» &r&aDu wurdest zu deinem Grundstück teleportiert!
 home-success=&6&lCitybuild &8&l» &r&aDu wurdest zu dem Grundstück von &r&6{0}&r&a teleportiert!
 home-failure-denied=&6&lCitybuild &8&l» &r&cDu bist auf dem Grundstück gesperrt!
@@ -76,7 +76,7 @@ warp-failure-free=&6&lCitybuild &8&l» &r&cDu kannst dich nicht zu einem freien 
 warp-success=&6&lCitybuild &8&l» &r&aDu wurdest zu dem Grundstück mit der ID &r&6{0}&r&a teleportiert!
 warp-failure=&6&lCitybuild &8&l» &r&cDu bist auf dem Grundstück gesperrt!
 help-title=&7====== &6Command Hilfe &7======
-help-reload=&6/p reload &7| &6Lädt die Welten und Sprachenkonfigurationen neu
+help-reload=&6/p reload &7| &6Lädt die Welten und Sprachen konfigurationen neu
 help-unlink=&6/p unlink &7| &6Trennt das Grundstück von seinen Nachbarn
 help-generate=&6/p generate [level name] [default plot world] &7| &6Erstelle eine neue Plot Welt
 help-regenroad=&6/p regenroad &7| &6Lasse den Weg in deinem Chunk erneut generieren
