@@ -19,7 +19,9 @@ package de.kcodeyt.plotplugin.manager;
 import cn.nukkit.Player;
 import cn.nukkit.Server;
 import cn.nukkit.block.Block;
+import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockstate.BlockState;
+import cn.nukkit.entity.Entity;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.Location;
 import cn.nukkit.level.format.FullChunk;
@@ -864,32 +866,30 @@ public class PlotManager {
 
                     TaskExecutor.execute(() -> {
                         if(!fullChunk.getBlockEntities().isEmpty()) {
-                            try {
-                                new ArrayList<>(fullChunk.getBlockEntities().values()).forEach(blockEntity -> {
-                                    try {
-                                        if(blockEntity.getFloorX() == floorX && blockEntity.getFloorZ() == floorZ)
-                                            blockEntity.close();
-                                    } catch(Exception e) {
-                                        this.plugin.catchException(e);
-                                    }
-                                });
-                            } catch(Exception e) {
-                                this.plugin.catchException(e);
+                            for(BlockEntity blockEntity : new ArrayList<>(fullChunk.getBlockEntities().values())) {
+                                try {
+                                    if(blockEntity.getFloorX() == floorX && blockEntity.getFloorZ() == floorZ)
+                                        blockEntity.close();
+                                } catch(Exception e) {
+                                    this.plugin.getLogger().warning(
+                                            "Could not close block entity in plot " + plot.getPlotVector() + " and position x: " + floorX + " z:" + floorZ,
+                                            e
+                                    );
+                                }
                             }
                         }
 
                         if(!fullChunk.getEntities().isEmpty()) {
-                            try {
-                                new ArrayList<>(fullChunk.getEntities().values()).forEach(entity -> {
-                                    try {
-                                        if(!(entity instanceof Player) && entity.getFloorX() == floorX && entity.getFloorZ() == floorZ)
-                                            entity.close();
-                                    } catch(Exception e) {
-                                        this.plugin.catchException(e);
-                                    }
-                                });
-                            } catch(Exception e) {
-                                this.plugin.catchException(e);
+                            for(Entity entity : new ArrayList<>(fullChunk.getEntities().values())) {
+                                try {
+                                    if(!(entity instanceof Player) && entity.getFloorX() == floorX && entity.getFloorZ() == floorZ)
+                                        entity.close();
+                                } catch(Exception e) {
+                                    this.plugin.getLogger().warning(
+                                            "Could not close entity in plot " + plot.getPlotVector() + " and position x: " + floorX + " z:" + floorZ,
+                                            e
+                                    );
+                                }
                             }
                         }
                     });

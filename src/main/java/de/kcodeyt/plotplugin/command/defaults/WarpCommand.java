@@ -35,7 +35,7 @@ public class WarpCommand extends SubCommand {
     @Override
     public boolean execute(Player player, String[] args) {
         PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        if(plotManager == null && this.plugin.getPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getPlotLevel())) == null) {
+        if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel())) == null) {
             player.sendMessage(this.translate("no-plot-world"));
             return false;
         }

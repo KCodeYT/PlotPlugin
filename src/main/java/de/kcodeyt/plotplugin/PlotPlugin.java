@@ -59,7 +59,7 @@ public class PlotPlugin extends PluginBase {
     private PlayerManager playerManager;
 
     @Getter
-    private Level plotLevel;
+    private Level defaultPlotLevel;
 
     @Getter
     private Map<Player, PlotLevelRegistration> levelRegistrationMap;
@@ -154,7 +154,8 @@ public class PlotPlugin extends PluginBase {
                     continue;
                 }
 
-                if(this.worldsConfig.getString("default", "").equalsIgnoreCase(levelName)) this.plotLevel = level;
+                if(this.worldsConfig.getString("default", "").equalsIgnoreCase(levelName))
+                    this.defaultPlotLevel = level;
                 plotManager.initLevel(level);
             }
         }
@@ -184,10 +185,6 @@ public class PlotPlugin extends PluginBase {
     @Override
     public void onDisable() {
 
-    }
-
-    public void catchException(Exception e) {
-        this.getLogger().debug("Got exception!", e);
     }
 
     public void reloadPlots() {
@@ -223,7 +220,7 @@ public class PlotPlugin extends PluginBase {
 
         if(defaultLevel) {
             this.worldsConfig.set("default", levelName);
-            this.plotLevel = level;
+            this.defaultPlotLevel = level;
         }
 
         this.worldsConfig.save(true);
