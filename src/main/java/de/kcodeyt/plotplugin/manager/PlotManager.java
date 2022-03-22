@@ -905,6 +905,8 @@ public class PlotManager {
 
         final int xMax = vector.getFloorX() + this.levelSettings.getPlotSize();
         final int zMax = vector.getFloorZ() + this.levelSettings.getPlotSize();
+        final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
+        final int maxY = LevelUtils.getChunkMaxY(this.levelSettings.getDimension());
 
         TaskExecutor.executeAsync(() -> {
             List<BaseFullChunk> fullChunks = new ArrayList<>();
@@ -949,12 +951,12 @@ public class PlotManager {
                         }
                     });
 
-                    for(int y = 0; y <= 255; ++y) {
-                        if(y == 0)
+                    for(int y = minY; y <= maxY; ++y) {
+                        if(y == minY)
                             fullChunk.setBlockState(floorX & 15, y, floorZ & 15, this.levelSettings.getFirstLayerState());
-                        else if(y < this.levelSettings.getGroundHeight())
+                        else if(y < minY + this.levelSettings.getGroundHeight())
                             fullChunk.setBlockState(floorX & 15, y, floorZ & 15, this.levelSettings.getMiddleLayerState());
-                        else if(y == this.levelSettings.getGroundHeight())
+                        else if(y == minY + this.levelSettings.getGroundHeight())
                             fullChunk.setBlockState(floorX & 15, y, floorZ & 15, this.levelSettings.getLastLayerState());
                         else
                             fullChunk.setBlock(floorX & 15, y, floorZ & 15, Block.AIR);
