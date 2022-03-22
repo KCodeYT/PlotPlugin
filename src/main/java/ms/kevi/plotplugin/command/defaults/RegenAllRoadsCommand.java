@@ -50,7 +50,6 @@ public class RegenAllRoadsCommand extends SubCommand {
         }
 
         final int chunkRadius = Utils.parseInteger(args.length > 0 ? args[0] : "32", 32);
-        final int fullSize = (chunkRadius * 2 * chunkRadius * 2) + 4;
         final Level level = player.getLevel();
         final PlotGenerator plotGenerator = (PlotGenerator) level.getGenerator();
 
@@ -58,23 +57,17 @@ public class RegenAllRoadsCommand extends SubCommand {
         final int pChunkZ = player.getChunkZ();
 
         TaskExecutor.executeAsync(() -> {
-            final long start = System.currentTimeMillis();
-            int index = 0;
             for(int chunkX = -chunkRadius; chunkX <= chunkRadius; chunkX++) {
                 for(int chunkZ = -chunkRadius; chunkZ <= chunkRadius; chunkZ++) {
-                    index++;
                     final FullChunk fullChunk = level.getChunk(pChunkX + chunkX, pChunkZ + chunkZ, false);
                     if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk, true);
                 }
-                if(index % 5 == 0)
-                    System.out.println("REGENALLROADS STATUS: [" + ((int) (Math.abs((float) index / fullSize) * 100)) + "/100 %] (" + (System.currentTimeMillis() - start) + "ms)");
             }
 
-            System.out.println("REGENALLROADS FINISHED Took " + (System.currentTimeMillis() - start) + "ms!");
-            player.sendMessage("Finished Regenallroads Task!");
+            player.sendMessage(this.translate(player, TranslationKey.REGENALLROADS_FINISHED));
         });
 
-        player.sendMessage("Starting Regenallroads Task!");
+        player.sendMessage(this.translate(player, TranslationKey.REGENALLROADS_START));
         return true;
     }
 

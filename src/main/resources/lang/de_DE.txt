@@ -112,3 +112,7 @@ unlink-failure=&6&lCitybuild &8&l» &r&cDie Grundstücke konnten leider nicht vo
 teleport-form-title=Wähle eine Plot Welt aus
 teleport-no-plot-world=&6&lCitybuild &8&l» &r&cDie Welt ist keine Grundstückswelt!
 teleport-success=&6&lCitybuild &8&l» &r&aDu wurdest erfolgreich in die &6{0}&r&a Grundstückswelt teleportiert!
+regenroad-start=&6&lCitybuild &8&l» &r&aGeneriere diesen Weg erneut...
+regenroad-finished=&6&lCitybuild &8&l» &r&aDieser Weg wurden erfolgreich neu generiert!
+regenallroads-start=&6&lCitybuild &8&l» &r&aGeneriere alle Wege erneut...
+regenallroads-finished=&6&lCitybuild &8&l» &r&aAlle Wege wurden erfolgreich neu generiert!

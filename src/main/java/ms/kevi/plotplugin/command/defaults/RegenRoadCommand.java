@@ -54,10 +54,10 @@ public class RegenRoadCommand extends SubCommand {
         TaskExecutor.executeAsync(() -> {
             final FullChunk fullChunk = level.getChunk(pChunkX, pChunkZ, false);
             if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk, true);
-            player.sendMessage("Finished Regenroad Task!");
+            player.sendMessage(this.translate(player, TranslationKey.REGENROAD_FINISHED));
         });
 
-        player.sendMessage("Starting Regenroad Task!");
+        player.sendMessage(this.translate(player, TranslationKey.REGENROAD_START));
         return true;
     }
 

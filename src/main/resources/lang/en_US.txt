@@ -114,3 +114,7 @@ unlink-failure=&6&lCitybuild &8&l» &r&cUnfortunately, the plots could not be se
 teleport-form-title=Select a plot world
 teleport-no-plot-world=&6&lCitybuild &8&l» &r&cThe world is not a plot world!
 teleport-success=&6&lCitybuild &8&l» &r&aYou have been successfully teleported to the plot world &6{0}&r&a!
+regenroad-start=&6&lCitybuild &8&l» &r&aRegenerate this road...
+regenroad-finished=&6&lCitybuild &8&l» &r&aSuccessfully regenerated this road!
+regenallroads-start=&6&lCitybuild &8&l» &r&aRegenerate all roads...
+regenallroads-finished=&6&lCitybuild &8&l» &r&aSuccessfully regenerated all roads!
