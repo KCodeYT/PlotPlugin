@@ -64,11 +64,11 @@ public class HomeCommand extends SubCommand {
             if(plotId < plots.size()) {
                 final Plot plot = plots.get(plotId);
                 final boolean canPerform = (!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.nodeny");
-                if(canPerform) {
-                    player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS, this.plugin.getCorrectName(targetId)));
-                    plotManager.teleportPlayerToPlot(player, plots.get(plotId));
-                } else if(targetName.equalsIgnoreCase(player.getName())) {
+                if(targetName.equalsIgnoreCase(player.getName())) {
                     player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS_OWN));
+                    plotManager.teleportPlayerToPlot(player, plots.get(plotId));
+                } else if(canPerform) {
+                    player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS, this.plugin.getCorrectName(targetId)));
                     plotManager.teleportPlayerToPlot(player, plots.get(plotId));
                 } else
                     player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_DENIED));
