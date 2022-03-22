@@ -76,7 +76,7 @@ public class Language {
 
         String message = langEntry.getTranslations().get(key);
         for(int i = 0; i < params.length; i++)
-            message = message.replace("{" + i + "}", Objects.toString(params[0]));
+            message = message.replace("{" + i + "}", Objects.toString(params[i]));
 
         return message.replaceAll("&", "" + TextFormat.ESCAPE);
     }

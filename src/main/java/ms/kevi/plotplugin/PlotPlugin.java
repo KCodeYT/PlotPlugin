@@ -22,6 +22,8 @@ import cn.nukkit.level.Level;
 import cn.nukkit.level.generator.Generator;
 import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
+import lombok.Getter;
+import lombok.Setter;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.lang.Language;
@@ -34,8 +36,6 @@ import ms.kevi.plotplugin.util.PlotLevelRegistration;
 import ms.kevi.plotplugin.util.PlotLevelSettings;
 import ms.kevi.plotplugin.util.Utils;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -77,6 +77,9 @@ public class PlotPlugin extends PluginBase {
 
     private final PlayerNameFunction defaultNameFunction = (name, nameConsumer) -> nameConsumer.accept(name.equalsIgnoreCase("admin") ? "§4Administrator" : name);
 
+    @Getter
+    private int plotsPerPage = 5;
+
     @Override
     public void onLoad() {
         INSTANCE = this;
@@ -114,6 +117,13 @@ public class PlotPlugin extends PluginBase {
             config.set("default_lang", DEFAULT_LANGUAGE);
             config.save();
         }
+
+        if(!config.exists("plots_per_page")) {
+            config.set("plots_per_page", this.plotsPerPage);
+            config.save();
+        }
+
+        this.plotsPerPage = config.getInt("plots_per_page");
 
         try {
             final String defaultLang = config.getString("default_lang");
