@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>de.kcodeyt</groupId>
-    <artifactId>PlotPlugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <groupId>ms.kevi</groupId>
+    <artifactId>plotplugin</artifactId>
+    <version>1.0.0</version>
 
     <repositories>
         <repository>
@@ -17,7 +17,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.blocklynukkit</groupId>
+            <groupId>cn.powernukkitx</groupId>
             <artifactId>powernukkitx</artifactId>
             <version>1.6.0.0-PNX-SNAPSHOT</version>
             <scope>compile</scope>
@@ -32,11 +32,6 @@
             <artifactId>gson</artifactId>
             <version>2.9.0</version>
         </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -46,6 +41,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
+                    <release>17</release>
                     <source>17</source>
                     <target>17</target>
                 </configuration>
