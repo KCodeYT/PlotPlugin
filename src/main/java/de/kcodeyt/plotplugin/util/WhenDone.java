@@ -18,6 +18,9 @@ package de.kcodeyt.plotplugin.util;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @RequiredArgsConstructor
 public class WhenDone {
 

@@ -29,6 +29,9 @@ import de.kcodeyt.plotplugin.util.Utils;
 
 import java.util.Arrays;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class SettingCommand extends SubCommand {
 
     public SettingCommand(PlotPlugin plugin, PlotCommand parent) {

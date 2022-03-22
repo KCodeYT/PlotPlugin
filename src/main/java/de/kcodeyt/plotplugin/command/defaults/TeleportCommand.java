@@ -34,6 +34,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class TeleportCommand extends SubCommand {
 
     private final Map<Player, Map<Integer, Consumer<FormResponse>>> map;

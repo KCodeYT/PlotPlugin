@@ -24,12 +24,12 @@ import cn.nukkit.plugin.PluginBase;
 import cn.nukkit.utils.Config;
 import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.generator.PlotGenerator;
+import de.kcodeyt.plotplugin.lang.Language;
 import de.kcodeyt.plotplugin.listener.PlotLevelRegistrationListener;
 import de.kcodeyt.plotplugin.listener.PlotListener;
 import de.kcodeyt.plotplugin.manager.PlayerManager;
 import de.kcodeyt.plotplugin.manager.PlayerNameFunction;
 import de.kcodeyt.plotplugin.manager.PlotManager;
-import de.kcodeyt.plotplugin.lang.Language;
 import de.kcodeyt.plotplugin.util.PlotLevelRegistration;
 import de.kcodeyt.plotplugin.util.PlotLevelSettings;
 import de.kcodeyt.plotplugin.util.Utils;
@@ -45,6 +45,9 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class PlotPlugin extends PluginBase {
 
     private static final String DEFAULT_LANGUAGE = "en_US";

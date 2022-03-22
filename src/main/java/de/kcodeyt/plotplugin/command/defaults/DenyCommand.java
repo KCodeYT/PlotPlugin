@@ -29,6 +29,9 @@ import de.kcodeyt.plotplugin.util.Utils;
 
 import java.util.UUID;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class DenyCommand extends SubCommand {
 
     public DenyCommand(PlotPlugin plugin, PlotCommand parent) {

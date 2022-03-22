@@ -30,6 +30,7 @@ import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.schematic.Schematic;
 import de.kcodeyt.plotplugin.util.Allowed;
+import de.kcodeyt.plotplugin.util.LevelUtils;
 import de.kcodeyt.plotplugin.util.PlotLevelSettings;
 import de.kcodeyt.plotplugin.util.ShapeType;
 import de.kcodeyt.plotplugin.util.async.TaskExecutor;
@@ -37,6 +38,13 @@ import de.kcodeyt.plotplugin.util.async.TaskHelper;
 
 import java.util.*;
 
+/**
+ * A basic plot generator for the PowerNukkitX environment,
+ * which supports the world heights introduced in the 1.18
+ * caves and cliffs update.
+ *
+ * @author Kevims KCodeYT
+ */
 public class PlotGenerator extends Generator {
 
     private static final Allowed<ShapeType> GENERATE_ALLOWED = new Allowed<>(ShapeType.values());
@@ -47,6 +55,7 @@ public class PlotGenerator extends Generator {
     private Level level;
     private ChunkManager chunkManager;
 
+    @SuppressWarnings("unused")
     public PlotGenerator() {
         this(new HashMap<>());
     }
@@ -81,8 +90,8 @@ public class PlotGenerator extends Generator {
 
         if(fullChunk.getProvider() == null || fullChunk.getProvider().getLevel() == null) return;
 
-        final Level level = fullChunk.getProvider().getLevel();
-        final PlotManager plotManager = this.plugin.getPlotManager(level);
+        this.level = fullChunk.getProvider().getLevel();
+        final PlotManager plotManager = this.plugin.getPlotManager(this.level);
         if(plotManager == null) return;
 
         final ShapeType[] shapes = plotManager.getShapes(fullChunk.getX() << 4, fullChunk.getZ() << 4);
@@ -142,6 +151,10 @@ public class PlotGenerator extends Generator {
         final BlockState wallPlotState = levelSettings.getWallPlotState();
         final BlockState roadState = levelSettings.getRoadState();
 
+        final int dimension = plotManager.getLevelSettings().getDimension();
+        final int chunkMinY = LevelUtils.getChunkMinY(dimension);
+        final int chunkMaxY = LevelUtils.getChunkMaxY(dimension);
+
         for(int xBlock = 0; xBlock < 16; ++xBlock) {
             for(int zBlock = 0; zBlock < 16; ++zBlock) {
                 final ShapeType shapeType = shapes[(zBlock << 4) | xBlock];
@@ -150,10 +163,10 @@ public class PlotGenerator extends Generator {
                 if(shapeType == ShapeType.PLOT) fullChunk.setBiomeId(xBlock, zBlock, levelSettings.getPlotBiome());
                 else fullChunk.setBiomeId(xBlock, zBlock, levelSettings.getRoadBiome());
 
-                if(!ignoreAir) for(int yBlock = 0; yBlock < 256; ++yBlock)
+                if(!ignoreAir) for(int yBlock = chunkMinY; yBlock <= chunkMaxY; ++yBlock)
                     fullChunk.setBlockStateAtLayer(xBlock, yBlock, zBlock, 1, BlockState.AIR);
 
-                fullChunk.setBlockState(xBlock, 0, zBlock, firstLayerState);
+                fullChunk.setBlockState(xBlock, chunkMinY, zBlock, firstLayerState);
 
                 final BlockState currentState;
                 if(shapeType == ShapeType.PLOT) currentState = middleLayerState;
@@ -161,22 +174,24 @@ public class PlotGenerator extends Generator {
                 else currentState = roadFillingState;
 
                 for(int yBlock = 1; yBlock < levelSettings.getGroundHeight(); ++yBlock)
-                    fullChunk.setBlockState(xBlock, yBlock, zBlock, currentState);
+                    fullChunk.setBlockState(xBlock, yBlock + chunkMinY, zBlock, currentState);
 
                 if(shapeType == ShapeType.PLOT) {
-                    fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight(), zBlock, lastLayerState);
-                    if(!ignoreAir) for(int yBlock = levelSettings.getGroundHeight() + 1; yBlock < 256; ++yBlock)
+                    fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight() + chunkMinY, zBlock, lastLayerState);
+                    if(!ignoreAir) for(int yBlock = levelSettings.getGroundHeight() + 1; yBlock <= chunkMaxY; ++yBlock)
                         fullChunk.setBlockState(xBlock, yBlock, zBlock, BlockState.AIR);
                 } else {
                     if(shapeType == ShapeType.WALL) {
-                        fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight() + 1, zBlock, wallPlotState);
-                        fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight(), zBlock, wallFillingState);
-                        if(!ignoreAir) for(int yBlock = levelSettings.getGroundHeight() + 2; yBlock < 256; ++yBlock)
-                            fullChunk.setBlockState(xBlock, yBlock, zBlock, BlockState.AIR);
+                        fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight() + 1 + chunkMinY, zBlock, wallPlotState);
+                        fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight() + chunkMinY, zBlock, wallFillingState);
+                        if(!ignoreAir)
+                            for(int yBlock = levelSettings.getGroundHeight() + 2; yBlock <= chunkMaxY; ++yBlock)
+                                fullChunk.setBlockState(xBlock, yBlock, zBlock, BlockState.AIR);
                     } else {
-                        fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight(), zBlock, roadState);
-                        if(!ignoreAir) for(int yBlock = levelSettings.getGroundHeight() + 1; yBlock < 256; ++yBlock)
-                            fullChunk.setBlockState(xBlock, yBlock, zBlock, BlockState.AIR);
+                        fullChunk.setBlockState(xBlock, levelSettings.getGroundHeight() + chunkMinY, zBlock, roadState);
+                        if(!ignoreAir)
+                            for(int yBlock = levelSettings.getGroundHeight() + 1; yBlock <= chunkMaxY; ++yBlock)
+                                fullChunk.setBlockState(xBlock, yBlock, zBlock, BlockState.AIR);
                     }
                 }
             }
@@ -190,21 +205,24 @@ public class PlotGenerator extends Generator {
         final int zBlock = blockVector.getFloorZ() & 15;
         final ShapeType shapeType = shapes[(zBlock << 4) | xBlock];
 
-        if(yBlock == 0)
+        final int dimension = plotManager.getLevelSettings().getDimension();
+        final int chunkMinY = LevelUtils.getChunkMinY(dimension);
+
+        if(yBlock == chunkMinY)
             return levelSettings.getFirstLayerState();
-        else if(yBlock < levelSettings.getGroundHeight())
+        else if(yBlock < levelSettings.getGroundHeight() + chunkMinY)
             return switch(shapeType) {
                 case PLOT -> levelSettings.getMiddleLayerState();
                 case WALL -> levelSettings.getWallFillingState();
                 case ROAD -> levelSettings.getRoadFillingState();
             };
-        else if(yBlock == levelSettings.getGroundHeight())
+        else if(yBlock == levelSettings.getGroundHeight() + chunkMinY)
             return switch(shapeType) {
                 case PLOT -> levelSettings.getLastLayerState();
                 case WALL -> levelSettings.getWallFillingState();
                 case ROAD -> levelSettings.getRoadState();
             };
-        else if(yBlock == levelSettings.getGroundHeight() + 1)
+        else if(yBlock == levelSettings.getGroundHeight() + 1 + chunkMinY)
             if(shapeType == ShapeType.WALL) return levelSettings.getWallPlotState();
 
         return BlockState.AIR;
@@ -258,17 +276,27 @@ public class PlotGenerator extends Generator {
     }
 
     public Vector3 getPlotAreaStart(PlotManager plotManager, int x, int z) {
-        final int totalSize = plotManager.getLevelSettings().getTotalSize();
+        final PlotLevelSettings levelSettings = plotManager.getLevelSettings();
+        final int totalSize = levelSettings.getTotalSize();
         final int xPart = x / totalSize;
         final int zPart = z / totalSize;
-        return new Vector3((x < 0 ? xPart - 1 : xPart) * totalSize, 0, (z < 0 ? zPart - 1 : zPart) * totalSize);
+        return new Vector3(
+                (x < 0 ? xPart - 1 : xPart) * totalSize,
+                LevelUtils.getChunkMinY(levelSettings.getDimension()),
+                (z < 0 ? zPart - 1 : zPart) * totalSize
+        );
     }
 
     public Vector3 getPlotAreaEnd(PlotManager plotManager, int x, int z) {
-        final int totalSize = plotManager.getLevelSettings().getTotalSize();
+        final PlotLevelSettings levelSettings = plotManager.getLevelSettings();
+        final int totalSize = levelSettings.getTotalSize();
         final int xPart = x / totalSize;
         final int zPart = z / totalSize;
-        return new Vector3((x < 0 ? xPart : xPart + 1) * totalSize, 255, (z < 0 ? zPart : zPart + 1) * totalSize);
+        return new Vector3(
+                (x < 0 ? xPart : xPart + 1) * totalSize,
+                LevelUtils.getChunkMaxY(levelSettings.getDimension()),
+                (z < 0 ? zPart : zPart + 1) * totalSize
+        );
     }
 
     public Vector3[] getPlotArea(PlotManager plotManager, int x, int z) {

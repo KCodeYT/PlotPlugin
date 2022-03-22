@@ -26,6 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Getter
 public class Language {
 

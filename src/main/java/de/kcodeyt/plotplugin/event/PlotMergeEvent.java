@@ -21,6 +21,9 @@ import cn.nukkit.event.HandlerList;
 import de.kcodeyt.plotplugin.util.Plot;
 import lombok.Getter;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Getter
 public class PlotMergeEvent extends PlotEvent {
 

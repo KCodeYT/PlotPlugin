@@ -28,6 +28,9 @@ import de.kcodeyt.plotplugin.util.Plot;
 
 import java.util.UUID;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class SetOwnerCommand extends SubCommand {
 
     public SetOwnerCommand(PlotPlugin plugin, PlotCommand parent) {

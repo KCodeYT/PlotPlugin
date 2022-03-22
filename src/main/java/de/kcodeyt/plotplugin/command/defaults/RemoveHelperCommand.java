@@ -28,6 +28,9 @@ import de.kcodeyt.plotplugin.util.Plot;
 
 import java.util.UUID;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class RemoveHelperCommand extends SubCommand {
 
     public RemoveHelperCommand(PlotPlugin plugin, PlotCommand parent) {

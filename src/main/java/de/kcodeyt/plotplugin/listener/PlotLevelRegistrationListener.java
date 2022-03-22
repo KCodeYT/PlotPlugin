@@ -29,6 +29,9 @@ import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.util.PlotLevelRegistration;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @RequiredArgsConstructor
 public class PlotLevelRegistrationListener implements Listener {
 

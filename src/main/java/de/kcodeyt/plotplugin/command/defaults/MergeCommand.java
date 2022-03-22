@@ -27,6 +27,9 @@ import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class MergeCommand extends SubCommand {
 
     public MergeCommand(PlotPlugin plugin, PlotCommand parent) {

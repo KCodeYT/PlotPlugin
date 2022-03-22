@@ -27,6 +27,9 @@ import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 import de.kcodeyt.plotplugin.util.Utils;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class WarpCommand extends SubCommand {
 
     public WarpCommand(PlotPlugin plugin, PlotCommand parent) {

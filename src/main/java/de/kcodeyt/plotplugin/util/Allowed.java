@@ -18,6 +18,9 @@ package de.kcodeyt.plotplugin.util;
 
 import java.util.Objects;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class Allowed<C> {
 
     private final Object[] allowed;

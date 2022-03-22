@@ -16,6 +16,9 @@
 
 package de.kcodeyt.plotplugin.util;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public enum ShapeType {
 
     WALL,

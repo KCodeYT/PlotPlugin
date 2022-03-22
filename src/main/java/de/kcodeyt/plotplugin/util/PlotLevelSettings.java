@@ -27,6 +27,9 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Getter
 @Setter
 public class PlotLevelSettings {

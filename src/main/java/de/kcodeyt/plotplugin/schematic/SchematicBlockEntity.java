@@ -17,9 +17,15 @@
 package de.kcodeyt.plotplugin.schematic;
 
 import cn.nukkit.nbt.tag.CompoundTag;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-@Getter @Setter
+/**
+ * @author Kevims KCodeYT
+ */
+@Getter
 @ToString
 @EqualsAndHashCode
 @AllArgsConstructor

@@ -19,7 +19,11 @@ package de.kcodeyt.plotplugin.util;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+/**
+ * @author Kevims KCodeYT
+ */
+@Getter
+@Setter
 public class PlotLevelRegistration {
 
     private String levelName;

@@ -30,6 +30,9 @@ import de.kcodeyt.plotplugin.util.Utils;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class HomeCommand extends SubCommand {
 
     public HomeCommand(PlotPlugin plugin, PlotCommand parent) {

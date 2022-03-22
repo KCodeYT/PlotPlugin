@@ -18,6 +18,9 @@ package de.kcodeyt.plotplugin.util;
 
 import lombok.Value;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Value(staticConstructor = "of")
 public class PlotId {
 

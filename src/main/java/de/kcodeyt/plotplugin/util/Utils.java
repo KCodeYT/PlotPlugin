@@ -18,6 +18,9 @@ package de.kcodeyt.plotplugin.util;
 
 import java.util.UUID;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class Utils {
 
     public static final UUID UUID_EVERYONE = new UUID(0L, 0L);

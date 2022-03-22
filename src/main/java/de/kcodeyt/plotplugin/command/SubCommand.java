@@ -26,6 +26,9 @@ import lombok.Setter;
 
 import java.util.*;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Getter
 public abstract class SubCommand {
 

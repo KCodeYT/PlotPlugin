@@ -19,6 +19,9 @@ package de.kcodeyt.plotplugin.util.async;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class TaskHelper {
 
     private final List<Runnable> asyncTasks = new ArrayList<>();

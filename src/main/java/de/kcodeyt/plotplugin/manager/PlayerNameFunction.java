@@ -18,6 +18,9 @@ package de.kcodeyt.plotplugin.manager;
 
 import java.util.function.Consumer;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public interface PlayerNameFunction {
 
     void execute(String name, Consumer<String> nameConsumer);

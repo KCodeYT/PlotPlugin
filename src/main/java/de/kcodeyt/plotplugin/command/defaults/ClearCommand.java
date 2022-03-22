@@ -24,6 +24,9 @@ import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class ClearCommand extends SubCommand {
 
     public ClearCommand(PlotPlugin plugin, PlotCommand parent) {

@@ -26,6 +26,9 @@ import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.util.PlotLevelRegistration;
 import de.kcodeyt.plotplugin.util.Utils;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class GenerateCommand extends SubCommand {
 
     public GenerateCommand(PlotPlugin plugin, PlotCommand parent) {

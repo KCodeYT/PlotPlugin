@@ -22,6 +22,9 @@ import cn.nukkit.event.HandlerList;
 import de.kcodeyt.plotplugin.util.Plot;
 import lombok.Getter;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Getter
 public class PlotLeaveEvent extends PlotEvent implements Cancellable {
 

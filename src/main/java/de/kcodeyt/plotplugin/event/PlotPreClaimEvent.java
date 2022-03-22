@@ -24,6 +24,9 @@ import de.kcodeyt.plotplugin.util.Waiter;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Setter
 @Getter
 public class PlotPreClaimEvent extends PlotEvent implements Cancellable {

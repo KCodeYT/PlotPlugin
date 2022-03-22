@@ -20,6 +20,9 @@ import lombok.Getter;
 
 import java.util.Locale;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public enum TranslationKey {
 
     ACTIVATED,

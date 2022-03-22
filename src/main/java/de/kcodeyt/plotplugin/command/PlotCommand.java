@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class PlotCommand extends Command {
 
     private final PlotPlugin plugin;

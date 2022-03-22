@@ -21,6 +21,9 @@ import de.kcodeyt.plotplugin.util.Plot;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Getter
 @AllArgsConstructor
 abstract class PlotEvent extends Event {

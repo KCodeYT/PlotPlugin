@@ -21,6 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class PlayerManager {
 
     private final Map<String, String> nameMap;

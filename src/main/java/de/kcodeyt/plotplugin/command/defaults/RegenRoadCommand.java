@@ -27,6 +27,9 @@ import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.async.TaskExecutor;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class RegenRoadCommand extends SubCommand {
 
     public RegenRoadCommand(PlotPlugin plugin, PlotCommand parent) {

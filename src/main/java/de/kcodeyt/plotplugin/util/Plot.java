@@ -24,6 +24,9 @@ import lombok.Setter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Setter
 @Getter
 @EqualsAndHashCode(exclude = {"manager", "origin"})

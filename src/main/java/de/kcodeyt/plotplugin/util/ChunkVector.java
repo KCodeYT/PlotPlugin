@@ -20,7 +20,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter @Setter
+/**
+ * @author Kevims KCodeYT
+ */
+@Getter
+@Setter
 @AllArgsConstructor
 public class ChunkVector {
 

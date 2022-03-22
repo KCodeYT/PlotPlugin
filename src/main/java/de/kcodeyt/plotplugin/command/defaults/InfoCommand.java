@@ -26,6 +26,9 @@ import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 import de.kcodeyt.plotplugin.util.PlotConfig;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class InfoCommand extends SubCommand {
 
     public InfoCommand(PlotPlugin plugin, PlotCommand parent) {

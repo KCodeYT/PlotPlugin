@@ -22,6 +22,9 @@ import lombok.Getter;
 
 import java.io.File;
 
+/**
+ * @author Kevims KCodeYT
+ */
 @Getter
 public class PlotSchematic {
 

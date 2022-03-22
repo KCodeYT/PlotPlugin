@@ -24,6 +24,9 @@ import de.kcodeyt.plotplugin.lang.TranslationKey;
 
 import java.io.IOException;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class ReloadCommand extends SubCommand {
 
     public ReloadCommand(PlotPlugin plugin, PlotCommand parent) {

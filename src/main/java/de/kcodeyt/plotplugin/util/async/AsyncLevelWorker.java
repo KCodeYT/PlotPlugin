@@ -30,6 +30,9 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.function.Supplier;
 
+/**
+ * @author Kevims KCodeYT
+ */
 public class AsyncLevelWorker {
 
     private final Level level;
@@ -44,33 +47,16 @@ public class AsyncLevelWorker {
 
     public void queueFill(BlockVector3 startPos, BlockVector3 endPos, BlockState blockState) {
         this.queue.add(() -> {
-            final int xMin = Math.min(startPos.getX(), endPos.getX());
-            final int xMax = Math.max(startPos.getX(), endPos.getX());
-            final int yMin = Math.min(startPos.getY(), endPos.getY());
-            final int yMax = Math.min(255, Math.max(startPos.getY(), endPos.getY()));
-            final int zMin = Math.min(startPos.getZ(), endPos.getZ());
-            final int zMax = Math.max(startPos.getZ(), endPos.getZ());
-
-            for(int x = xMin; x <= xMax; x++) {
-                for(int z = zMin; z <= zMax; z++) {
+            for(int x = startPos.getX(); x <= endPos.getX(); x++) {
+                for(int z = startPos.getZ(); z <= endPos.getZ(); z++) {
                     final BaseFullChunk fullChunk = this.level.getChunk(x >> 4, z >> 4);
                     if(fullChunk == null) continue;
                     this.addChunk(fullChunk);
 
-                    for(int y = yMin; y <= yMax; y++)
+                    for(int y = startPos.getY(); y <= endPos.getY(); y++)
                         fullChunk.setBlockState(x & 15, y, z & 15, blockState);
                 }
             }
-        });
-    }
-
-    public void queueSetBlock(BlockVector3 blockVector3, BlockState blockState) {
-        this.queue.add(() -> {
-            final BaseFullChunk fullChunk = this.level.getChunk(blockVector3.getX() >> 4, blockVector3.getZ() >> 4);
-            if(fullChunk == null) return;
-            this.addChunk(fullChunk);
-
-            fullChunk.setBlockState(blockVector3.getX() & 15, blockVector3.getY(), blockVector3.getZ() & 15, blockState);
         });
     }
 
