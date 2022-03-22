@@ -88,7 +88,7 @@ public class PlotGenerator extends Generator {
         final ShapeType[] shapes = plotManager.getShapes(fullChunk.getX() << 4, fullChunk.getZ() << 4);
 
         this.preGenerateChunk(plotManager, fullChunk, shapes, GENERATE_ALLOWED, true);
-        final Schematic schematic = plotManager.getPlotChunk().getSchematic();
+        final Schematic schematic = plotManager.getPlotSchematic().getSchematic();
         if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, GENERATE_ALLOWED);
     }
 
@@ -121,7 +121,7 @@ public class PlotGenerator extends Generator {
 
         this.preGenerateChunk(plotManager, fullChunk, shapes, REGENERATE_ALLOWED, false);
 
-        final Schematic schematic = plotManager.getPlotChunk().getSchematic();
+        final Schematic schematic = plotManager.getPlotSchematic().getSchematic();
         if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, REGENERATE_ALLOWED);
 
         if(resend) {

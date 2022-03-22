@@ -97,8 +97,8 @@ public class SetRoadsCommand extends SubCommand {
             }
 
             if(schematic.isEmpty()) {
-                if(plotManager.getPlotChunk().getSchematic() != null) {
-                    plotManager.getPlotChunk().remove(plotManager.getPlotChunkFile());
+                if(plotManager.getPlotSchematic().getSchematic() != null) {
+                    plotManager.getPlotSchematic().remove(plotManager.getPlotSchematicFile());
                     player.sendMessage(this.translate("setroads-road-removed"));
                     return;
                 }
@@ -107,8 +107,8 @@ public class SetRoadsCommand extends SubCommand {
                 return;
             }
 
-            plotManager.getPlotChunk().init(schematic);
-            plotManager.getPlotChunk().save(plotManager.getPlotChunkFile());
+            plotManager.getPlotSchematic().init(schematic);
+            plotManager.getPlotSchematic().save(plotManager.getPlotSchematicFile());
             player.sendMessage(this.translate("setroads-finished"));
         });
 

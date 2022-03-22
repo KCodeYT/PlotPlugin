@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 @Setter
 @Getter
-@EqualsAndHashCode(exclude = {"plotManager", "origin"})
+@EqualsAndHashCode(exclude = {"manager", "origin"})
 public class Plot {
 
     public static Plot fromConfig(PlotManager plotManager, Map<String, Object> plotMap) {
@@ -40,8 +40,8 @@ public class Plot {
         return plot;
     }
 
-    public static PlotVector getPlotVectorFromConfig(Map<String, Object> plotMap) {
-        return new PlotVector((int) plotMap.getOrDefault("x", 0), (int) plotMap.getOrDefault("z", 0));
+    public static PlotId getPlotVectorFromConfig(Map<String, Object> plotMap) {
+        return PlotId.of((int) plotMap.getOrDefault("x", 0), (int) plotMap.getOrDefault("z", 0));
     }
 
     @SuppressWarnings("unchecked")
@@ -49,8 +49,8 @@ public class Plot {
         return o == null ? defaultValue : (C) o;
     }
 
-    private final PlotManager plotManager;
-    private final PlotVector plotVector;
+    private final PlotManager manager;
+    private final PlotId id;
 
     private UUID owner;
     private final List<UUID> helpers;
@@ -60,9 +60,9 @@ public class Plot {
     private final Boolean[] mergedPlots;
     private Plot origin;
 
-    public Plot(PlotManager plotManager, PlotVector plotVector, UUID owner) {
-        this.plotManager = plotManager;
-        this.plotVector = plotVector;
+    public Plot(PlotManager manager, PlotId id, UUID owner) {
+        this.manager = manager;
+        this.id = id;
 
         this.owner = owner;
         this.helpers = new ArrayList<>();
@@ -81,7 +81,7 @@ public class Plot {
 
     public boolean addHelper(UUID playerId) {
         if(!this.isHelper(playerId)) {
-            this.plotManager.getConnectedPlots(this).forEach(plot -> plot.addHelper0(playerId));
+            this.manager.getConnectedPlots(this).forEach(plot -> plot.addHelper0(playerId));
             return true;
         }
         return false;
@@ -93,7 +93,7 @@ public class Plot {
 
     public boolean removeHelper(UUID playerId) {
         final boolean wasHelper = this.isHelper(playerId);
-        this.plotManager.getConnectedPlots(this).forEach(plot -> plot.removeHelper0(playerId));
+        this.manager.getConnectedPlots(this).forEach(plot -> plot.removeHelper0(playerId));
         return wasHelper;
     }
 
@@ -111,7 +111,7 @@ public class Plot {
 
     public boolean denyPlayer(UUID playerId) {
         if(!this.isDenied(playerId)) {
-            this.plotManager.getConnectedPlots(this).forEach(plot -> plot.denyPlayer0(playerId));
+            this.manager.getConnectedPlots(this).forEach(plot -> plot.denyPlayer0(playerId));
             return true;
         }
         return false;
@@ -123,7 +123,7 @@ public class Plot {
 
     public boolean unDenyPlayer(UUID playerId) {
         final boolean wasDenied = this.isDenied(playerId);
-        this.plotManager.getConnectedPlots(this).forEach(plot -> plot.unDenyPlayer0(playerId));
+        this.manager.getConnectedPlots(this).forEach(plot -> plot.unDenyPlayer0(playerId));
         return wasDenied;
     }
 
@@ -136,7 +136,7 @@ public class Plot {
     }
 
     public void setConfigValue(String name, Object object) {
-        this.plotManager.getConnectedPlots(this).forEach(plot -> plot.setConfigValue0(name, object));
+        this.manager.getConnectedPlots(this).forEach(plot -> plot.setConfigValue0(name, object));
     }
 
     private void setConfigValue0(String name, Object object) {
@@ -160,13 +160,13 @@ public class Plot {
             case 7:
                 int i = direction - 4;
                 int i2 = 0;
-                return this.isMerged(i2) && this.isMerged(i) && this.plotManager.getPlotById(this.getRelative(i)).isMerged(i2) && this.plotManager.getPlotById(this.getRelative(i2)).isMerged(i);
+                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).isMerged(i);
             case 4:
             case 5:
             case 6:
                 i = direction - 4;
                 i2 = direction - 3;
-                return this.isMerged(i2) && this.isMerged(i) && this.plotManager.getPlotById(this.getRelative(i)).isMerged(i2) && this.plotManager.getPlotById(this.getRelative(i2)).isMerged(i);
+                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).isMerged(i);
         }
 
         return false;
@@ -176,19 +176,19 @@ public class Plot {
         this.mergedPlots[direction] = bool;
     }
 
-    public PlotVector getRelative(int direction) {
+    public PlotId getRelative(int direction) {
         return switch(direction) {
-            case 0 -> this.plotVector.add(0, -1);
-            case 1 -> this.plotVector.add(1, 0);
-            case 2 -> this.plotVector.add(0, 1);
-            case 3 -> this.plotVector.add(-1, 0);
-            default -> this.plotVector;
+            case 0 -> this.id.subtract(0, 1);
+            case 1 -> this.id.add(1, 0);
+            case 2 -> this.id.add(0, 1);
+            case 3 -> this.id.subtract(1, 0);
+            default -> this.id;
         };
     }
 
-    public int getRelativeDir(PlotVector other) {
-        final int x = this.plotVector.getX() - other.getX();
-        final int z = this.plotVector.getZ() - other.getZ();
+    public int getRelativeDir(PlotId other) {
+        final int x = this.id.getX() - other.getX();
+        final int z = this.id.getZ() - other.getZ();
 
         if(x == 0 && z == 1) return 0;
         if(x == -1 && z == 0) return 1;
@@ -203,10 +203,10 @@ public class Plot {
             return;
         }
 
-        final Set<Plot> connectedPlots = this.plotManager.getConnectedPlots(this);
+        final Set<Plot> connectedPlots = this.manager.getConnectedPlots(this);
         Plot min = this;
         for(Plot plot : connectedPlots) {
-            if(plot.plotVector.getZ() < min.plotVector.getZ() || plot.plotVector.getZ() == min.plotVector.getZ() && plot.plotVector.getX() < min.plotVector.getX())
+            if(plot.id.getZ() < min.id.getZ() || plot.id.getZ() == min.id.getZ() && plot.id.getX() < min.id.getX())
                 min = plot;
         }
 
@@ -221,7 +221,7 @@ public class Plot {
 
     @Override
     public String toString() {
-        return this.plotVector.toString();
+        return this.id.toString();
     }
 
     public boolean isDefault() {
@@ -237,8 +237,8 @@ public class Plot {
     public Map<String, Object> toMap() {
         final Map<String, Object> map = new HashMap<>();
 
-        map.put("x", this.plotVector.getX());
-        map.put("z", this.plotVector.getZ());
+        map.put("x", this.id.getX());
+        map.put("z", this.id.getZ());
         map.put("owner", this.owner == null ? "null" : this.owner.toString());
         map.put("helpers", this.helpers.stream().map(UUID::toString).collect(Collectors.toList()));
         map.put("denied", this.deniedPlayers.stream().map(UUID::toString).collect(Collectors.toList()));

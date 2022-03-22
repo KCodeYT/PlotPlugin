@@ -69,12 +69,12 @@ public class DenyCommand extends SubCommand {
             if(target != null || isEveryone) {
                 if(!isEveryone) {
                     final Plot plot1 = plotManager.getMergedPlot(target.getFloorX(), target.getFloorZ());
-                    if(plot1 != null && (plot.getPlotVector().equals(plot1.getPlotVector())) && !target.hasPermission("plot.admin.nodeny"))
+                    if(plot1 != null && (plot.getId().equals(plot1.getId())) && !target.hasPermission("plot.admin.nodeny"))
                         plotManager.teleportPlayerToPlot(target, plot1);
                 } else {
                     for(Player onlinePlayer : this.plugin.getServer().getOnlinePlayers().values()) {
                         final Plot plot1 = plotManager.getMergedPlot(onlinePlayer.getFloorX(), onlinePlayer.getFloorZ());
-                        if(!plot.isOwner(onlinePlayer.getUniqueId()) && !plot.isHelper(onlinePlayer.getUniqueId()) && plot1 != null && (plot.getPlotVector().equals(plot1.getPlotVector())) && !onlinePlayer.hasPermission("plot.admin.nodeny"))
+                        if(!plot.isOwner(onlinePlayer.getUniqueId()) && !plot.isHelper(onlinePlayer.getUniqueId()) && plot1 != null && (plot.getId().equals(plot1.getId())) && !onlinePlayer.hasPermission("plot.admin.nodeny"))
                             plotManager.teleportPlayerToPlot(onlinePlayer, plot1);
                     }
                 }

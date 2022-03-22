@@ -45,9 +45,9 @@ public class PlotManager {
 
     private final PlotPlugin plugin;
     @Getter
-    private final PlotChunk plotChunk;
+    private final PlotSchematic plotSchematic;
     @Getter
-    private final File plotChunkFile;
+    private final File plotSchematicFile;
 
     @Getter
     private final PlotLevelSettings levelSettings;
@@ -55,7 +55,7 @@ public class PlotManager {
     @Getter
     private final Config config;
 
-    private final List<Plot> plots;
+    private final Map<PlotId, Plot> plots;
 
     @Getter
     private Level level;
@@ -67,10 +67,10 @@ public class PlotManager {
 
     public PlotManager(PlotPlugin plugin, String levelName, PlotLevelSettings levelSettings) {
         this.plugin = plugin;
-        this.plotChunk = new PlotChunk(this);
-        this.plotChunk.init(this.plotChunkFile = new File(this.plugin.getDataFolder(), "schems/" + levelName + ".road"));
+        this.plotSchematic = new PlotSchematic(this);
+        this.plotSchematic.init(this.plotSchematicFile = new File(this.plugin.getDataFolder(), "schems/" + levelName + ".road"));
         this.config = new Config(new File(plugin.getDataFolder(), "worlds/" + levelName + ".yml"), Config.YAML);
-        this.plots = new ArrayList<>();
+        this.plots = new HashMap<>();
         this.loadAllPlots();
         this.savePlots();
         this.levelSettings = levelSettings;
@@ -95,24 +95,27 @@ public class PlotManager {
 
     public void savePlots() {
         final List<Map<String, Object>> plotMapList = new ArrayList<>();
-        for(Plot plot : this.plots)
+        for(Plot plot : this.plots.values())
             if(!plot.isDefault()) plotMapList.add(plot.toMap());
         this.config.set("plots", plotMapList);
         this.config.save();
     }
 
     private void loadAllPlots() {
-        for(Map<String, Object> plotMap : this.config.<List<Map<String, Object>>>get("plots", new ArrayList<>()))
-            this.plots.add(Plot.fromConfig(this, plotMap));
-        this.plots.forEach(Plot::recalculateOrigin);
+        for(Map<String, Object> plotMap : this.config.<List<Map<String, Object>>>get("plots", new ArrayList<>())) {
+            final Plot plot = Plot.fromConfig(this, plotMap);
+            this.plots.put(plot.getId(), plot);
+        }
+
+        this.plots.values().forEach(Plot::recalculateOrigin);
     }
 
     public void addPlot(Plot plot) {
-        this.plots.add(plot);
+        this.plots.put(plot.getId(), plot);
     }
 
     private void removePlot(Plot plot) {
-        this.plots.remove(plot);
+        this.plots.remove(plot.getId());
     }
 
     public Plot getMergedPlot(int x, int z) {
@@ -129,91 +132,79 @@ public class PlotManager {
     }
 
     public Plot getPlot(int x, int z) {
-        final PlotVector plotVector = this.getPlotVectorByPos(x, z);
-        if(plotVector == null) return null;
+        final PlotId plotId = this.getPlotIdByPos(x, z);
+        if(plotId == null) return null;
 
-        return this.getPlotById(plotVector.getX(), plotVector.getZ());
+        return this.getPlotById(plotId.getX(), plotId.getZ());
     }
 
-    private PlotVector getPlotVectorByPos(int x, int z) {
+    private PlotId getPlotIdByPos(int x, int z) {
         final int plotSize = this.levelSettings.getPlotSize();
         final int totalSize = plotSize + this.levelSettings.getRoadSize();
-        final int posX, posZ, difX, difZ;
+        final int idX, idZ, difX, difZ;
 
         if(x >= 0) {
-            posX = (int) Math.floor((float) x / totalSize);
+            idX = (int) Math.floor((float) x / totalSize);
             difX = x % totalSize;
         } else {
-            posX = (int) Math.ceil((float) (x - plotSize + 1) / totalSize);
+            idX = (int) Math.ceil((float) (x - plotSize + 1) / totalSize);
             difX = Math.abs((x - plotSize + 1) % totalSize);
         }
 
         if(z >= 0) {
-            posZ = (int) Math.floor((float) z / totalSize);
+            idZ = (int) Math.floor((float) z / totalSize);
             difZ = z % totalSize;
         } else {
-            posZ = (int) Math.ceil((float) (z - plotSize + 1) / totalSize);
+            idZ = (int) Math.ceil((float) (z - plotSize + 1) / totalSize);
             difZ = Math.abs((z - plotSize + 1) % totalSize);
         }
 
-        if((difX > plotSize - 1) || (difZ > plotSize - 1)) {
+        if((difX > plotSize - 1) || (difZ > plotSize - 1))
             return null;
-        }
-
-        return new PlotVector(posX, posZ);
+        return PlotId.of(idX, idZ);
     }
 
-    public Plot getPlotById(PlotVector plotVector) {
-        return this.getPlotByPlotPos(plotVector.getX(), plotVector.getZ());
+    public Plot getPlotById(PlotId plotId) {
+        return this.plots.computeIfAbsent(plotId, id -> new Plot(this, id, null));
     }
 
-    public Plot getPlotById(int x, int z) {
-        return this.getPlotByPlotPos(x, z);
-    }
-
-    private Plot getPlotByPlotPos(int plotX, int plotZ) {
-        final PlotVector plotVector = new PlotVector(plotX, plotZ);
-        for(Plot plot : this.plots)
-            if((plot.getPlotVector().equals(plotVector)))
-                return plot;
-
-        final Plot plot = new Plot(this, plotVector, null);
-        this.addPlot(plot);
-        return plot;
+    public Plot getPlotById(int plotX, int plotZ) {
+        return this.plots.computeIfAbsent(PlotId.of(plotX, plotZ), id -> new Plot(this, id, null));
     }
 
     private Vector3 getPosByPlot(Plot plot) {
-        return this.getPosByPlotVector(plot.getPlotVector());
+        return this.getPosByPlotId(plot.getId());
     }
 
-    private Vector3 getPosByPlotVector(PlotVector plotVector) {
+    private Vector3 getPosByPlotId(PlotId plotId) {
         final int totalSize = this.levelSettings.getTotalSize();
         return new Vector3(
-                totalSize * plotVector.getX(),
+                totalSize * plotId.getX(),
                 this.levelSettings.getGroundHeight() + 1,
-                totalSize * plotVector.getZ()
+                totalSize * plotId.getZ()
         );
     }
 
     public Plot getNextFreePlot() {
-        for(int i = 0; i < 100; i++) {
+        int i = 0;
+        while(true) {
             for(int x = -i; x <= i; x++) {
                 for(int z = -i; z <= i; z++) {
-                    if(x != i && z != i) continue;
+                    if((x != i && x != -i) && (z != i && z != -i)) continue;
 
                     final Plot plot;
                     if((plot = this.getPlotById(x, z)) != null && !plot.hasOwner())
                         return plot;
                 }
             }
-        }
 
-        return null;
+            i++;
+        }
     }
 
     public List<Plot> getPlotsByOwner(UUID ownerId) {
         final List<Plot> plots = new ArrayList<>();
-        for(Plot plot : this.plots)
+        for(Plot plot : this.plots.values())
             if(plot.isOwner(ownerId))
                 plots.add(plot);
         return plots;
@@ -278,11 +269,11 @@ public class PlotManager {
             for(Plot toMerge1 : plots) {
                 if(toMerge0.equals(toMerge1)) continue;
 
-                relativeDir = toMerge0.getRelativeDir(toMerge1.getPlotVector());
+                relativeDir = toMerge0.getRelativeDir(toMerge1.getId());
                 if(relativeDir != -1 && !toMerge0.isMerged(relativeDir))
                     this.mergePlot(toMerge0, toMerge1, whenDone);
 
-                relativeDir = toMerge1.getRelativeDir(toMerge0.getPlotVector());
+                relativeDir = toMerge1.getRelativeDir(toMerge0.getId());
                 if(relativeDir != -1 && !toMerge1.isMerged(relativeDir))
                     this.mergePlot(toMerge1, toMerge0, whenDone);
             }
@@ -329,8 +320,8 @@ public class PlotManager {
     }
 
     private void mergePlot(Plot lesserPlot, Plot greaterPlot, WhenDone whenDone) {
-        if(lesserPlot.getPlotVector().getX() == greaterPlot.getPlotVector().getX()) {
-            if(lesserPlot.getPlotVector().getZ() > greaterPlot.getPlotVector().getZ()) {
+        if(lesserPlot.getId().getX() == greaterPlot.getId().getX()) {
+            if(lesserPlot.getId().getZ() > greaterPlot.getId().getZ()) {
                 final Plot tmp = lesserPlot;
                 lesserPlot = greaterPlot;
                 greaterPlot = tmp;
@@ -348,7 +339,7 @@ public class PlotManager {
                     this.removeRoadSouthEast(this.getPlotById(below.getRelative(0)), whenDone);
             }
         } else {
-            if(lesserPlot.getPlotVector().getX() > greaterPlot.getPlotVector().getX()) {
+            if(lesserPlot.getId().getX() > greaterPlot.getId().getX()) {
                 Plot tmp = lesserPlot;
                 lesserPlot = greaterPlot;
                 greaterPlot = tmp;
@@ -465,8 +456,8 @@ public class PlotManager {
         if(plot.hasNoMerges()) return;
 
         final Set<Plot> plots = this.getConnectedPlots(plot);
-        final List<PlotVector> vectors = new ArrayList<>();
-        for(Plot current : plots) vectors.add(current.getPlotVector());
+        final List<PlotId> vectors = new ArrayList<>();
+        for(Plot current : plots) vectors.add(current.getId());
 
         if(finishDone != null) finishDone.addTask();
 
@@ -493,13 +484,13 @@ public class PlotManager {
         whenDone.start();
     }
 
-    private void finishPlotUnlink(List<PlotVector> plots) {
+    private void finishPlotUnlink(List<PlotId> plots) {
         final BlockState claimBlock = BlockState.of(this.levelSettings.getClaimPlotBlockId(), this.levelSettings.getClaimPlotBlockMeta());
         final BlockState wallBlock = BlockState.of(this.levelSettings.getWallPlotBlockId(), this.levelSettings.getWallPlotBlockMeta());
         final BlockState wallFillingBlock = BlockState.of(this.levelSettings.getWallFillingBlockId(), this.levelSettings.getWallFillingBlockMeta());
 
-        for(PlotVector plotVector : plots) {
-            final Plot plot = this.getPlotById(plotVector);
+        for(PlotId plotId : plots) {
+            final Plot plot = this.getPlotById(plotId);
             this.changeBorder(plot, plot.hasOwner() ? claimBlock : wallBlock);
             this.changeWall(plot, wallFillingBlock);
             plot.recalculateOrigin();
@@ -571,7 +562,7 @@ public class PlotManager {
                 this.levelSettings.getRoadState()
         );
 
-        if(this.plotChunk.getSchematic() != null)
+        if(this.plotSchematic.getSchematic() != null)
             asyncLevelWorker.addTask(() -> this.pasteRoadSchematic(new Vector2(xStart, zStart), new Vector2(xEnd, zEnd), new Vector2(0, 2), new Vector2(0, -1)));
 
         asyncLevelWorker.runQueue(whenDone);
@@ -615,7 +606,7 @@ public class PlotManager {
                 this.levelSettings.getRoadState()
         );
 
-        if(this.plotChunk.getSchematic() != null)
+        if(this.plotSchematic.getSchematic() != null)
             asyncLevelWorker.addTask(() -> this.pasteRoadSchematic(new Vector2(xStart, zStart), new Vector2(xEnd, zEnd), new Vector2(2, 1), new Vector2(-1, 0)));
 
         asyncLevelWorker.runQueue(whenDone);
@@ -653,7 +644,7 @@ public class PlotManager {
                 this.levelSettings.getRoadState()
         );
 
-        if(this.plotChunk.getSchematic() != null)
+        if(this.plotSchematic.getSchematic() != null)
             asyncLevelWorker.addTask(() -> this.pasteRoadSchematic(new Vector2(xStart, zStart), new Vector2(xEnd, zEnd), new Vector2(1, 1), new Vector2(-1, -1)));
 
         asyncLevelWorker.runQueue(whenDone);
@@ -666,7 +657,7 @@ public class PlotManager {
 
     private BlockVector3 getBottomPlotPos(Plot plot) {
         final int totalSize = this.levelSettings.getTotalSize();
-        return new BlockVector3(plot.getPlotVector().getX() * totalSize - 1, 0, plot.getPlotVector().getZ() * totalSize - 1);
+        return new BlockVector3(plot.getId().getX() * totalSize - 1, 0, plot.getId().getZ() * totalSize - 1);
     }
 
     private BlockVector3 getExtendedTopPlotPos(Plot plot) {
@@ -872,7 +863,7 @@ public class PlotManager {
                                         blockEntity.close();
                                 } catch(Exception e) {
                                     this.plugin.getLogger().warning(
-                                            "Could not close block entity in plot " + plot.getPlotVector() + " and position x: " + floorX + " z:" + floorZ,
+                                            "Could not close block entity in plot " + plot.getId() + " and position x: " + floorX + " z:" + floorZ,
                                             e
                                     );
                                 }
@@ -886,7 +877,7 @@ public class PlotManager {
                                         entity.close();
                                 } catch(Exception e) {
                                     this.plugin.getLogger().warning(
-                                            "Could not close entity in plot " + plot.getPlotVector() + " and position x: " + floorX + " z:" + floorZ,
+                                            "Could not close entity in plot " + plot.getId() + " and position x: " + floorX + " z:" + floorZ,
                                             e
                                     );
                                 }

@@ -16,32 +16,25 @@
 
 package de.kcodeyt.plotplugin.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Value;
 
-@Getter
-@AllArgsConstructor
-public class PlotVector {
+@Value(staticConstructor = "of")
+public class PlotId {
 
-    private final int x;
-    private final int z;
+    int x;
+    int z;
 
-    public PlotVector add(int x, int z) {
-        return new PlotVector(this.x + x, this.z + z);
+    public PlotId add(int x, int z) {
+        return new PlotId(this.x + x, this.z + z);
     }
 
-    public PlotVector subtract(int x, int z) {
+    public PlotId subtract(int x, int z) {
         return this.add(-x, -z);
     }
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "(" + this.x + ";" + this.z + ")";
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof PlotVector && ((PlotVector) obj).x == this.x && ((PlotVector) obj).z == this.z;
+        return this.x + ";" + this.z;
     }
 
 }

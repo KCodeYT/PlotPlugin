@@ -23,12 +23,12 @@ import lombok.Getter;
 import java.io.File;
 
 @Getter
-public class PlotChunk {
+public class PlotSchematic {
 
     private final PlotManager plotManager;
     private Schematic schematic;
 
-    public PlotChunk(PlotManager plotManager) {
+    public PlotSchematic(PlotManager plotManager) {
         this.plotManager = plotManager;
     }
 

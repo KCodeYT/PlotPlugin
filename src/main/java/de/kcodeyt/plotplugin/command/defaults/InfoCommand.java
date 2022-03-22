@@ -50,7 +50,7 @@ public class InfoCommand extends SubCommand {
             plot.getDeniedPlayers().forEach(deniedPlayer -> denied.append(this.plugin.getCorrectName(deniedPlayer)).append("§r§7, ").append(deniedLastColors));
 
             player.sendMessage(this.translate("info-title"));
-            player.sendMessage(this.translate("info-id", plot.getPlotVector().getX() + ";" + plot.getPlotVector().getZ()));
+            player.sendMessage(this.translate("info-id", plot.getId()));
             player.sendMessage(this.translate("info-owner", plotOwner));
             player.sendMessage(this.translate("info-helpers", (helpers.length() > 0 ? helpers.substring(0, helpers.length() - 2 - helpersLastColors.length()) : "§c-----")));
             player.sendMessage(this.translate("info-denied", (denied.length() > 0 ? denied.substring(0, denied.length() - 2 - deniedLastColors.length()) : "§c-----")));
