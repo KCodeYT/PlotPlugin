@@ -25,6 +25,7 @@ import cn.nukkit.event.player.PlayerChatEvent;
 import cn.nukkit.item.Item;
 import cn.nukkit.level.Level;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.util.PlotLevelRegistration;
 import lombok.RequiredArgsConstructor;
 
@@ -151,73 +152,77 @@ public class PlotLevelRegistrationListener implements Listener {
                 this.plugin.getLevelRegistrationMap().remove(player);
                 Level level;
                 if((level = this.plugin.createLevel(registration.getLevelName(), registration.isDefaultLevel(), registration.getLevelSettings())) != null) {
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-success" + (registration.isDefaultLevel() ? "-default" : ""), registration.getLevelName()));
+                    player.sendMessage(this.plugin.getLanguage().translate(
+                            player,
+                            registration.isDefaultLevel() ? TranslationKey.GENERATE_SUCCESS_DEFAULT : TranslationKey.GENERATE_SUCCESS,
+                            registration.getLevelName())
+                    );
                     player.teleport(level.getSafeSpawn(level.getGenerator().getSpawn()));
                 } else {
-                    player.sendMessage(this.plugin.getLanguage().translate("generate-failure", registration.getLevelName()));
+                    player.sendMessage(this.plugin.getLanguage().translate(player, TranslationKey.GENERATE_FAILURE, registration.getLevelName()));
                 }
                 return;
             }
 
             registration.setState(states[nextStage]);
             switch(registration.getState()) {
-                case PLOT_BIOME -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-plot-biome",
+                case PLOT_BIOME -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_PLOT_BIOME,
                         registration.getLevelSettings().getPlotBiome()
                 ));
-                case ROAD_BIOME -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-road-biome",
+                case ROAD_BIOME -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_ROAD_BIOME,
                         registration.getLevelSettings().getRoadBiome()));
-                case FIRST_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-first-layer",
+                case FIRST_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_FIRST_LAYER,
                         registration.getLevelSettings().getFirstLayerBlockId() + ":" +
                                 registration.getLevelSettings().getFirstLayerBlockMeta()
                 ));
-                case MIDDLE_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-middle-layer",
+                case MIDDLE_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_MIDDLE_LAYER,
                         registration.getLevelSettings().getMiddleLayerBlockId() + ":" +
                                 registration.getLevelSettings().getMiddleLayerBlockMeta()
                 ));
-                case LAST_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-last-layer",
+                case LAST_LAYER -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_LAST_LAYER,
                         registration.getLevelSettings().getLastLayerBlockId() + ":" +
                                 registration.getLevelSettings().getLastLayerBlockMeta()
                 ));
-                case ROAD -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-road",
+                case ROAD -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_ROAD,
                         registration.getLevelSettings().getRoadBlockId() + ":" +
                                 registration.getLevelSettings().getRoadBlockMeta()
                 ));
-                case ROAD_FILLING -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-road-filling",
+                case ROAD_FILLING -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_ROAD_FILLING,
                         registration.getLevelSettings().getRoadFillingBlockId() + ":" +
                                 registration.getLevelSettings().getRoadFillingBlockMeta()
                 ));
-                case WALL_UNOWNED -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-wall-unowned",
+                case WALL_UNOWNED -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_WALL_UNOWNED,
                         registration.getLevelSettings().getWallPlotBlockId() + ":" +
                                 registration.getLevelSettings().getWallPlotBlockMeta()
                 ));
-                case WALL_CLAIMED -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-wall-claimed",
+                case WALL_CLAIMED -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_WALL_CLAIMED,
                         registration.getLevelSettings().getClaimPlotBlockId() + ":" +
                                 registration.getLevelSettings().getClaimPlotBlockMeta()
                 ));
-                case WALL_FILLING -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-wall-filling",
+                case WALL_FILLING -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_WALL_FILLING,
                         registration.getLevelSettings().getWallFillingBlockId() + ":" +
                                 registration.getLevelSettings().getWallFillingBlockMeta()
                 ));
-                case PLOT_SIZE -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-plot-size",
+                case PLOT_SIZE -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_PLOT_SIZE,
                         registration.getLevelSettings().getPlotSize()
                 ));
-                case ROAD_SIZE -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-road-size",
+                case ROAD_SIZE -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_ROAD_SIZE,
                         registration.getLevelSettings().getRoadSize()
                 ));
-                case GROUND_HEIGHT -> player.sendMessage(this.plugin.getLanguage().translate(
-                        "generate-ground-height",
+                case GROUND_HEIGHT -> player.sendMessage(this.plugin.getLanguage().translate(player,
+                        TranslationKey.GENERATE_GROUND_HEIGHT,
                         registration.getLevelSettings().getGroundHeight()
                 ));
             }

@@ -20,7 +20,9 @@ import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
@@ -28,8 +30,8 @@ import java.util.UUID;
 
 public class UndenyCommand extends SubCommand {
 
-    public UndenyCommand(PlotPlugin plugin) {
-        super(plugin, "undeny");
+    public UndenyCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "undeny");
         this.addParameter(CommandParameter.newType("player", CommandParamType.TARGET));
     }
 
@@ -38,7 +40,7 @@ public class UndenyCommand extends SubCommand {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate("no-plot"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
             return false;
         }
 
@@ -46,26 +48,26 @@ public class UndenyCommand extends SubCommand {
         final UUID targetId = this.plugin.getUniqueIdByName(targetName);
 
         if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.undeny")) {
-            player.sendMessage(this.translate("player-self"));
+            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
             return false;
         }
 
         if(targetName.trim().isEmpty() || targetId == null) {
-            player.sendMessage(this.translate("no-player"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
             return false;
         }
 
         if(!player.hasPermission("plot.command.admin.undeny") && !plot.isOwner(player.getUniqueId())) {
-            player.sendMessage(this.translate("no-plot-owner"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }
 
         if(plot.unDenyPlayer(targetId)) {
             plotManager.savePlots();
-            player.sendMessage(this.translate("undeny-success", this.plugin.getCorrectName(targetId)));
+            player.sendMessage(this.translate(player, TranslationKey.UNDENY_SUCCESS, this.plugin.getCorrectName(targetId)));
             return true;
         } else {
-            player.sendMessage(this.translate("undeny-failure", this.plugin.getCorrectName(targetId)));
+            player.sendMessage(this.translate(player, TranslationKey.UNDENY_FAILURE, this.plugin.getCorrectName(targetId)));
             return false;
         }
     }

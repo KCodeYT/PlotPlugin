@@ -20,7 +20,9 @@ import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
@@ -28,8 +30,8 @@ import java.util.UUID;
 
 public class SetOwnerCommand extends SubCommand {
 
-    public SetOwnerCommand(PlotPlugin plugin) {
-        super(plugin, "setowner");
+    public SetOwnerCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "setowner");
         this.addParameter(CommandParameter.newType("player", CommandParamType.TARGET));
     }
 
@@ -38,7 +40,7 @@ public class SetOwnerCommand extends SubCommand {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate("no-plot"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
             return false;
         }
 
@@ -47,25 +49,25 @@ public class SetOwnerCommand extends SubCommand {
         final Player target = targetId != null ? player.getServer().getPlayer(targetId).orElse(null) : null;
 
         if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.setowner")) {
-            player.sendMessage(this.translate("player-self"));
+            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
             return false;
         }
 
         if(targetName.trim().isEmpty() || targetId == null) {
-            player.sendMessage(this.translate("no-player"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
             return false;
         }
 
         if(!player.hasPermission("plot.command.admin.setowner") && !plot.isOwner(player.getUniqueId())) {
-            player.sendMessage(this.translate("no-plot-owner"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }
 
         plot.setOwner(targetId);
         plotManager.savePlots();
         if(target != null)
-            target.sendMessage(this.translate("setowner-success-target", plot.getId()));
-        player.sendMessage(this.translate("setowner-success", this.plugin.getCorrectName(targetId)));
+            target.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
+        player.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS, this.plugin.getCorrectName(targetId)));
         return true;
     }
 

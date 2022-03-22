@@ -49,6 +49,7 @@ generate-success-default=&6&lCitybuild &8&l» &r&aDie Welt mit dem Namen &6{0}&r
 generate-success=&6&lCitybuild &8&l» &r&aDie Welt mit dem Namen &6{0}&r&a erstellt und sie nicht als Standard Plotwelt registriert!
 generate-failure=&6&lCitybuild &8&l» &r&cDie Welt konnte nicht erstellt werden!
 reload-success=&6&lCitybuild &8&l» &r&aDie Welten und Sprachen konfigurationen wurden erfolgreich neu geladen!
+reload-failure=&6&lCitybuild &8&l» &r&cEs ist etwas schiefgelaufen, beim neuladen der Konfigurationen!
 home-success-own=&6&lCitybuild &8&l» &r&aDu wurdest zu deinem Grundstück teleportiert!
 home-success=&6&lCitybuild &8&l» &r&aDu wurdest zu dem Grundstück von &r&6{0}&r&a teleportiert!
 home-failure-denied=&6&lCitybuild &8&l» &r&cDu bist auf dem Grundstück gesperrt!

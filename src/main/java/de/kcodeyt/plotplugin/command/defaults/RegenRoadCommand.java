@@ -20,15 +20,17 @@ import cn.nukkit.Player;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.format.FullChunk;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.generator.PlotGenerator;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.async.TaskExecutor;
 
 public class RegenRoadCommand extends SubCommand {
 
-    public RegenRoadCommand(PlotPlugin plugin) {
-        super(plugin, "regenroad");
+    public RegenRoadCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "regenroad");
         this.setPermission("plot.command.admin.regenroad");
     }
 
@@ -36,7 +38,7 @@ public class RegenRoadCommand extends SubCommand {
     public boolean execute(Player player, String[] args) {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         if(plotManager == null) {
-            player.sendMessage(this.translate("no-plot-world"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
             return false;
         }
 

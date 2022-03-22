@@ -19,16 +19,18 @@ package de.kcodeyt.plotplugin.command.defaults;
 import cn.nukkit.Player;
 import cn.nukkit.math.BlockFace;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.event.PlotMergeEvent;
 import de.kcodeyt.plotplugin.event.PlotPreMergeEvent;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
 public class MergeCommand extends SubCommand {
 
-    public MergeCommand(PlotPlugin plugin) {
-        super(plugin, "merge");
+    public MergeCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "merge");
         this.setPermission("plot.command.admin.merge");
     }
 
@@ -37,7 +39,7 @@ public class MergeCommand extends SubCommand {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate("no-plot"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
             return false;
         }
 
@@ -47,7 +49,7 @@ public class MergeCommand extends SubCommand {
 
         if(player.hasPermission("plot.command.admin.merge") || (plot.isOwner(player.getUniqueId()) && rPlot.isOwner(player.getUniqueId()))) {
             if(plot.isMerged(dir)) {
-                player.sendMessage(this.translate("merge-failure-already-merged"));
+                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_ALREADY_MERGED));
                 return false;
             }
 
@@ -56,17 +58,17 @@ public class MergeCommand extends SubCommand {
             if(plotPreMergeEvent.isCancelled()) return false;
 
             if(!plotManager.startMerge(plot, dir)) {
-                player.sendMessage(this.translate("merge-failure-no-plots-found"));
+                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_NO_PLOTS_FOUND));
                 return false;
             }
 
             final PlotMergeEvent plotMergeEvent = new PlotMergeEvent(player, plot, dir);
             this.plugin.getServer().getPluginManager().callEvent(plotMergeEvent);
 
-            player.sendMessage(this.translate("merge-success"));
+            player.sendMessage(this.translate(player, TranslationKey.MERGE_SUCCESS));
             return true;
         } else {
-            player.sendMessage(this.translate("merge-failure-owner"));
+            player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_OWNER));
             return false;
         }
     }

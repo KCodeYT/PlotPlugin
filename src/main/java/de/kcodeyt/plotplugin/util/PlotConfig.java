@@ -16,6 +16,7 @@
 
 package de.kcodeyt.plotplugin.util;
 
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -25,6 +26,8 @@ public class PlotConfig {
 
     private final Object defaultValue;
     private final String saveName;
+    private final TranslationKey infoTranslationKey;
+    private final TranslationKey defaultTranslationKey;
 
     public Object get(Plot plot) {
         Object o = plot.getConfigValue(this.saveName);
@@ -52,9 +55,9 @@ public class PlotConfig {
     @AllArgsConstructor
     public enum ConfigEnum {
 
-        DAMAGE(new PlotConfig(false, "damage")),
-        PVE(new PlotConfig(false, "pve")),
-        PVP(new PlotConfig(false, "pvp"));
+        DAMAGE(new PlotConfig(false, "damage", TranslationKey.INFO_DAMAGE, TranslationKey.CONFIG_DAMAGE)),
+        PVE(new PlotConfig(false, "pve", TranslationKey.INFO_PVE, TranslationKey.CONFIG_PVE)),
+        PVP(new PlotConfig(false, "pvp", TranslationKey.INFO_PVP, TranslationKey.CONFIG_PVP));
 
         private final PlotConfig config;
 

@@ -18,16 +18,18 @@ package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.event.PlotClaimEvent;
 import de.kcodeyt.plotplugin.event.PlotPreClaimEvent;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
 public class ClaimCommand extends SubCommand {
 
-    public ClaimCommand(PlotPlugin plugin) {
-        super(plugin, "claim", "c");
+    public ClaimCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "claim", "c");
     }
 
     @Override
@@ -35,7 +37,7 @@ public class ClaimCommand extends SubCommand {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate("no-plot"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
             return false;
         }
 
@@ -53,11 +55,11 @@ public class ClaimCommand extends SubCommand {
                 final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
                 this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
 
-                player.sendMessage(this.translate("claim-success"));
+                player.sendMessage(this.translate(player, TranslationKey.CLAIM_SUCCESS));
             });
             return true;
         } else {
-            player.sendMessage(this.translate("claim-failure"));
+            player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE));
             return false;
         }
     }

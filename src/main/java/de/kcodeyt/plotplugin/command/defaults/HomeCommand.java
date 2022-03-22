@@ -20,7 +20,9 @@ import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 import de.kcodeyt.plotplugin.util.Utils;
@@ -30,8 +32,8 @@ import java.util.UUID;
 
 public class HomeCommand extends SubCommand {
 
-    public HomeCommand(PlotPlugin plugin) {
-        super(plugin, "home", "h", "visit", "v");
+    public HomeCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "home", "h", "visit", "v");
         this.addParameter(CommandParameter.newType("id", true, CommandParamType.INT));
     }
 
@@ -39,7 +41,7 @@ public class HomeCommand extends SubCommand {
     public boolean execute(Player player, String[] args) {
         PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel())) == null) {
-            player.sendMessage(this.translate("no-plot-world"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
             return false;
         }
 
@@ -50,7 +52,7 @@ public class HomeCommand extends SubCommand {
         final UUID targetId = this.plugin.getUniqueIdByName(targetName);
 
         if(targetName.isEmpty() || targetId == null) {
-            player.sendMessage(this.translate("no-player"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
             return false;
         }
 
@@ -59,27 +61,27 @@ public class HomeCommand extends SubCommand {
             if(plotId < plots.size()) {
                 final Plot plot = plots.get(plotId);
                 final boolean canPerform = (!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.nodeny");
-                if(canPerform)
+                if(canPerform) {
+                    player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS, this.plugin.getCorrectName(targetId)));
                     plotManager.teleportPlayerToPlot(player, plots.get(plotId));
-                if(targetName.equalsIgnoreCase(player.getName()))
-                    player.sendMessage(this.translate("home-success-own"));
-                else if(canPerform)
-                    player.sendMessage(this.translate("home-success", this.plugin.getCorrectName(targetId)));
-                else
-                    player.sendMessage(this.translate("home-failure-denied"));
+                } else if(targetName.equalsIgnoreCase(player.getName())) {
+                    player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS_OWN));
+                    plotManager.teleportPlayerToPlot(player, plots.get(plotId));
+                } else
+                    player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_DENIED));
                 return true;
             } else {
                 if(targetName.equalsIgnoreCase(player.getName()))
-                    player.sendMessage(this.translate("home-failure-own-id", plotId + 1));
+                    player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_OWN_ID, plotId + 1));
                 else
-                    player.sendMessage(this.translate("home-failure-id", this.plugin.getCorrectName(targetId), plotId + 1));
+                    player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_ID, this.plugin.getCorrectName(targetId), plotId + 1));
                 return false;
             }
         } else {
             if(targetName.equalsIgnoreCase(player.getName()))
-                player.sendMessage(this.translate("home-failure-own"));
+                player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_OWN));
             else
-                player.sendMessage(this.translate("home-failure", this.plugin.getCorrectName(targetId)));
+                player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE, this.plugin.getCorrectName(targetId)));
             return false;
         }
     }

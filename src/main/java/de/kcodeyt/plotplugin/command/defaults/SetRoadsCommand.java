@@ -23,8 +23,10 @@ import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.level.Level;
 import cn.nukkit.math.Vector3;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.generator.PlotGenerator;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.schematic.Schematic;
 import de.kcodeyt.plotplugin.schematic.SchematicBlock;
@@ -37,8 +39,8 @@ import java.util.Map;
 
 public class SetRoadsCommand extends SubCommand {
 
-    public SetRoadsCommand(PlotPlugin plugin) {
-        super(plugin, "setroads");
+    public SetRoadsCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "setroads");
         this.setPermission("plot.command.admin.setroads");
     }
 
@@ -46,7 +48,7 @@ public class SetRoadsCommand extends SubCommand {
     public boolean execute(Player player, String[] args) {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         if(plotManager == null) {
-            player.sendMessage(this.translate("no-plot-world"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
             return false;
         }
 
@@ -99,20 +101,20 @@ public class SetRoadsCommand extends SubCommand {
             if(schematic.isEmpty()) {
                 if(plotManager.getPlotSchematic().getSchematic() != null) {
                     plotManager.getPlotSchematic().remove(plotManager.getPlotSchematicFile());
-                    player.sendMessage(this.translate("setroads-road-removed"));
+                    player.sendMessage(this.translate(player, TranslationKey.SETROADS_ROAD_REMOVED));
                     return;
                 }
 
-                player.sendMessage(this.translate("setroads-no-road-found"));
+                player.sendMessage(this.translate(player, TranslationKey.SETROADS_NO_ROAD_FOUND));
                 return;
             }
 
             plotManager.getPlotSchematic().init(schematic);
             plotManager.getPlotSchematic().save(plotManager.getPlotSchematicFile());
-            player.sendMessage(this.translate("setroads-finished"));
+            player.sendMessage(this.translate(player, TranslationKey.SETROADS_FINISHED));
         });
 
-        player.sendMessage(this.translate("setroads-starting"));
+        player.sendMessage(this.translate(player, TranslationKey.SETROADS_STARTING));
         return true;
     }
 

@@ -51,6 +51,7 @@ generate-success-default=&6&lCitybuild &8&l» &r&aThe world with name &6{0}&r&a 
 generate-success=&6&lCitybuild &8&l» &r&aThe world with name &6{0}&r&a was created and has not been set as default plot world!
 generate-failure=&6&lCitybuild &8&l» &r&cThe world could not be created!
 reload-success=&6&lCitybuild &8&l» &r&aThe worlds and language configurations have been successfully reloaded!
+reload-failure=&6&lCitybuild &8&l» &r&cSomething went wrong, whilst reloading the configurations!
 home-success-own=&6&lCitybuild &8&l» &r&aYou were teleported to your plot!
 home-success=&6&lCitybuild &8&l» &r&aYou were teleported to the plot of &r&6{0}&r&a!
 home-failure-denied=&6&lCitybuild &8&l» &r&cYou are banned from this plot!

@@ -32,6 +32,7 @@ import cn.nukkit.item.Item;
 import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.event.PlotEnterEvent;
 import de.kcodeyt.plotplugin.event.PlotLeaveEvent;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 import de.kcodeyt.plotplugin.util.PlotConfig;
@@ -174,9 +175,9 @@ public class PlotListener implements Listener {
                     }
 
                     if(!plotTo.hasOwner())
-                        player.sendActionBar(this.plugin.getLanguage().translate("plot-popup-no-owner"));
+                        player.sendActionBar(this.plugin.getLanguage().translate(player, TranslationKey.PLOT_POPUP_NO_OWNER));
                     else
-                        player.sendActionBar(this.plugin.getLanguage().translate("plot-popup-owner", this.plugin.getCorrectName(plotTo.getOwner())));
+                        player.sendActionBar(this.plugin.getLanguage().translate(player, TranslationKey.PLOT_POPUP_OWNER, this.plugin.getCorrectName(plotTo.getOwner())));
                 }
             } else if(plotFrom != null) {
                 final PlotLeaveEvent plotLeaveEvent = new PlotLeaveEvent(player, plotFrom);

@@ -18,14 +18,16 @@ package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
 public class ClearCommand extends SubCommand {
 
-    public ClearCommand(PlotPlugin plugin) {
-        super(plugin, "clear");
+    public ClearCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "clear");
     }
 
     @Override
@@ -33,16 +35,16 @@ public class ClearCommand extends SubCommand {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate("no-plot"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
             return false;
         }
 
         if((player.hasPermission("plot.command.admin.clear") || plot.isOwner(player.getUniqueId())) && plotManager.clearPlot(plot)) {
             plotManager.savePlots();
-            player.sendMessage(this.translate("clear-success"));
+            player.sendMessage(this.translate(player, TranslationKey.CLEAR_SUCCESS));
             return true;
         } else {
-            player.sendMessage(this.translate("clear-failure"));
+            player.sendMessage(this.translate(player, TranslationKey.CLEAR_FAILURE));
             return false;
         }
     }

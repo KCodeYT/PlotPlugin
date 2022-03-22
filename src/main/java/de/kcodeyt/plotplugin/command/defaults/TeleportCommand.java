@@ -25,7 +25,9 @@ import cn.nukkit.form.response.FormResponse;
 import cn.nukkit.form.response.FormResponseSimple;
 import cn.nukkit.form.window.FormWindowSimple;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 
 import java.util.HashMap;
@@ -36,8 +38,8 @@ public class TeleportCommand extends SubCommand {
 
     private final Map<Player, Map<Integer, Consumer<FormResponse>>> map;
 
-    public TeleportCommand(PlotPlugin plugin) {
-        super(plugin, "teleport", "tp");
+    public TeleportCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "teleport", "tp");
         this.setPermission("plot.command.admin.teleport");
 
         this.map = new HashMap<>();
@@ -61,7 +63,7 @@ public class TeleportCommand extends SubCommand {
             this.map.put(player, map = new HashMap<>());
 
         final Map<String, PlotManager> plotManagers = this.plugin.getPlotManagerMap();
-        final FormWindowSimple window = new FormWindowSimple(this.translate("teleport-form-title"), "");
+        final FormWindowSimple window = new FormWindowSimple(this.translate(player, TranslationKey.TELEPORT_FORM_TITLE), "");
 
         for(String levelName : plotManagers.keySet())
             window.addButton(new ElementButton(levelName));
@@ -72,7 +74,7 @@ public class TeleportCommand extends SubCommand {
                 if(plotManager == null) return;
 
                 player.teleport(plotManager.getLevel().getSpawnLocation());
-                player.sendMessage(this.translate("teleport-success", plotManager.getLevel().getFolderName()));
+                player.sendMessage(this.translate(player, TranslationKey.TELEPORT_SUCCESS, plotManager.getLevel().getFolderName()));
             }
         });
         return false;

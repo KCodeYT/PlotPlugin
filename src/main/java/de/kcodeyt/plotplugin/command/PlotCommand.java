@@ -21,6 +21,7 @@ import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
 import de.kcodeyt.plotplugin.PlotPlugin;
 import de.kcodeyt.plotplugin.command.defaults.*;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -36,27 +37,27 @@ public class PlotCommand extends Command {
         this.plugin = plugin;
         this.subCommands = new LinkedHashSet<>();
 
-        this.subCommands.add(new AddHelperCommand(this.plugin));
-        this.subCommands.add(new AutoCommand(this.plugin));
-        this.subCommands.add(new ClaimCommand(this.plugin));
-        this.subCommands.add(new ClearCommand(this.plugin));
-        this.subCommands.add(new DenyCommand(this.plugin));
-        this.subCommands.add(new DisposeCommand(this.plugin));
-        this.subCommands.add(new GenerateCommand(this.plugin));
-        this.subCommands.add(new HomeCommand(this.plugin));
-        this.subCommands.add(new InfoCommand(this.plugin));
-        this.subCommands.add(new MergeCommand(this.plugin));
-        this.subCommands.add(new RegenAllRoadsCommand(this.plugin));
-        this.subCommands.add(new RegenRoadCommand(this.plugin));
-        this.subCommands.add(new ReloadCommand(this.plugin));
-        this.subCommands.add(new RemoveHelperCommand(this.plugin));
-        this.subCommands.add(new SetOwnerCommand(this.plugin));
-        this.subCommands.add(new SetRoadsCommand(this.plugin));
-        this.subCommands.add(new SettingCommand(this.plugin));
-        this.subCommands.add(new TeleportCommand(this.plugin));
-        this.subCommands.add(new UndenyCommand(this.plugin));
-        this.subCommands.add(new UnlinkCommand(this.plugin));
-        this.subCommands.add(new WarpCommand(this.plugin));
+        this.subCommands.add(new AddHelperCommand(this.plugin, this));
+        this.subCommands.add(new AutoCommand(this.plugin, this));
+        this.subCommands.add(new ClaimCommand(this.plugin, this));
+        this.subCommands.add(new ClearCommand(this.plugin, this));
+        this.subCommands.add(new DenyCommand(this.plugin, this));
+        this.subCommands.add(new DisposeCommand(this.plugin, this));
+        this.subCommands.add(new GenerateCommand(this.plugin, this));
+        this.subCommands.add(new HomeCommand(this.plugin, this));
+        this.subCommands.add(new InfoCommand(this.plugin, this));
+        this.subCommands.add(new MergeCommand(this.plugin, this));
+        this.subCommands.add(new RegenAllRoadsCommand(this.plugin, this));
+        this.subCommands.add(new RegenRoadCommand(this.plugin, this));
+        this.subCommands.add(new ReloadCommand(this.plugin, this));
+        this.subCommands.add(new RemoveHelperCommand(this.plugin, this));
+        this.subCommands.add(new SetOwnerCommand(this.plugin, this));
+        this.subCommands.add(new SetRoadsCommand(this.plugin, this));
+        this.subCommands.add(new SettingCommand(this.plugin, this));
+        this.subCommands.add(new TeleportCommand(this.plugin, this));
+        this.subCommands.add(new UndenyCommand(this.plugin, this));
+        this.subCommands.add(new UnlinkCommand(this.plugin, this));
+        this.subCommands.add(new WarpCommand(this.plugin, this));
     }
 
     @Override
@@ -75,15 +76,20 @@ public class PlotCommand extends Command {
                 return subCommand.execute(player, args);
         }
 
-        player.sendMessage(this.translate("help-title"));
+        player.sendMessage(this.translate(player, TranslationKey.HELP_TITLE));
         for(SubCommand subCommand : this.subCommands)
-            if(subCommand.hasPermission(player)) player.sendMessage(this.translate("help-" + subCommand.getName()));
-        player.sendMessage(this.translate("help-end"));
+            if(subCommand.hasPermission(player))
+                player.sendMessage(this.translate(player, subCommand.getHelpTranslationKey()));
+        player.sendMessage(this.translate(player, TranslationKey.HELP_END));
         return true;
     }
 
-    private String translate(String message) {
-        return this.plugin.getLanguage().translate(message);
+    protected String translate(Player player, TranslationKey key) {
+        return this.plugin.getLanguage().translate(player, key);
+    }
+
+    protected String translate(Player player, TranslationKey key, Object... params) {
+        return this.plugin.getLanguage().translate(player, key, params);
     }
 
 }

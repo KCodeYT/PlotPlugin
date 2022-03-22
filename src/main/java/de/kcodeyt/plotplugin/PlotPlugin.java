@@ -29,7 +29,7 @@ import de.kcodeyt.plotplugin.listener.PlotListener;
 import de.kcodeyt.plotplugin.manager.PlayerManager;
 import de.kcodeyt.plotplugin.manager.PlayerNameFunction;
 import de.kcodeyt.plotplugin.manager.PlotManager;
-import de.kcodeyt.plotplugin.util.Language;
+import de.kcodeyt.plotplugin.lang.Language;
 import de.kcodeyt.plotplugin.util.PlotLevelRegistration;
 import de.kcodeyt.plotplugin.util.PlotLevelSettings;
 import de.kcodeyt.plotplugin.util.Utils;
@@ -39,6 +39,7 @@ import lombok.Setter;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -85,8 +86,9 @@ public class PlotPlugin extends PluginBase {
         this.playersConfig = new Config(new File(this.getDataFolder(), "players.yml"), Config.YAML);
 
         final File langDir = new File(this.getDataFolder(), "lang");
-        if(!langDir.exists()) {
-            if(!langDir.mkdirs()) {
+        final File[] files = langDir.listFiles();
+        if(!langDir.exists() || files == null || files.length == 0) {
+            if(!langDir.exists() && !langDir.mkdirs()) {
                 this.getLogger().error("Could not create the language directory for this plugin!");
                 return;
             }
@@ -94,8 +96,10 @@ public class PlotPlugin extends PluginBase {
             try(final InputStreamReader inputReader = new InputStreamReader(this.getResource("lang"));
                 final BufferedReader bufferedReader = new BufferedReader(inputReader)) {
                 String line;
-                while((line = bufferedReader.readLine()) != null)
+                while((line = bufferedReader.readLine()) != null) {
+                    System.out.println("LINE: " + line);
                     this.saveResource("lang/" + line);
+                }
             } catch(Exception e) {
                 this.getLogger().error("Could not find the language resources of this plugin!", e);
                 return;
@@ -105,31 +109,20 @@ public class PlotPlugin extends PluginBase {
         this.saveResource("config.yml");
         final Config config = this.getConfig();
 
-        if(!config.exists("lang")) {
-            config.set("lang", DEFAULT_LANGUAGE);
+        if(!config.exists("default_lang")) {
+            config.set("default_lang", DEFAULT_LANGUAGE);
             config.save();
         }
 
-        final String language = config.getString("lang");
-        File languageFile = new File(langDir, language + ".txt");
+        try {
+            final String defaultLang = config.getString("default_lang");
 
-        if(!languageFile.exists()) {
-            if(!language.equals(DEFAULT_LANGUAGE)) {
-                languageFile = new File(langDir, DEFAULT_LANGUAGE + ".txt");
-
-                if(!languageFile.exists()) {
-                    this.getLogger().error("Could not find the default language file!");
-                    return;
-                }
-            } else {
-                this.getLogger().error("Could not find the default language file!");
-            }
-
+            this.language = new Language(langDir, defaultLang);
+            this.getLogger().info("This plugin is using the " + this.language.getDefaultLang() + " as default language file!");
+        } catch(IOException e) {
+            this.getLogger().error(e.getMessage(), e);
             return;
         }
-
-        this.language = new Language(languageFile);
-        this.getLogger().info("This plugin is using the " + languageFile.getName() + " language file!");
 
         this.plotManagerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         this.levelRegistrationMap = new HashMap<>();

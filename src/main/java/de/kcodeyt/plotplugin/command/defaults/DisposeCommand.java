@@ -18,14 +18,16 @@ package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
 public class DisposeCommand extends SubCommand {
 
-    public DisposeCommand(PlotPlugin plugin) {
-        super(plugin, "dispose", "reset");
+    public DisposeCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "dispose", "reset");
     }
 
     @Override
@@ -33,17 +35,17 @@ public class DisposeCommand extends SubCommand {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate("no-plot"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
             return false;
         }
 
         if(player.hasPermission("plot.command.admin.dispose") || plot.isOwner(player.getUniqueId())) {
             plotManager.disposePlot(plot);
             plotManager.savePlots();
-            player.sendMessage(this.translate("dispose-success"));
+            player.sendMessage(this.translate(player, TranslationKey.DISPOSE_SUCCESS));
             return true;
         } else {
-            player.sendMessage(this.translate("dispose-failure"));
+            player.sendMessage(this.translate(player, TranslationKey.DISPOSE_FAILURE));
             return false;
         }
     }

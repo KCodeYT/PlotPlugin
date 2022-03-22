@@ -18,21 +18,31 @@ package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
+
+import java.io.IOException;
 
 public class ReloadCommand extends SubCommand {
 
-    public ReloadCommand(PlotPlugin plugin) {
-        super(plugin, "reload");
+    public ReloadCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "reload");
         this.setPermission("plot.command.admin.reload");
     }
 
     @Override
     public boolean execute(Player player, String[] args) {
-        this.plugin.reloadPlots();
-        this.plugin.getLanguage().reload();
-        player.sendMessage(this.translate("reload-success"));
-        return true;
+        try {
+            this.plugin.reloadPlots();
+            this.plugin.getLanguage().reload();
+            player.sendMessage(this.translate(player, TranslationKey.RELOAD_SUCCESS));
+            return true;
+        } catch(IOException e) {
+            this.plugin.getLogger().warning("Could not reload configurations!", e);
+            player.sendMessage(this.translate(player, TranslationKey.RELOAD_FAILURE));
+            return false;
+        }
     }
 
 }

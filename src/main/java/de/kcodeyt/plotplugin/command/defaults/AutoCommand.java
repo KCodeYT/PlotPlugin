@@ -18,23 +18,25 @@ package de.kcodeyt.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
 import de.kcodeyt.plotplugin.event.PlotClaimEvent;
 import de.kcodeyt.plotplugin.event.PlotPreClaimEvent;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 
 public class AutoCommand extends SubCommand {
 
-    public AutoCommand(PlotPlugin plugin) {
-        super(plugin, "auto", "a");
+    public AutoCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "auto", "a");
     }
 
     @Override
     public boolean execute(Player player, String[] args) {
         PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel())) == null) {
-            player.sendMessage(this.translate("no-plot-world"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
             return false;
         }
 
@@ -57,11 +59,11 @@ public class AutoCommand extends SubCommand {
                 this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
 
                 finalPlotManager.teleportPlayerToPlot(player, plot);
-                player.sendMessage(this.translate("auto-success"));
+                player.sendMessage(this.translate(player, TranslationKey.AUTO_SUCCESS));
             });
             return true;
         } else {
-            player.sendMessage(this.translate("auto-failure"));
+            player.sendMessage(this.translate(player, TranslationKey.AUTO_FAILURE));
             return false;
         }
     }

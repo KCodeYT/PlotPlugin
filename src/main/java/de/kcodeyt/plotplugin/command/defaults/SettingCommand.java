@@ -19,7 +19,9 @@ package de.kcodeyt.plotplugin.command.defaults;
 import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 import de.kcodeyt.plotplugin.util.PlotConfig;
@@ -29,8 +31,8 @@ import java.util.Arrays;
 
 public class SettingCommand extends SubCommand {
 
-    public SettingCommand(PlotPlugin plugin) {
-        super(plugin, "setting", "config");
+    public SettingCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "setting", "config");
         this.addParameter(CommandParameter.newEnum("name", new String[]{"damage", "pve", "pvp"}));
     }
 
@@ -39,7 +41,7 @@ public class SettingCommand extends SubCommand {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate("no-plot"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
             return false;
         }
 
@@ -47,7 +49,7 @@ public class SettingCommand extends SubCommand {
         args = args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0];
 
         if(!player.hasPermission("plot.command.admin.config") && !plot.isOwner(player.getUniqueId())) {
-            player.sendMessage(this.translate("no-plot-owner"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }
 
@@ -56,29 +58,29 @@ public class SettingCommand extends SubCommand {
                 final boolean damageValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.DAMAGE.getConfig().set(plot, damageValue);
                 plotManager.savePlots();
-                player.sendMessage(this.translate("config-damage", this.translate(damageValue ? "activated" : "deactivated")));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_DAMAGE, this.translate(player, damageValue ? TranslationKey.ACTIVATED : TranslationKey.DEACTIVATED)));
                 return true;
             }
             case "pve" -> {
                 final boolean pveValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.PVE.getConfig().set(plot, pveValue);
                 plotManager.savePlots();
-                player.sendMessage(this.translate("config-pve", this.translate(pveValue ? "activated" : "deactivated")));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_PVE, this.translate(player, pveValue ? TranslationKey.ACTIVATED : TranslationKey.DEACTIVATED)));
                 return false;
             }
             case "pvp" -> {
                 final boolean pvpValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.PVP.getConfig().set(plot, pvpValue);
                 plotManager.savePlots();
-                player.sendMessage(this.translate("config-pvp", this.translate(pvpValue ? "activated" : "deactivated")));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_PVP, this.translate(player, pvpValue ? TranslationKey.ACTIVATED : TranslationKey.DEACTIVATED)));
                 return false;
             }
             default -> {
-                player.sendMessage(this.translate("config-help-title"));
-                player.sendMessage(this.translate("config-help-damage"));
-                player.sendMessage(this.translate("config-help-pve"));
-                player.sendMessage(this.translate("config-help-pvp"));
-                player.sendMessage(this.translate("config-help-end"));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_HELP_TITLE));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_HELP_DAMAGE));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_HELP_PVE));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_HELP_PVP));
+                player.sendMessage(this.translate(player, TranslationKey.CONFIG_HELP_END));
                 return false;
             }
         }

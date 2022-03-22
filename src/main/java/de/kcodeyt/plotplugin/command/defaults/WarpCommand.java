@@ -20,15 +20,17 @@ import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.command.PlotCommand;
 import de.kcodeyt.plotplugin.command.SubCommand;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import de.kcodeyt.plotplugin.manager.PlotManager;
 import de.kcodeyt.plotplugin.util.Plot;
 import de.kcodeyt.plotplugin.util.Utils;
 
 public class WarpCommand extends SubCommand {
 
-    public WarpCommand(PlotPlugin plugin) {
-        super(plugin, "warp", "w");
+    public WarpCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "warp", "w");
         this.addParameter(CommandParameter.newType("id", CommandParamType.STRING));
     }
 
@@ -36,7 +38,7 @@ public class WarpCommand extends SubCommand {
     public boolean execute(Player player, String[] args) {
         PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel())) == null) {
-            player.sendMessage(this.translate("no-plot-world"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
             return false;
         }
 
@@ -50,24 +52,24 @@ public class WarpCommand extends SubCommand {
         final Integer plotZ = plotIds.length != 0 ? Utils.parseIntegerWithNull(plotIds[1]) : null;
 
         if(plotX == null || plotZ == null) {
-            player.sendMessage(this.translate("no-plot-id"));
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_ID));
             return false;
         }
 
         final Plot plot = plotManager.getPlotById(plotX, plotZ);
 
         if(!plot.hasOwner() && !player.hasPermission("plot.command.warp.free")) {
-            player.sendMessage(this.translate("warp-failure-free"));
+            player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE_FREE));
             return false;
         }
 
         if((!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.nodeny")) {
             plotManager.teleportPlayerToPlot(player, plot);
-            player.sendMessage(this.translate("warp-success", (plotX + ";" + plotZ)));
+            player.sendMessage(this.translate(player, TranslationKey.WARP_SUCCESS, (plotX + ";" + plotZ)));
             return true;
         }
 
-        player.sendMessage(this.translate("warp-failure"));
+        player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE));
         return false;
     }
 

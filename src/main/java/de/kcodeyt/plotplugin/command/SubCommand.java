@@ -19,21 +19,21 @@ package de.kcodeyt.plotplugin.command;
 import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParameter;
 import de.kcodeyt.plotplugin.PlotPlugin;
+import de.kcodeyt.plotplugin.lang.TranslationKey;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 @Getter
 public abstract class SubCommand {
 
     protected final PlotPlugin plugin;
+    protected final PlotCommand parent;
 
     private final String name;
+    private final TranslationKey helpTranslationKey;
     private final Set<String> aliases;
 
     private final Set<CommandParameter> parameters;
@@ -41,13 +41,15 @@ public abstract class SubCommand {
     @Setter(AccessLevel.PROTECTED)
     private String permission;
 
-    protected SubCommand(PlotPlugin plugin, String name, String alias) {
-        this(plugin, name, new String[]{alias});
+    protected SubCommand(PlotPlugin plugin, PlotCommand parent, String name, String alias) {
+        this(plugin, parent, name, new String[]{alias});
     }
 
-    protected SubCommand(PlotPlugin plugin, String name, String... aliases) {
+    protected SubCommand(PlotPlugin plugin, PlotCommand parent, String name, String... aliases) {
         this.plugin = plugin;
+        this.parent = parent;
         this.name = name;
+        this.helpTranslationKey = TranslationKey.valueOf("HELP_" + this.name.toUpperCase(Locale.ROOT));
         this.aliases = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         this.aliases.add(name);
         this.aliases.addAll(Arrays.asList(aliases));
@@ -64,12 +66,12 @@ public abstract class SubCommand {
         this.parameters.add(parameter);
     }
 
-    protected String translate(String message) {
-        return this.plugin.getLanguage().translate(message);
+    protected String translate(Player player, TranslationKey key) {
+        return this.parent.translate(player, key);
     }
 
-    protected String translate(String message, Object... params) {
-        return this.plugin.getLanguage().translate(message, params);
+    protected String translate(Player player, TranslationKey key, Object... params) {
+        return this.parent.translate(player, key, params);
     }
 
 }
