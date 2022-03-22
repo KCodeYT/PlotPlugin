@@ -273,6 +273,16 @@ public class PlotListener implements Listener {
     }
 
     @EventHandler
+    public void onUpdate(BlockUpdateEvent event) {
+        final Block block = event.getBlock();
+        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel());
+        if(plotManager == null) return;
+
+        final Plot plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
+        if(plot == null) event.setCancelled(true);
+    }
+
+    @EventHandler
     public void onPiston(BlockPistonEvent event) {
         final Block block = event.getBlock();
         final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel());
