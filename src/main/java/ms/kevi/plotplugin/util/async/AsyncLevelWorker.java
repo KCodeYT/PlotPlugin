@@ -32,6 +32,7 @@ import java.util.function.Supplier;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class AsyncLevelWorker {
 

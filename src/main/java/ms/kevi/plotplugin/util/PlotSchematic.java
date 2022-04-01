@@ -24,6 +24,7 @@ import java.io.File;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @Getter
 public class PlotSchematic {

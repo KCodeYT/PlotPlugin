@@ -23,6 +23,7 @@ import lombok.Getter;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class PlotClearEvent extends PlotEvent implements Cancellable {
 

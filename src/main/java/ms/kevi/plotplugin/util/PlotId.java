@@ -20,6 +20,7 @@ import lombok.Value;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @Value(staticConstructor = "of")
 public class PlotId {

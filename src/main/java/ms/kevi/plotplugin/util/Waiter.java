@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class Waiter {
 

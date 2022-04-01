@@ -28,6 +28,7 @@ import ms.kevi.plotplugin.util.Plot;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class ClaimCommand extends SubCommand {
 

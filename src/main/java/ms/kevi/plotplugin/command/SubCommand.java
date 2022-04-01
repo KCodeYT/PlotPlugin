@@ -28,6 +28,7 @@ import java.util.*;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @Getter
 public abstract class SubCommand {

@@ -42,6 +42,7 @@ import java.util.zip.Inflater;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @ToString
 @EqualsAndHashCode

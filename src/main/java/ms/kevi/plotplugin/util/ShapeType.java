@@ -18,6 +18,7 @@ package ms.kevi.plotplugin.util;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public enum ShapeType {
 

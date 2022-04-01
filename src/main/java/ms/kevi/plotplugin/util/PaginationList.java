@@ -22,6 +22,7 @@ import java.util.List;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class PaginationList<T> extends AbstractList<List<T>> {
 

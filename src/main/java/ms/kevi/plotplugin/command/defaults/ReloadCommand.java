@@ -26,6 +26,7 @@ import java.io.IOException;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class ReloadCommand extends SubCommand {
 

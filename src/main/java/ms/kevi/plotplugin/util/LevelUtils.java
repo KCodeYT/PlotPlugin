@@ -21,6 +21,7 @@ import lombok.experimental.UtilityClass;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @UtilityClass
 public class LevelUtils {

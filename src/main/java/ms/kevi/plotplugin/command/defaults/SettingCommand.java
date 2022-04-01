@@ -31,6 +31,7 @@ import java.util.Arrays;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class SettingCommand extends SubCommand {
 

@@ -44,6 +44,7 @@ import java.util.*;
  * caves and cliffs update.
  *
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class PlotGenerator extends Generator {
 

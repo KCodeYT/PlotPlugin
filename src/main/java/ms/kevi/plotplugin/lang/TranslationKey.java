@@ -22,6 +22,7 @@ import java.util.Locale;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public enum TranslationKey {
 

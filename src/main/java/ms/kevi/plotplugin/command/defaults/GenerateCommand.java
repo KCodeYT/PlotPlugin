@@ -28,6 +28,7 @@ import ms.kevi.plotplugin.util.Utils;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class GenerateCommand extends SubCommand {
 

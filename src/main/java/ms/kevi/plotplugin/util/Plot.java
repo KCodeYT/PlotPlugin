@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @Setter
 @Getter

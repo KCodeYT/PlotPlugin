@@ -36,6 +36,7 @@ import java.util.function.Consumer;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class TeleportCommand extends SubCommand {
 

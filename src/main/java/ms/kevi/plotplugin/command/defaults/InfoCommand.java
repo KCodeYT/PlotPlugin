@@ -28,6 +28,7 @@ import ms.kevi.plotplugin.util.PlotConfig;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 public class InfoCommand extends SubCommand {
 

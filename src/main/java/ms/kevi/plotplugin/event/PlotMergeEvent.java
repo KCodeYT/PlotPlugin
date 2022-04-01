@@ -23,6 +23,7 @@ import lombok.Getter;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @Getter
 public class PlotMergeEvent extends PlotEvent {

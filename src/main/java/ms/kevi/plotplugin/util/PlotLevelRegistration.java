@@ -21,6 +21,7 @@ import lombok.Setter;
 
 /**
  * @author Kevims KCodeYT
+ * @version 1.0
  */
 @Getter
 @Setter
