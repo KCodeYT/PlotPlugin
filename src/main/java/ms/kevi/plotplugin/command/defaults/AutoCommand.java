@@ -37,39 +37,38 @@ public class AutoCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel())) == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
-            return false;
-        }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel()).join()) == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
+                return;
+            }
 
-        final Plot plot = plotManager.getNextFreePlot();
+            final Plot plot = plotManager.getNextFreePlot().join();
 
-        if(plot != null) {
-            final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, true, true);
-            this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
-            final PlotManager finalPlotManager = plotManager;
-            plotPreClaimEvent.getWaiter().addTask(() -> {
-                if(plotPreClaimEvent.isCancelled())
-                    return;
+            if(plot != null) {
+                final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, true, true);
+                this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
+                final PlotManager finalPlotManager = plotManager;
+                plotPreClaimEvent.getWaiter().addTask(() -> {
+                    if(plotPreClaimEvent.isCancelled()) return;
 
-                plot.setOwner(player.getUniqueId());
-                if(plotPreClaimEvent.isBorderChanging())
-                    finalPlotManager.changeBorder(plot, finalPlotManager.getLevelSettings().getClaimPlotState());
-                finalPlotManager.savePlots();
+                    plot.setOwner(player.getUniqueId());
+                    if(plotPreClaimEvent.isBorderChanging())
+                        finalPlotManager.changeBorder(plot, finalPlotManager.getLevelSettings().getClaimPlotState()).join();
+                    finalPlotManager.addPlot(plot).join();
+                    finalPlotManager.savePlots();
 
-                final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, true);
-                this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
+                    final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, true);
+                    this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
 
-                finalPlotManager.teleportPlayerToPlot(player, plot);
-                player.sendMessage(this.translate(player, TranslationKey.AUTO_SUCCESS));
-            });
-            return true;
-        } else {
-            player.sendMessage(this.translate(player, TranslationKey.AUTO_FAILURE));
-            return false;
-        }
+                    finalPlotManager.teleportPlayerToPlot(player, plot);
+                    player.sendMessage(this.translate(player, TranslationKey.AUTO_SUCCESS));
+                });
+            } else {
+                player.sendMessage(this.translate(player, TranslationKey.AUTO_FAILURE));
+            }
+        });
     }
 
 }

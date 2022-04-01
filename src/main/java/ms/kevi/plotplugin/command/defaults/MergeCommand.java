@@ -24,7 +24,6 @@ import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.event.PlotMergeEvent;
 import ms.kevi.plotplugin.event.PlotPreMergeEvent;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
 
 /**
@@ -39,42 +38,41 @@ public class MergeCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        final Plot plot;
-        if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
-            return false;
-        }
-
-        final BlockFace blockFace = player.getDirection();
-        final int dir = blockFace == BlockFace.NORTH ? 0 : blockFace == BlockFace.EAST ? 1 : blockFace == BlockFace.SOUTH ? 2 : blockFace == BlockFace.WEST ? 3 : -1;
-        final Plot rPlot = plotManager.getPlotById(plot.getRelative(dir));
-
-        if(player.hasPermission("plot.command.admin.merge") || (plot.isOwner(player.getUniqueId()) && rPlot.isOwner(player.getUniqueId()))) {
-            if(plot.isMerged(dir)) {
-                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_ALREADY_MERGED));
-                return false;
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            final Plot plot;
+            if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ()).join()) == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
+                return;
             }
 
-            final PlotPreMergeEvent plotPreMergeEvent = new PlotPreMergeEvent(player, plot, dir);
-            this.plugin.getServer().getPluginManager().callEvent(plotPreMergeEvent);
-            if(plotPreMergeEvent.isCancelled()) return false;
+            final BlockFace blockFace = player.getDirection();
+            final int dir = blockFace == BlockFace.NORTH ? 0 : blockFace == BlockFace.EAST ? 1 : blockFace == BlockFace.SOUTH ? 2 : blockFace == BlockFace.WEST ? 3 : -1;
+            final Plot rPlot = plotManager.getPlotById(plot.getRelative(dir)).join();
 
-            if(!plotManager.startMerge(plot, dir)) {
-                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_NO_PLOTS_FOUND));
-                return false;
+            if(player.hasPermission("plot.command.admin.merge") || (plot.isOwner(player.getUniqueId()) && rPlot.isOwner(player.getUniqueId()))) {
+                if(plot.isMerged(dir)) {
+                    player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_ALREADY_MERGED));
+                    return;
+                }
+
+                final PlotPreMergeEvent plotPreMergeEvent = new PlotPreMergeEvent(player, plot, dir);
+                this.plugin.getServer().getPluginManager().callEvent(plotPreMergeEvent);
+                if(plotPreMergeEvent.isCancelled()) return;
+
+                if(!plotManager.startMerge(plot, dir).join()) {
+                    player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_NO_PLOTS_FOUND));
+                    return;
+                }
+
+                final PlotMergeEvent plotMergeEvent = new PlotMergeEvent(player, plot, dir);
+                this.plugin.getServer().getPluginManager().callEvent(plotMergeEvent);
+
+                player.sendMessage(this.translate(player, TranslationKey.MERGE_SUCCESS));
+            } else {
+                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_OWNER));
             }
-
-            final PlotMergeEvent plotMergeEvent = new PlotMergeEvent(player, plot, dir);
-            this.plugin.getServer().getPluginManager().callEvent(plotMergeEvent);
-
-            player.sendMessage(this.translate(player, TranslationKey.MERGE_SUCCESS));
-            return true;
-        } else {
-            player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_OWNER));
-            return false;
-        }
+        });
     }
 
 }

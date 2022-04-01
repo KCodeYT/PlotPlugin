@@ -23,7 +23,6 @@ import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.event.PlotClaimEvent;
 import ms.kevi.plotplugin.event.PlotPreClaimEvent;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
 
 /**
@@ -37,35 +36,35 @@ public class ClaimCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        final Plot plot;
-        if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
-            return false;
-        }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            final Plot plot;
+            if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ()).join()) == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
+                return;
+            }
 
-        if(!plot.hasOwner()) {
-            final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true);
-            this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
-            plotPreClaimEvent.getWaiter().addTask(() -> {
-                if(plotPreClaimEvent.isCancelled()) return;
+            if(!plot.hasOwner()) {
+                final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true);
+                this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
+                plotPreClaimEvent.getWaiter().addTask(() -> {
+                    if(plotPreClaimEvent.isCancelled()) return;
 
-                plot.setOwner(player.getUniqueId());
-                if(plotPreClaimEvent.isBorderChanging())
-                    plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
-                plotManager.savePlots();
+                    plot.setOwner(player.getUniqueId());
+                    if(plotPreClaimEvent.isBorderChanging())
+                        plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
+                    plotManager.addPlot(plot).join();
+                    plotManager.savePlots();
 
-                final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
-                this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
+                    final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
+                    this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
 
-                player.sendMessage(this.translate(player, TranslationKey.CLAIM_SUCCESS));
-            });
-            return true;
-        } else {
-            player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE));
-            return false;
-        }
+                    player.sendMessage(this.translate(player, TranslationKey.CLAIM_SUCCESS));
+                });
+            } else {
+                player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE));
+            }
+        });
     }
 
 }

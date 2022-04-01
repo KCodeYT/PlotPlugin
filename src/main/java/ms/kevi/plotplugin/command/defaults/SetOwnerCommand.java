@@ -23,7 +23,6 @@ import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
 
 import java.util.UUID;
@@ -40,39 +39,41 @@ public class SetOwnerCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        final Plot plot;
-        if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
-            return false;
-        }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            final Plot plot;
+            if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ()).join()) == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
+                return;
+            }
 
-        final String targetName = (args.length > 0 ? args[0] : "").trim();
-        final UUID targetId = this.plugin.getUniqueIdByName(targetName);
-        final Player target = targetId != null ? player.getServer().getPlayer(targetId).orElse(null) : null;
+            final String targetName = (args.length > 0 ? args[0] : "").trim();
+            final UUID targetId = this.plugin.getUniqueIdByName(targetName);
+            final Player target = targetId != null ? player.getServer().getPlayer(targetId).orElse(null) : null;
 
-        if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.setowner")) {
-            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
-            return false;
-        }
+            if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.setowner")) {
+                player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
+                return;
+            }
 
-        if(targetName.trim().isEmpty() || targetId == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
-            return false;
-        }
+            if(targetName.trim().isEmpty() || targetId == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
+                return;
+            }
 
-        if(!player.hasPermission("plot.command.admin.setowner") && !plot.isOwner(player.getUniqueId())) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
-            return false;
-        }
+            if(!player.hasPermission("plot.command.admin.setowner") && !plot.isOwner(player.getUniqueId())) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
+                return;
+            }
 
-        plot.setOwner(targetId);
-        plotManager.savePlots();
-        if(target != null)
-            target.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
-        player.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS, this.plugin.getCorrectName(targetId)));
-        return true;
+            plot.setOwner(targetId);
+            plotManager.addPlot(plot).join();
+            plotManager.savePlots();
+
+            if(target != null)
+                target.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
+            player.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS, this.plugin.getCorrectName(targetId)));
+        });
     }
 
 }

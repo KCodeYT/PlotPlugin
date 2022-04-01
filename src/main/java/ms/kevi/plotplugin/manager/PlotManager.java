@@ -29,17 +29,17 @@ import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.math.BlockVector3;
 import cn.nukkit.math.Vector2;
 import cn.nukkit.math.Vector3;
-import cn.nukkit.utils.Config;
+import lombok.Getter;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.event.PlotClearEvent;
 import ms.kevi.plotplugin.generator.PlotGenerator;
+import ms.kevi.plotplugin.util.*;
 import ms.kevi.plotplugin.util.async.AsyncLevelWorker;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
-import lombok.Getter;
-import ms.kevi.plotplugin.util.*;
 
-import java.io.File;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Kevims KCodeYT
@@ -50,16 +50,14 @@ public class PlotManager {
     private final PlotPlugin plugin;
     @Getter
     private final PlotSchematic plotSchematic;
+
     @Getter
-    private final File plotSchematicFile;
+    private final String levelName;
 
     @Getter
     private final PlotLevelSettings levelSettings;
 
-    @Getter
-    private final Config config;
-
-    private final Map<PlotId, Plot> plots;
+    private final Map<PlotId, Plot> plotsCache;
 
     @Getter
     private Level level;
@@ -71,19 +69,10 @@ public class PlotManager {
 
     public PlotManager(PlotPlugin plugin, String levelName, PlotLevelSettings levelSettings) {
         this.plugin = plugin;
-        this.plotSchematic = new PlotSchematic(this);
-        this.plotSchematic.init(this.plotSchematicFile = new File(this.plugin.getDataFolder(), "schems/" + levelName + ".road"));
-        this.config = new Config(new File(plugin.getDataFolder(), "worlds/" + levelName + ".yml"), Config.YAML);
-        this.plots = new HashMap<>();
-        this.loadAllPlots();
-        this.savePlots();
+        this.levelName = levelName;
+        this.plotSchematic = new PlotSchematic(this.plugin, this);
+        this.plotsCache = Collections.synchronizedMap(new ConcurrentHashMap<>());
         this.levelSettings = levelSettings;
-        if(!this.config.exists("Settings")) {
-            this.config.set("Settings", this.levelSettings.toMap());
-            this.config.save();
-        }
-
-        this.levelSettings.fromMap(this.config.get("Settings", new HashMap<>()));
     }
 
     public void initLevel(Level level) {
@@ -91,53 +80,41 @@ public class PlotManager {
         this.plotGenerator = (PlotGenerator) level.getGenerator();
     }
 
-    public void reload() {
-        this.plots.clear();
-        this.config.reload();
-        this.loadAllPlots();
-    }
-
     public void savePlots() {
-        final List<Map<String, Object>> plotMapList = new ArrayList<>();
-        for(Plot plot : this.plots.values())
-            if(!plot.isDefault()) plotMapList.add(plot.toMap());
-        this.config.set("plots", plotMapList);
-        this.config.save();
+        this.plugin.getProvider().savePlots(this.levelName, new ArrayList<>(this.plotsCache.values()));
     }
 
-    private void loadAllPlots() {
-        for(Map<String, Object> plotMap : this.config.<List<Map<String, Object>>>get("plots", new ArrayList<>())) {
-            final Plot plot = Plot.fromConfig(this, plotMap);
-            this.plots.put(plot.getId(), plot);
-        }
-
-        this.plots.values().forEach(Plot::recalculateOrigin);
-    }
-
-    public void addPlot(Plot plot) {
-        this.plots.put(plot.getId(), plot);
+    public CompletableFuture<Void> addPlot(Plot plot) {
+        this.plotsCache.put(plot.getId(), plot);
+        if(plot.isDefault()) return CompletableFuture.completedFuture(null);
+        return this.plugin.getProvider().addPlot(this.levelName, plot);
     }
 
     private void removePlot(Plot plot) {
-        this.plots.remove(plot.getId());
+        this.plugin.getProvider().removePlot(this.levelName, plot);
+        this.plotsCache.remove(plot.getId());
     }
 
-    public Plot getMergedPlot(int x, int z) {
-        Plot plot;
-        if((plot = this.getPlot(x, z)) != null) return plot;
-
-        final int roadSize = this.levelSettings.getRoadSize();
-        if((plot = this.getPlot(x - roadSize, z)) != null && plot.isMerged(1)) return plot;
-        if((plot = this.getPlot(x, z - roadSize)) != null && plot.isMerged(2)) return plot;
-        if((plot = this.getPlot(x - roadSize, z - roadSize)) != null && plot.isMerged(5))
-            return plot;
-
-        return null;
-    }
-
-    public Plot getPlot(int x, int z) {
+    public CompletableFuture<Plot> getMergedPlot(int x, int z) {
         final PlotId plotId = this.getPlotIdByPos(x, z);
-        if(plotId == null) return null;
+        if(plotId != null) return this.getPlotById(plotId);
+
+        return CompletableFuture.supplyAsync(() -> {
+            Plot plot;
+
+            final int roadSize = this.levelSettings.getRoadSize();
+            if((plot = this.getPlot(x - roadSize, z).join()) != null && plot.isMerged(1)) return plot;
+            if((plot = this.getPlot(x, z - roadSize).join()) != null && plot.isMerged(2)) return plot;
+            if((plot = this.getPlot(x - roadSize, z - roadSize).join()) != null && plot.isMerged(5))
+                return plot;
+
+            return null;
+        });
+    }
+
+    public CompletableFuture<Plot> getPlot(int x, int z) {
+        final PlotId plotId = this.getPlotIdByPos(x, z);
+        if(plotId == null) return CompletableFuture.completedFuture(null);
 
         return this.getPlotById(plotId.getX(), plotId.getZ());
     }
@@ -168,12 +145,16 @@ public class PlotManager {
         return PlotId.of(idX, idZ);
     }
 
-    public Plot getPlotById(PlotId plotId) {
-        return this.plots.computeIfAbsent(plotId, id -> new Plot(this, id, null));
+    public CompletableFuture<Plot> getPlotById(int plotX, int plotZ) {
+        return this.getPlotById(PlotId.of(plotX, plotZ));
     }
 
-    public Plot getPlotById(int plotX, int plotZ) {
-        return this.plots.computeIfAbsent(PlotId.of(plotX, plotZ), id -> new Plot(this, id, null));
+    public CompletableFuture<Plot> getPlotById(PlotId plotId) {
+        if(this.plotsCache.containsKey(plotId)) return CompletableFuture.completedFuture(this.plotsCache.get(plotId));
+        return this.plugin.getProvider().getPlot(this.levelName, plotId).
+                whenComplete((plot, throwable) -> {
+                    if(plot != null) this.addPlot(plot).join();
+                });
     }
 
     private Vector3 getPosByPlot(Plot plot) {
@@ -190,102 +171,89 @@ public class PlotManager {
         );
     }
 
-    public Plot getNextFreePlot() {
-        int i = 0;
-        while(true) {
-            for(int x = -i; x <= i; x++) {
-                for(int z = -i; z <= i; z++) {
-                    if((x != i && x != -i) && (z != i && z != -i)) continue;
+    public CompletableFuture<Plot> getNextFreePlot() {
+        return this.plugin.getProvider().searchNextFreePlot(this.levelName);
+    }
 
-                    final Plot plot;
-                    if((plot = this.getPlotById(x, z)) != null && !plot.hasOwner())
-                        return plot;
+    public CompletableFuture<List<Plot>> getPlotsByOwner(UUID ownerId) {
+        return this.plugin.getProvider().getPlotsByOwner(this.levelName, ownerId);
+    }
+
+    public CompletableFuture<Set<Plot>> getConnectedPlots(Plot plot) {
+        if(plot.hasNoMerges()) return CompletableFuture.completedFuture(Collections.singleton(plot));
+
+        return CompletableFuture.supplyAsync(() -> {
+            final Set<Plot> tmpSet = new HashSet<>();
+            final Queue<Plot> frontier = new ArrayDeque<>();
+            final Set<Object> queueCache = new HashSet<>();
+            tmpSet.add(plot);
+            Plot tmp;
+            final int[] opposites = new int[]{2, 3, 0, 1};
+            for(int iDir = 0; iDir < 4; iDir++) {
+                if(plot.isMerged(iDir)) {
+                    tmp = this.getPlotById(plot.getRelative(iDir)).join();
+                    if(!tmp.isMerged(opposites[iDir]))
+                        tmp.setMerged(opposites[iDir], true);
+                    queueCache.add(tmp);
+                    frontier.add(tmp);
                 }
             }
 
-            i++;
-        }
-    }
-
-    public List<Plot> getPlotsByOwner(UUID ownerId) {
-        final List<Plot> plots = new ArrayList<>();
-        for(Plot plot : this.plots.values())
-            if(plot.isOwner(ownerId))
-                plots.add(plot);
-        return plots;
-    }
-
-    public Set<Plot> getConnectedPlots(Plot plot) {
-        if(plot.hasNoMerges()) return Collections.singleton(plot);
-
-        final Set<Plot> tmpSet = new HashSet<>();
-        final Queue<Plot> frontier = new ArrayDeque<>();
-        final Set<Object> queueCache = new HashSet<>();
-        tmpSet.add(plot);
-        Plot tmp;
-        final int[] opposites = new int[]{2, 3, 0, 1};
-        for(int iDir = 0; iDir < 4; iDir++) {
-            if(plot.isMerged(iDir)) {
-                tmp = this.getPlotById(plot.getRelative(iDir));
-                if(!tmp.isMerged(opposites[iDir]))
-                    tmp.setMerged(opposites[iDir], true);
-                queueCache.add(tmp);
-                frontier.add(tmp);
-            }
-        }
-
-        Plot current;
-        while((current = frontier.poll()) != null) {
-            tmpSet.add(current);
-            queueCache.remove(current);
-            for(int iDir = 0; iDir < 4; iDir++) {
-                if(current.isMerged(iDir)) {
-                    tmp = this.getPlotById(current.getRelative(iDir));
-                    if(tmp != null && !queueCache.contains(tmp) && !tmpSet.contains(tmp)) {
-                        queueCache.add(tmp);
-                        frontier.add(tmp);
+            Plot current;
+            while((current = frontier.poll()) != null) {
+                tmpSet.add(current);
+                queueCache.remove(current);
+                for(int iDir = 0; iDir < 4; iDir++) {
+                    if(current.isMerged(iDir)) {
+                        tmp = this.getPlotById(current.getRelative(iDir)).join();
+                        if(tmp != null && !queueCache.contains(tmp) && !tmpSet.contains(tmp)) {
+                            queueCache.add(tmp);
+                            frontier.add(tmp);
+                        }
                     }
                 }
             }
-        }
 
-        return tmpSet;
+            return tmpSet;
+        });
     }
 
-    public boolean startMerge(Plot plot, int dir) {
-        final Plot relativePlot = this.getPlotById(plot.getRelative(dir));
+    public CompletableFuture<Boolean> startMerge(Plot plot, int dir) {
+        return CompletableFuture.supplyAsync(() -> {
+            final Plot relativePlot = this.getPlotById(plot.getRelative(dir)).join();
 
-        final List<Plot> plots = new ArrayList<>();
-        plots.addAll(this.getConnectedPlots(plot));
-        plots.addAll(this.getConnectedPlots(relativePlot));
+            final List<Plot> plots = new ArrayList<>();
+            plots.addAll(this.getConnectedPlots(plot).join());
+            plots.addAll(this.getConnectedPlots(relativePlot).join());
 
-        final WhenDone whenDone = new WhenDone(() -> {
-            this.finishPlotMerge(plots);
-            plot.recalculateOrigin();
+            final WhenDone whenDone = new WhenDone(() -> {
+                this.finishPlotMerge(plots);
+                plot.recalculateOrigin();
 
-            for(Plot other : plots)
-                if(!other.equals(plot)) this.mergePlotData(plot, other);
+                for(Plot other : plots)
+                    if(!other.equals(plot)) this.mergePlotData(plot, other);
 
-            this.savePlots();
-        });
+                this.savePlots();
+            });
 
-        int relativeDir;
-        for(Plot toMerge0 : plots) {
-            for(Plot toMerge1 : plots) {
-                if(toMerge0.equals(toMerge1)) continue;
+            int relativeDir;
+            for(Plot toMerge0 : plots) {
+                for(Plot toMerge1 : plots) {
+                    if(toMerge0.equals(toMerge1)) continue;
 
-                relativeDir = toMerge0.getRelativeDir(toMerge1.getId());
-                if(relativeDir != -1 && !toMerge0.isMerged(relativeDir))
-                    this.mergePlot(toMerge0, toMerge1, whenDone);
+                    relativeDir = toMerge0.getRelativeDir(toMerge1.getId());
+                    if(relativeDir != -1 && !toMerge0.isMerged(relativeDir))
+                        this.mergePlot(toMerge0, toMerge1, whenDone);
 
-                relativeDir = toMerge1.getRelativeDir(toMerge0.getId());
-                if(relativeDir != -1 && !toMerge1.isMerged(relativeDir))
-                    this.mergePlot(toMerge1, toMerge0, whenDone);
+                    relativeDir = toMerge1.getRelativeDir(toMerge0.getId());
+                    if(relativeDir != -1 && !toMerge1.isMerged(relativeDir))
+                        this.mergePlot(toMerge1, toMerge0, whenDone);
+                }
             }
-        }
 
-        whenDone.start();
-        return true;
+            whenDone.start();
+            return true;
+        });
     }
 
     private void mergePlotData(Plot plotA, Plot plotB) {
@@ -319,8 +287,8 @@ public class PlotManager {
         final BlockState wallFillingBlock = this.levelSettings.getWallFillingState();
 
         for(Plot plot : plots) {
-            this.changeBorder(plot, plot.hasOwner() ? claimBlock : wallBlock);
-            this.changeWall(plot, wallFillingBlock);
+            this.changeBorder(plot, plot.hasOwner() ? claimBlock : wallBlock).join();
+            this.changeWall(plot, wallFillingBlock).join();
         }
     }
 
@@ -335,13 +303,16 @@ public class PlotManager {
             if(!lesserPlot.isMerged(2)) {
                 lesserPlot.setMerged(2, true);
                 greaterPlot.setMerged(0, true);
+                this.addPlot(lesserPlot);
+                this.addPlot(greaterPlot);
+
                 this.removeRoadSouth(lesserPlot, whenDone);
-                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(1));
+                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(1)).join();
                 if(diagonal.isMerged(7))
                     this.removeRoadSouthEast(lesserPlot, whenDone);
-                final Plot below = this.getPlotById(greaterPlot.getRelative(3));
+                final Plot below = this.getPlotById(greaterPlot.getRelative(3)).join();
                 if(below.isMerged(4))
-                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(0)), whenDone);
+                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(0)).join(), whenDone);
             }
         } else {
             if(lesserPlot.getId().getX() > greaterPlot.getId().getX()) {
@@ -353,13 +324,16 @@ public class PlotManager {
             if(!lesserPlot.isMerged(1)) {
                 lesserPlot.setMerged(1, true);
                 greaterPlot.setMerged(3, true);
-                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(2));
+                this.addPlot(lesserPlot);
+                this.addPlot(greaterPlot);
+
+                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(2)).join();
                 if(diagonal.isMerged(7))
                     this.removeRoadSouthEast(lesserPlot, whenDone);
                 this.removeRoadEast(lesserPlot, whenDone);
-                final Plot below = this.getPlotById(greaterPlot.getRelative(0));
+                final Plot below = this.getPlotById(greaterPlot.getRelative(0)).join();
                 if(below.isMerged(6))
-                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(3)), whenDone);
+                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(3)).join(), whenDone);
             }
         }
     }
@@ -462,40 +436,43 @@ public class PlotManager {
         asyncLevelWorker.runQueue(whenDone);
     }
 
-    public void unlinkPlot(Plot plot) {
-        this.unlinkPlot(plot, null);
+    public CompletableFuture<Void> unlinkPlot(Plot plot) {
+        return this.unlinkPlot(plot, null);
     }
 
-    private void unlinkPlot(Plot plot, WhenDone finishDone) {
-        if(plot.hasNoMerges()) return;
+    private CompletableFuture<Void> unlinkPlot(Plot plot, WhenDone finishDone) {
+        if(plot.hasNoMerges()) return CompletableFuture.completedFuture(null);
 
-        final Set<Plot> plots = this.getConnectedPlots(plot);
-        final List<PlotId> vectors = new ArrayList<>();
-        for(Plot current : plots) vectors.add(current.getId());
+        return CompletableFuture.runAsync(() -> {
+            final Set<Plot> plots = this.getConnectedPlots(plot).join();
+            final List<PlotId> vectors = new ArrayList<>();
+            for(Plot current : plots) vectors.add(current.getId());
 
-        if(finishDone != null) finishDone.addTask();
+            if(finishDone != null) finishDone.addTask();
 
-        final WhenDone whenDone = new WhenDone(() -> {
-            this.finishPlotUnlink(vectors);
-            if(finishDone != null) finishDone.done();
-        });
+            final WhenDone whenDone = new WhenDone(() -> {
+                this.finishPlotUnlink(vectors);
+                if(finishDone != null) finishDone.done();
+            });
 
-        for(Plot current : plots) {
-            if(current.isMerged(1)) {
-                this.createRoadEast(current, whenDone);
-                if(current.isMerged(2)) {
+            for(Plot current : plots) {
+                if(current.isMerged(1)) {
+                    this.createRoadEast(current, whenDone);
+                    if(current.isMerged(2)) {
+                        this.createRoadSouth(current, whenDone);
+                        if(current.isMerged(5))
+                            this.createRoadSouthEast(current, whenDone);
+                    }
+                } else if(current.isMerged(2))
                     this.createRoadSouth(current, whenDone);
-                    if(current.isMerged(5))
-                        this.createRoadSouthEast(current, whenDone);
-                }
-            } else if(current.isMerged(2))
-                this.createRoadSouth(current, whenDone);
-        }
+            }
 
-        for(Plot current : plots)
-            for(int iDir = 0; iDir < 4; iDir++)
-                current.setMerged(iDir, false);
-        whenDone.start();
+            for(Plot current : plots)
+                for(int iDir = 0; iDir < 4; iDir++)
+                    current.setMerged(iDir, false);
+
+            whenDone.start();
+        });
     }
 
     private void finishPlotUnlink(List<PlotId> plots) {
@@ -504,7 +481,7 @@ public class PlotManager {
         final BlockState wallFillingBlock = BlockState.of(this.levelSettings.getWallFillingBlockId(), this.levelSettings.getWallFillingBlockMeta());
 
         for(PlotId plotId : plots) {
-            final Plot plot = this.getPlotById(plotId);
+            final Plot plot = this.getPlotById(plotId).join();
             this.changeBorder(plot, plot.hasOwner() ? claimBlock : wallBlock);
             this.changeWall(plot, wallFillingBlock);
             plot.recalculateOrigin();
@@ -688,9 +665,9 @@ public class PlotManager {
         if(plot.hasNoMerges()) return top;
 
         if(plot.isMerged(2))
-            top.z = this.getBottomPlotPos(this.getPlotById(plot.getRelative(2))).getZ();
+            top.z = this.getBottomPlotPos(this.getPlotById(plot.getRelative(2)).join()).getZ();
         if(plot.isMerged(1))
-            top.x = this.getBottomPlotPos(this.getPlotById(plot.getRelative(1))).getX();
+            top.x = this.getBottomPlotPos(this.getPlotById(plot.getRelative(1)).join()).getX();
         return top;
     }
 
@@ -699,206 +676,213 @@ public class PlotManager {
         if(plot.hasNoMerges()) return bottom;
 
         if(plot.isMerged(0))
-            bottom.z = this.getTopPlotPos(this.getPlotById(plot.getRelative(0))).getZ() + 2;
+            bottom.z = this.getTopPlotPos(this.getPlotById(plot.getRelative(0)).join()).getZ() + 2;
         if(plot.isMerged(3))
-            bottom.x = this.getTopPlotPos(this.getPlotById(plot.getRelative(3))).getX() + 2;
+            bottom.x = this.getTopPlotPos(this.getPlotById(plot.getRelative(3)).join()).getX() + 2;
         return bottom;
     }
 
-    public void changeBorder(Plot plot, BlockState blockState) {
-        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
-        final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
-        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
-        final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
-        final int y = minY + this.levelSettings.getGroundHeight() + 1;
+    public CompletableFuture<Void> changeBorder(Plot plot, BlockState blockState) {
+        return CompletableFuture.runAsync(() -> {
+            final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
+            final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
+            final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
+            final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
+            final int y = minY + this.levelSettings.getGroundHeight() + 1;
 
-        if(!plot.isMerged(0)) {
-            final int z = bottom.getZ();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(bottom.getX(), y, z),
-                    new BlockVector3(top.getX() - 1, y, z),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(0));
-            if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+            if(!plot.isMerged(0)) {
                 final int z = bottom.getZ();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(top.getX(), y, z),
-                        new BlockVector3(this.getExtendedTopPlotPos(rPlot).getX() - 1, y, z),
+                        new BlockVector3(bottom.getX(), y, z),
+                        new BlockVector3(top.getX() - 1, y, z),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(0)).join();
+                if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+                    final int z = bottom.getZ();
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(top.getX(), y, z),
+                            new BlockVector3(this.getExtendedTopPlotPos(rPlot).getX() - 1, y, z),
+                            blockState
+                    );
+                }
             }
-        }
 
-        if(!plot.isMerged(3)) {
-            final int x = bottom.getX();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(x, y, bottom.getZ()),
-                    new BlockVector3(x, y, top.getZ() - 1),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(3));
-            if(rPlot.isMerged(0) && !plot.isMerged(0)) {
-                final int z = this.getBottomPlotPos(plot).getZ();
+            if(!plot.isMerged(3)) {
+                final int x = bottom.getX();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(this.getBottomPlotPos(plot).getX(), y, z),
-                        new BlockVector3(bottom.getX() - 1, y, z),
+                        new BlockVector3(x, y, bottom.getZ()),
+                        new BlockVector3(x, y, top.getZ() - 1),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(3)).join();
+                if(rPlot.isMerged(0) && !plot.isMerged(0)) {
+                    final int z = this.getBottomPlotPos(plot).getZ();
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(this.getBottomPlotPos(plot).getX(), y, z),
+                            new BlockVector3(bottom.getX() - 1, y, z),
+                            blockState
+                    );
+                }
             }
-        }
 
-        if(!plot.isMerged(2)) {
-            final int z = top.getZ();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(bottom.getX(), y, z),
-                    new BlockVector3(top.getX() + (plot.isMerged(1) ? -1 : 0), y, z),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(2));
-            if(rPlot.isMerged(3) && !plot.isMerged(3)) {
-                final int z = top.getZ() - 1;
+            if(!plot.isMerged(2)) {
+                final int z = top.getZ();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, y, z),
-                        new BlockVector3(bottom.getX() - 1, y, z),
+                        new BlockVector3(bottom.getX(), y, z),
+                        new BlockVector3(top.getX() + (plot.isMerged(1) ? -1 : 0), y, z),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(2)).join();
+                if(rPlot.isMerged(3) && !plot.isMerged(3)) {
+                    final int z = top.getZ() - 1;
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, y, z),
+                            new BlockVector3(bottom.getX() - 1, y, z),
+                            blockState
+                    );
+                }
             }
-        }
 
-        if(!plot.isMerged(1)) {
-            final int x = top.getX();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(x, y, bottom.getZ()),
-                    new BlockVector3(x, y, top.getZ() + (plot.isMerged(2) ? -1 : 0)),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(1));
-            if(rPlot.isMerged(2) && !plot.isMerged(2)) {
-                final int x = top.getX() - 1;
+            if(!plot.isMerged(1)) {
+                final int x = top.getX();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(x, y, top.getZ()),
-                        new BlockVector3(x, y, this.getExtendedTopPlotPos(rPlot).getZ() - 1),
+                        new BlockVector3(x, y, bottom.getZ()),
+                        new BlockVector3(x, y, top.getZ() + (plot.isMerged(2) ? -1 : 0)),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(1)).join();
+                if(rPlot.isMerged(2) && !plot.isMerged(2)) {
+                    final int x = top.getX() - 1;
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(x, y, top.getZ()),
+                            new BlockVector3(x, y, this.getExtendedTopPlotPos(rPlot).getZ() - 1),
+                            blockState
+                    );
+                }
             }
-        }
 
-        asyncLevelWorker.runQueue();
+            asyncLevelWorker.runQueue();
+        });
     }
 
-    public void changeWall(Plot plot, BlockState blockState) {
-        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
-        final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
-        final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
+    public CompletableFuture<Void> changeWall(Plot plot, BlockState blockState) {
+        return CompletableFuture.runAsync(() -> {
+            final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
+            final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
+            final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
 
-        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
+            final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
 
-        if(!plot.isMerged(0)) {
-            final int z = bottom.getZ();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(bottom.getX(), minY + 1, z),
-                    new BlockVector3(top.getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(0));
-            if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+            if(!plot.isMerged(0)) {
                 final int z = bottom.getZ();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(top.getX(), minY + 1, z),
-                        new BlockVector3(this.getExtendedTopPlotPos(rPlot).getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
+                        new BlockVector3(bottom.getX(), minY + 1, z),
+                        new BlockVector3(top.getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(0)).join();
+                if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+                    final int z = bottom.getZ();
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(top.getX(), minY + 1, z),
+                            new BlockVector3(this.getExtendedTopPlotPos(rPlot).getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
+                            blockState
+                    );
+                }
             }
-        }
 
-        if(!plot.isMerged(3)) {
-            final int x = bottom.getX();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(x, minY + 1, bottom.getZ()),
-                    new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), top.getZ() - 1),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(3));
-            if(rPlot.isMerged(0) && !plot.isMerged(0)) {
-                final int z = this.getBottomPlotPos(plot).getZ();
+            if(!plot.isMerged(3)) {
+                final int x = bottom.getX();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(this.getBottomPlotPos(plot).getX(), minY + 1, z),
-                        new BlockVector3(bottom.getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
+                        new BlockVector3(x, minY + 1, bottom.getZ()),
+                        new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), top.getZ() - 1),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(3)).join();
+                if(rPlot.isMerged(0) && !plot.isMerged(0)) {
+                    final int z = this.getBottomPlotPos(plot).getZ();
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(this.getBottomPlotPos(plot).getX(), minY + 1, z),
+                            new BlockVector3(bottom.getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
+                            blockState
+                    );
+                }
             }
-        }
 
-        if(!plot.isMerged(2)) {
-            final int z = top.getZ();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(bottom.getX(), minY + 1, z),
-                    new BlockVector3(top.getX() + (plot.isMerged(1) ? -1 : 0), minY + this.levelSettings.getGroundHeight(), z),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(2));
-            if(rPlot.isMerged(3) && !plot.isMerged(3)) {
-                final int z = top.getZ() - 1;
+            if(!plot.isMerged(2)) {
+                final int z = top.getZ();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, minY + 1, z),
-                        new BlockVector3(bottom.getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
+                        new BlockVector3(bottom.getX(), minY + 1, z),
+                        new BlockVector3(top.getX() + (plot.isMerged(1) ? -1 : 0), minY + this.levelSettings.getGroundHeight(), z),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(2)).join();
+                if(rPlot.isMerged(3) && !plot.isMerged(3)) {
+                    final int z = top.getZ() - 1;
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, minY + 1, z),
+                            new BlockVector3(bottom.getX() - 1, minY + this.levelSettings.getGroundHeight(), z),
+                            blockState
+                    );
+                }
             }
-        }
 
-        if(!plot.isMerged(1)) {
-            final int x = top.getX();
-            asyncLevelWorker.queueFill(
-                    new BlockVector3(x, minY + 1, bottom.getZ()),
-                    new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), top.getZ() + (plot.isMerged(2) ? -1 : 0)),
-                    blockState
-            );
-        } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(1));
-            if(rPlot.isMerged(2) && !plot.isMerged(2)) {
-                final int x = top.getX() - 1;
+            if(!plot.isMerged(1)) {
+                final int x = top.getX();
                 asyncLevelWorker.queueFill(
-                        new BlockVector3(x, minY + 1, top.getZ()),
-                        new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), this.getExtendedTopPlotPos(rPlot).getZ() - 1),
+                        new BlockVector3(x, minY + 1, bottom.getZ()),
+                        new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), top.getZ() + (plot.isMerged(2) ? -1 : 0)),
                         blockState
                 );
+            } else {
+                final Plot rPlot = this.getPlotById(plot.getRelative(1)).join();
+                if(rPlot.isMerged(2) && !plot.isMerged(2)) {
+                    final int x = top.getX() - 1;
+                    asyncLevelWorker.queueFill(
+                            new BlockVector3(x, minY + 1, top.getZ()),
+                            new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), this.getExtendedTopPlotPos(rPlot).getZ() - 1),
+                            blockState
+                    );
+                }
             }
-        }
 
-        asyncLevelWorker.runQueue();
+            asyncLevelWorker.runQueue();
+        });
     }
 
-    public boolean clearPlot(Plot plot) {
+    public CompletableFuture<Boolean> clearPlot(Plot plot) {
         return this.clearPlot(plot, null);
     }
 
-    private boolean clearPlot(Plot plot, WhenDone finishDone) {
+    private CompletableFuture<Boolean> clearPlot(Plot plot, WhenDone finishDone) {
         final PlotClearEvent plotClearEvent = new PlotClearEvent(plot);
         this.plugin.getServer().getPluginManager().callEvent(plotClearEvent);
-        if(plotClearEvent.isCancelled()) return false;
+        if(plotClearEvent.isCancelled()) return CompletableFuture.completedFuture(false);
 
-        final Set<Plot> visited = new HashSet<>();
-        if(finishDone != null) finishDone.addTask();
+        return CompletableFuture.supplyAsync(() -> {
+            final Set<Plot> visited = new HashSet<>();
+            if(finishDone != null) finishDone.addTask();
 
-        final WhenDone whenDone = new WhenDone(() -> {
-            for(Plot visit : visited) this.finishClearPlot(visit);
-            if(finishDone != null) finishDone.done();
+            final WhenDone whenDone = new WhenDone(() -> {
+                for(Plot visit : visited) this.finishClearPlot(visit);
+                if(finishDone != null) finishDone.done();
+            });
+
+            final Set<Plot> connectedPlots = this.getConnectedPlots(plot).join();
+            visited.addAll(connectedPlots);
+            for(Plot connectedPlot : connectedPlots) this.unlinkPlot(connectedPlot, whenDone).join();
+            whenDone.start();
+
+            return true;
         });
-
-        final Set<Plot> connectedPlots = this.getConnectedPlots(plot);
-        visited.addAll(connectedPlots);
-        for(Plot connectedPlot : connectedPlots) this.unlinkPlot(connectedPlot, whenDone);
-        whenDone.start();
-        return true;
     }
 
     private void finishClearPlot(Plot plot) {
@@ -1019,15 +1003,18 @@ public class PlotManager {
         return shapes;
     }
 
-    public void disposePlot(Plot plot) {
-        final WhenDone whenDone = new WhenDone(() -> {
-            this.changeWall(plot, BlockState.of(this.levelSettings.getWallFillingBlockId(), this.levelSettings.getWallFillingBlockMeta()));
-            this.changeBorder(plot, BlockState.of(this.levelSettings.getWallPlotBlockId(), this.levelSettings.getWallPlotBlockMeta()));
-            this.removePlot(plot);
-        });
+    public CompletableFuture<Void> disposePlot(Plot plot) {
+        return CompletableFuture.runAsync(() -> {
+            final WhenDone whenDone = new WhenDone(() -> {
+                this.changeWall(plot, BlockState.of(this.levelSettings.getWallFillingBlockId(), this.levelSettings.getWallFillingBlockMeta()));
+                this.changeBorder(plot, BlockState.of(this.levelSettings.getWallPlotBlockId(), this.levelSettings.getWallPlotBlockMeta()));
+                this.removePlot(plot);
+                this.savePlots();
+            });
 
-        if(!this.clearPlot(plot, whenDone)) return;
-        whenDone.start();
+            if(!this.clearPlot(plot, whenDone).join()) return;
+            whenDone.start();
+        });
     }
 
     public void teleportPlayerToPlot(Player player, Plot plot) {

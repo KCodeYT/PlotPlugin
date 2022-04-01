@@ -16,13 +16,14 @@
 
 package ms.kevi.plotplugin.util;
 
-import ms.kevi.plotplugin.manager.PlotManager;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import ms.kevi.plotplugin.manager.PlotManager;
 
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * @author Kevims KCodeYT
@@ -33,24 +34,8 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(exclude = {"manager", "origin"})
 public class Plot {
 
-    public static Plot fromConfig(PlotManager plotManager, Map<String, Object> plotMap) {
-        final String ownerString = (String) plotMap.getOrDefault("owner", "null");
-        final Plot plot = new Plot(plotManager, Plot.getPlotVectorFromConfig(plotMap), ownerString.equals("null") ? null : UUID.fromString(ownerString));
-        plot.helpers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("helpers"), new ArrayList<>())).stream().map(UUID::fromString).toList());
-        plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).toList());
-        plot.config.putAll(Plot.<Map<String, Object>>getOrDefault(plotMap.get("config"), new HashMap<>()));
-        for(int i = 0; i < plot.mergedPlots.length; i++)
-            plot.mergedPlots[i] = (Boolean) ((List<?>) plotMap.getOrDefault("merges", new ArrayList<>())).get(i);
-        return plot;
-    }
-
     public static PlotId getPlotVectorFromConfig(Map<String, Object> plotMap) {
         return PlotId.of((int) plotMap.getOrDefault("x", 0), (int) plotMap.getOrDefault("z", 0));
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <C> C getOrDefault(Object o, C defaultValue) {
-        return o == null ? defaultValue : (C) o;
     }
 
     private final PlotManager manager;
@@ -69,9 +54,9 @@ public class Plot {
         this.id = id;
 
         this.owner = owner;
-        this.helpers = new ArrayList<>();
-        this.deniedPlayers = new ArrayList<>();
-        this.config = new HashMap<>();
+        this.helpers = Collections.synchronizedList(new CopyOnWriteArrayList<>());
+        this.deniedPlayers = Collections.synchronizedList(new CopyOnWriteArrayList<>());
+        this.config = Collections.synchronizedMap(new ConcurrentHashMap<>());
         Arrays.fill(this.mergedPlots = new Boolean[4], false);
     }
 
@@ -85,7 +70,8 @@ public class Plot {
 
     public boolean addHelper(UUID playerId) {
         if(!this.isHelper(playerId)) {
-            this.manager.getConnectedPlots(this).forEach(plot -> plot.addHelper0(playerId));
+            this.manager.getConnectedPlots(this).
+                    whenCompleteAsync((plots, throwable) -> plots.forEach(plot -> plot.addHelper0(playerId)));
             return true;
         }
         return false;
@@ -97,7 +83,8 @@ public class Plot {
 
     public boolean removeHelper(UUID playerId) {
         final boolean wasHelper = this.isHelper(playerId);
-        this.manager.getConnectedPlots(this).forEach(plot -> plot.removeHelper0(playerId));
+        this.manager.getConnectedPlots(this).
+                whenCompleteAsync((plots, throwable) -> plots.forEach(plot -> plot.removeHelper0(playerId)));
         return wasHelper;
     }
 
@@ -115,7 +102,8 @@ public class Plot {
 
     public boolean denyPlayer(UUID playerId) {
         if(!this.isDenied(playerId)) {
-            this.manager.getConnectedPlots(this).forEach(plot -> plot.denyPlayer0(playerId));
+            this.manager.getConnectedPlots(this).
+                    whenCompleteAsync((plots, throwable) -> plots.forEach(plot -> plot.denyPlayer0(playerId)));
             return true;
         }
         return false;
@@ -127,7 +115,8 @@ public class Plot {
 
     public boolean unDenyPlayer(UUID playerId) {
         final boolean wasDenied = this.isDenied(playerId);
-        this.manager.getConnectedPlots(this).forEach(plot -> plot.unDenyPlayer0(playerId));
+        this.manager.getConnectedPlots(this).
+                whenCompleteAsync((plots, throwable) -> plots.forEach(plot -> plot.unDenyPlayer0(playerId)));
         return wasDenied;
     }
 
@@ -140,7 +129,8 @@ public class Plot {
     }
 
     public void setConfigValue(String name, Object object) {
-        this.manager.getConnectedPlots(this).forEach(plot -> plot.setConfigValue0(name, object));
+        this.manager.getConnectedPlots(this).
+                whenCompleteAsync((plots, throwable) -> plots.forEach(plot -> plot.setConfigValue0(name, object)));
     }
 
     private void setConfigValue0(String name, Object object) {
@@ -149,8 +139,7 @@ public class Plot {
 
     public boolean hasNoMerges() {
         for(boolean merged : this.mergedPlots)
-            if(merged)
-                return false;
+            if(merged) return false;
         return true;
     }
 
@@ -164,13 +153,13 @@ public class Plot {
             case 7:
                 int i = direction - 4;
                 int i2 = 0;
-                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).isMerged(i);
+                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).join().isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).join().isMerged(i);
             case 4:
             case 5:
             case 6:
                 i = direction - 4;
                 i2 = direction - 3;
-                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).isMerged(i);
+                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).join().isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).join().isMerged(i);
         }
 
         return false;
@@ -207,7 +196,7 @@ public class Plot {
             return;
         }
 
-        final Set<Plot> connectedPlots = this.manager.getConnectedPlots(this);
+        final Set<Plot> connectedPlots = this.manager.getConnectedPlots(this).join();
         Plot min = this;
         for(Plot plot : connectedPlots) {
             if(plot.id.getZ() < min.id.getZ() || plot.id.getZ() == min.id.getZ() && plot.id.getX() < min.id.getX())
@@ -236,20 +225,6 @@ public class Plot {
         for(boolean mergedPlot : this.mergedPlots)
             if(mergedPlot) return false;
         return true;
-    }
-
-    public Map<String, Object> toMap() {
-        final Map<String, Object> map = new HashMap<>();
-
-        map.put("x", this.id.getX());
-        map.put("z", this.id.getZ());
-        map.put("owner", this.owner == null ? "null" : this.owner.toString());
-        map.put("helpers", this.helpers.stream().map(UUID::toString).collect(Collectors.toList()));
-        map.put("denied", this.deniedPlayers.stream().map(UUID::toString).collect(Collectors.toList()));
-        map.put("config", this.config);
-        map.put("merges", this.mergedPlots);
-
-        return map;
     }
 
 }

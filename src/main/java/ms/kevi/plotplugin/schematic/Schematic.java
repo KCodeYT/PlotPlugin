@@ -25,12 +25,12 @@ import cn.nukkit.nbt.stream.NBTInputStream;
 import cn.nukkit.nbt.stream.NBTOutputStream;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.utils.BinaryStream;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.util.Allowed;
 import ms.kevi.plotplugin.util.ShapeType;
 import ms.kevi.plotplugin.util.async.TaskHelper;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import java.io.*;
 import java.util.Arrays;
@@ -123,83 +123,76 @@ public class Schematic {
         });
     }
 
-    public synchronized void init(File file) {
-        try(final FileInputStream fileInputStream = new FileInputStream(file)) {
-            final byte[] bytes = new byte[fileInputStream.available()];
-            final BinaryStream binaryStream = new BinaryStream(this.decompress(Arrays.copyOf(bytes, fileInputStream.read(bytes))));
-            final int blocks = binaryStream.getVarInt();
-            for(int i = 0; i < blocks; i++) {
-                final int blockX = binaryStream.getVarInt();
-                final int blockY = binaryStream.getVarInt();
-                final int blockZ = binaryStream.getVarInt();
+    public synchronized void load(InputStream inputStream) throws IOException, DataFormatException {
+        final byte[] bytes = new byte[inputStream.available()];
+        final BinaryStream binaryStream = new BinaryStream(this.decompress(Arrays.copyOf(bytes, inputStream.read(bytes))));
+        final int blocks = binaryStream.getVarInt();
+        for(int i = 0; i < blocks; i++) {
+            final int blockX = binaryStream.getVarInt();
+            final int blockY = binaryStream.getVarInt();
+            final int blockZ = binaryStream.getVarInt();
 
-                final int layer0Id = binaryStream.getVarInt();
-                final int layer0Meta = binaryStream.getVarInt();
-                final int layer1Id = binaryStream.getVarInt();
-                final int layer1Meta = binaryStream.getVarInt();
+            final int layer0Id = binaryStream.getVarInt();
+            final int layer0Meta = binaryStream.getVarInt();
+            final int layer1Id = binaryStream.getVarInt();
+            final int layer1Meta = binaryStream.getVarInt();
 
-                this.addBlock(new Vector3(blockX, blockY, blockZ), new SchematicBlock(BlockState.of(layer0Id, layer0Meta), BlockState.of(layer1Id, layer1Meta)));
-            }
+            this.addBlock(new Vector3(blockX, blockY, blockZ), new SchematicBlock(BlockState.of(layer0Id, layer0Meta), BlockState.of(layer1Id, layer1Meta)));
+        }
 
-            final int blockEntities = binaryStream.getVarInt();
-            for(int i = 0; i < blockEntities; i++) {
-                final int x = binaryStream.getVarInt();
-                final int y = binaryStream.getVarInt();
-                final int z = binaryStream.getVarInt();
+        final int blockEntities = binaryStream.getVarInt();
+        for(int i = 0; i < blockEntities; i++) {
+            final int x = binaryStream.getVarInt();
+            final int y = binaryStream.getVarInt();
+            final int z = binaryStream.getVarInt();
 
-                final String type = binaryStream.getString();
+            final String type = binaryStream.getString();
 
-                final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(binaryStream.getByteArray());
-                final NBTInputStream nbtStream = new NBTInputStream(byteArrayInputStream);
-                final CompoundTag compoundTag = (CompoundTag) CompoundTag.readNamedTag(nbtStream);
-                nbtStream.close();
-                byteArrayInputStream.close();
-                this.addBlockEntity(new BlockVector3(x, y, z), type, compoundTag);
-            }
-        } catch(IOException | DataFormatException e) {
-            e.printStackTrace();
+            final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(binaryStream.getByteArray());
+            final NBTInputStream nbtStream = new NBTInputStream(byteArrayInputStream);
+            final CompoundTag compoundTag = (CompoundTag) CompoundTag.readNamedTag(nbtStream);
+            nbtStream.close();
+            byteArrayInputStream.close();
+            this.addBlockEntity(new BlockVector3(x, y, z), type, compoundTag);
         }
     }
 
-    public synchronized void save(File file) {
-        try(final FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-            synchronized(this.blocks) {
-                final BinaryStream binaryStream = new BinaryStream();
-                binaryStream.putVarInt(this.blocks.size());
-                for(Vector3 blockVector : this.blocks.keySet()) {
-                    final SchematicBlock schematicBlock = this.blocks.get(blockVector);
+    public synchronized void save(OutputStream outputStream) throws IOException {
+        synchronized(this.blocks) {
+            final BinaryStream binaryStream = new BinaryStream();
+            binaryStream.putVarInt(this.blocks.size());
+            for(Vector3 blockVector : this.blocks.keySet()) {
+                final SchematicBlock schematicBlock = this.blocks.get(blockVector);
 
-                    binaryStream.putVarInt(blockVector.getFloorX());
-                    binaryStream.putVarInt(blockVector.getFloorY());
-                    binaryStream.putVarInt(blockVector.getFloorZ());
+                binaryStream.putVarInt(blockVector.getFloorX());
+                binaryStream.putVarInt(blockVector.getFloorY());
+                binaryStream.putVarInt(blockVector.getFloorZ());
 
-                    binaryStream.putVarInt(schematicBlock.getLayer0().getBlockId());
-                    binaryStream.putVarInt(schematicBlock.getLayer0().getHugeDamage().intValue());
-                    binaryStream.putVarInt(schematicBlock.getLayer1().getBlockId());
-                    binaryStream.putVarInt(schematicBlock.getLayer1().getHugeDamage().intValue());
-                }
-
-                binaryStream.putVarInt(this.blockEntities.size());
-                for(BlockVector3 blockVector : this.blockEntities.keySet()) {
-                    final SchematicBlockEntity blockEntity = this.blockEntities.get(blockVector);
-                    binaryStream.putVarInt(blockVector.getX());
-                    binaryStream.putVarInt(blockVector.getY());
-                    binaryStream.putVarInt(blockVector.getZ());
-
-                    binaryStream.putString(blockEntity.getType());
-
-                    final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    final NBTOutputStream nbtStream = new NBTOutputStream(byteArrayOutputStream);
-                    CompoundTag.writeNamedTag(blockEntity.getCompoundTag(), nbtStream);
-                    byteArrayOutputStream.flush();
-                    binaryStream.putByteArray(byteArrayOutputStream.toByteArray());
-                    byteArrayOutputStream.close();
-                }
-
-                fileOutputStream.write(this.compress(binaryStream.getBuffer()));
+                binaryStream.putVarInt(schematicBlock.getLayer0().getBlockId());
+                binaryStream.putVarInt(schematicBlock.getLayer0().getHugeDamage().intValue());
+                binaryStream.putVarInt(schematicBlock.getLayer1().getBlockId());
+                binaryStream.putVarInt(schematicBlock.getLayer1().getHugeDamage().intValue());
             }
-        } catch(IOException e) {
-            e.printStackTrace();
+
+            binaryStream.putVarInt(this.blockEntities.size());
+            for(BlockVector3 blockVector : this.blockEntities.keySet()) {
+                final SchematicBlockEntity blockEntity = this.blockEntities.get(blockVector);
+                binaryStream.putVarInt(blockVector.getX());
+                binaryStream.putVarInt(blockVector.getY());
+                binaryStream.putVarInt(blockVector.getZ());
+
+                binaryStream.putString(blockEntity.getType());
+
+                final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                final NBTOutputStream nbtStream = new NBTOutputStream(byteArrayOutputStream);
+                CompoundTag.writeNamedTag(blockEntity.getCompoundTag(), nbtStream);
+                byteArrayOutputStream.flush();
+                binaryStream.putByteArray(byteArrayOutputStream.toByteArray());
+                byteArrayOutputStream.close();
+            }
+
+            outputStream.write(this.compress(binaryStream.getBuffer()));
+            outputStream.flush();
         }
     }
 

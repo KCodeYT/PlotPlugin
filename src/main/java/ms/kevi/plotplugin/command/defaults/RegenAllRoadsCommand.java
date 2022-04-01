@@ -26,7 +26,6 @@ import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Utils;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
 
@@ -43,33 +42,33 @@ public class RegenAllRoadsCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        if(plotManager == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
-            return false;
-        }
-
-        final int chunkRadius = Utils.parseInteger(args.length > 0 ? args[0] : "32", 32);
-        final Level level = player.getLevel();
-        final PlotGenerator plotGenerator = (PlotGenerator) level.getGenerator();
-
-        final int pChunkX = player.getChunkX();
-        final int pChunkZ = player.getChunkZ();
-
-        TaskExecutor.executeAsync(() -> {
-            for(int chunkX = -chunkRadius; chunkX <= chunkRadius; chunkX++) {
-                for(int chunkZ = -chunkRadius; chunkZ <= chunkRadius; chunkZ++) {
-                    final FullChunk fullChunk = level.getChunk(pChunkX + chunkX, pChunkZ + chunkZ, false);
-                    if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk, true);
-                }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            if(plotManager == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
+                return;
             }
 
-            player.sendMessage(this.translate(player, TranslationKey.REGENALLROADS_FINISHED));
-        });
+            final int chunkRadius = Utils.parseInteger(args.length > 0 ? args[0] : "32", 32);
+            final Level level = player.getLevel();
+            final PlotGenerator plotGenerator = (PlotGenerator) level.getGenerator();
 
-        player.sendMessage(this.translate(player, TranslationKey.REGENALLROADS_START));
-        return true;
+            final int pChunkX = player.getChunkX();
+            final int pChunkZ = player.getChunkZ();
+
+            TaskExecutor.executeAsync(() -> {
+                for(int chunkX = -chunkRadius; chunkX <= chunkRadius; chunkX++) {
+                    for(int chunkZ = -chunkRadius; chunkZ <= chunkRadius; chunkZ++) {
+                        final FullChunk fullChunk = level.getChunk(pChunkX + chunkX, pChunkZ + chunkZ, false);
+                        if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk, true);
+                    }
+                }
+
+                player.sendMessage(this.translate(player, TranslationKey.REGENALLROADS_FINISHED));
+            });
+
+            player.sendMessage(this.translate(player, TranslationKey.REGENALLROADS_START));
+        });
     }
 
 }

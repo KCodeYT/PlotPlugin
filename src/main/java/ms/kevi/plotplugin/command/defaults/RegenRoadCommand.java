@@ -24,7 +24,6 @@ import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 /**
@@ -39,27 +38,27 @@ public class RegenRoadCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        if(plotManager == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
-            return false;
-        }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            if(plotManager == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
+                return;
+            }
 
-        final Level level = player.getLevel();
-        final PlotGenerator plotGenerator = (PlotGenerator) level.getGenerator();
+            final Level level = player.getLevel();
+            final PlotGenerator plotGenerator = (PlotGenerator) level.getGenerator();
 
-        final int pChunkX = player.getChunkX();
-        final int pChunkZ = player.getChunkZ();
+            final int pChunkX = player.getChunkX();
+            final int pChunkZ = player.getChunkZ();
 
-        TaskExecutor.executeAsync(() -> {
-            final FullChunk fullChunk = level.getChunk(pChunkX, pChunkZ, false);
-            if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk, true);
-            player.sendMessage(this.translate(player, TranslationKey.REGENROAD_FINISHED));
+            TaskExecutor.executeAsync(() -> {
+                final FullChunk fullChunk = level.getChunk(pChunkX, pChunkZ, false);
+                if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk, true);
+                player.sendMessage(this.translate(player, TranslationKey.REGENROAD_FINISHED));
+            });
+
+            player.sendMessage(this.translate(player, TranslationKey.REGENROAD_START));
         });
-
-        player.sendMessage(this.translate(player, TranslationKey.REGENROAD_START));
-        return true;
     }
 
 }

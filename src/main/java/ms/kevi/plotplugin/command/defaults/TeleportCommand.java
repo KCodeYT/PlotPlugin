@@ -61,27 +61,30 @@ public class TeleportCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        Map<Integer, Consumer<FormResponse>> map;
-        if((map = this.map.get(player)) == null)
-            this.map.put(player, map = new HashMap<>());
+    public void execute(Player player, String[] args) {
+        this.plugin.getProvider().getAllPlotManagers().whenComplete((plotManagers, throwable) ->
+                this.plugin.getServer().getScheduler().scheduleTask(null, () -> {
+                    Map<Integer, Consumer<FormResponse>> map;
+                    if((map = this.map.get(player)) == null)
+                        this.map.put(player, map = new HashMap<>());
 
-        final Map<String, PlotManager> plotManagers = this.plugin.getPlotManagerMap();
-        final FormWindowSimple window = new FormWindowSimple(this.translate(player, TranslationKey.TELEPORT_FORM_TITLE), "");
+                    final FormWindowSimple window = new FormWindowSimple(this.translate(player, TranslationKey.TELEPORT_FORM_TITLE), "");
 
-        for(String levelName : plotManagers.keySet())
-            window.addButton(new ElementButton(levelName));
+                    for(String levelName : plotManagers.stream().map(PlotManager::getLevelName).distinct().sorted().toArray(String[]::new))
+                        window.addButton(new ElementButton(levelName));
 
-        map.put(player.showFormWindow(window), response -> {
-            if(response instanceof FormResponseSimple) {
-                final PlotManager plotManager = plotManagers.get(((FormResponseSimple) response).getClickedButton().getText());
-                if(plotManager == null) return;
+                    map.put(player.showFormWindow(window), response -> {
+                        if(response instanceof FormResponseSimple) {
+                            final String levelName = ((FormResponseSimple) response).getClickedButton().getText();
+                            final PlotManager plotManager = plotManagers.stream().filter(o -> o.getLevelName().equals(levelName)).findFirst().orElse(null);
+                            if(plotManager == null) return;
 
-                player.teleport(plotManager.getLevel().getSpawnLocation());
-                player.sendMessage(this.translate(player, TranslationKey.TELEPORT_SUCCESS, plotManager.getLevel().getFolderName()));
-            }
-        });
-        return false;
+                            player.teleport(plotManager.getLevel().getSpawnLocation());
+                            player.sendMessage(this.translate(player, TranslationKey.TELEPORT_SUCCESS, plotManager.getLevel().getFolderName()));
+                        }
+                    });
+                })
+        );
     }
 
 }

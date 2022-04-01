@@ -16,11 +16,10 @@
 
 package ms.kevi.plotplugin.util;
 
+import lombok.Getter;
+import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.schematic.Schematic;
-import lombok.Getter;
-
-import java.io.File;
 
 /**
  * @author Kevims KCodeYT
@@ -29,47 +28,39 @@ import java.io.File;
 @Getter
 public class PlotSchematic {
 
-    private final PlotManager plotManager;
+    private final PlotPlugin plugin;
+    private final PlotManager manager;
     private Schematic schematic;
 
-    public PlotSchematic(PlotManager plotManager) {
-        this.plotManager = plotManager;
+    public PlotSchematic(PlotPlugin plugin, PlotManager manager) {
+        this.plugin = plugin;
+        this.manager = manager;
+
+        this.init();
     }
 
     public void init(Schematic schematic) {
         this.schematic = schematic;
     }
 
-    public void init(File file) {
-        try {
-            if(!file.exists()) return;
+    public void init() {
+        final Schematic schematic = this.plugin.getProvider().loadSchematic(this.manager.getLevelName()).join();
+        if(schematic == null) return;
 
-            final Schematic schematic = new Schematic();
-            schematic.init(file);
-            this.init(schematic);
-        } catch(Throwable throwable) {
-            throwable.printStackTrace();
-        }
+        this.init(schematic);
     }
 
-    public void save(File file) {
-        try {
-            if(this.schematic == null) return;
+    public void save() {
+        if(this.schematic == null) return;
 
-            if(!file.getParentFile().exists())
-                file.getParentFile().mkdirs();
-            this.schematic.save(file);
-        } catch(Throwable throwable) {
-            throwable.printStackTrace();
-        }
+        this.plugin.getProvider().saveSchematic(this.manager.getLevelName(), this.schematic).join();
     }
 
-    public void remove(File file) {
+    public void remove() {
         if(this.schematic == null) return;
         this.schematic = null;
 
-        if(!file.exists()) return;
-        file.delete();
+        this.plugin.getProvider().deleteSchematic(this.manager.getLevelName()).join();
     }
 
 }

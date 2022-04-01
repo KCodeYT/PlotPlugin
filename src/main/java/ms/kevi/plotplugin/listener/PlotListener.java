@@ -29,6 +29,7 @@ import cn.nukkit.event.entity.EntityExplodeEvent;
 import cn.nukkit.event.level.StructureGrowEvent;
 import cn.nukkit.event.player.*;
 import cn.nukkit.item.Item;
+import lombok.RequiredArgsConstructor;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.event.PlotEnterEvent;
 import ms.kevi.plotplugin.event.PlotLeaveEvent;
@@ -38,7 +39,6 @@ import ms.kevi.plotplugin.util.Plot;
 import ms.kevi.plotplugin.util.PlotConfig;
 import ms.kevi.plotplugin.util.ShapeType;
 import ms.kevi.plotplugin.util.Utils;
-import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 
@@ -59,14 +59,14 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onPlace(BlockPlaceEvent event) {
         final Player player = event.getPlayer();
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel()).join();
 
         if(plotManager != null && !player.hasPermission("plot.admin.place")) {
             final int x = event.getBlock().getFloorX();
             final int z = event.getBlock().getFloorZ();
 
             Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if((plot = plotManager.getMergedPlot(x, z).join()) != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
             } else {
@@ -78,14 +78,14 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
         final Player player = event.getPlayer();
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel()).join();
 
         if(plotManager != null && !player.hasPermission("plot.admin.break")) {
             final int x = event.getBlock().getFloorX();
             final int z = event.getBlock().getFloorZ();
 
             Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if((plot = plotManager.getMergedPlot(x, z).join()) != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
             } else {
@@ -97,14 +97,14 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onBucketEmpty(PlayerBucketEmptyEvent event) {
         final Player player = event.getPlayer();
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel()).join();
 
         if(plotManager != null && !player.hasPermission("plot.admin.bucket.emtpy")) {
             final int x = event.getBlockClicked().getFloorX();
             final int z = event.getBlockClicked().getFloorZ();
 
             Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if((plot = plotManager.getMergedPlot(x, z).join()) != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
             } else {
@@ -116,14 +116,14 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onBucketFill(PlayerBucketFillEvent event) {
         final Player player = event.getPlayer();
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel()).join();
 
         if(plotManager != null && !player.hasPermission("plot.admin.bucket.fill")) {
             final int x = event.getBlockClicked().getFloorX();
             final int z = event.getBlockClicked().getFloorZ();
 
             Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if((plot = plotManager.getMergedPlot(x, z).join()) != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
             } else {
@@ -135,7 +135,7 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
         final Player player = event.getPlayer();
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel()).join();
 
         if(plotManager != null && !player.hasPermission("plot.admin.interact")) {
             final Block block = event.getBlock();
@@ -146,7 +146,7 @@ public class PlotListener implements Listener {
                 final int z = (block == null ? player : block).getFloorZ();
 
                 Plot plot;
-                if((plot = plotManager.getMergedPlot(x, z)) != null) {
+                if((plot = plotManager.getMergedPlot(x, z).join()) != null) {
                     if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                         event.setCancelled(true);
                 } else {
@@ -159,11 +159,11 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onMove(PlayerMoveEvent event) {
         final Player player = event.getPlayer();
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel()).join();
 
         if(plotManager != null && event.getFrom() != null) {
-            final Plot plotFrom = plotManager.getMergedPlot(event.getFrom().getFloorX(), event.getFrom().getFloorZ());
-            final Plot plotTo = plotManager.getMergedPlot(event.getTo().getFloorX(), event.getTo().getFloorZ());
+            final Plot plotFrom = plotManager.getMergedPlot(event.getFrom().getFloorX(), event.getFrom().getFloorZ()).join();
+            final Plot plotTo = plotManager.getMergedPlot(event.getTo().getFloorX(), event.getTo().getFloorZ()).join();
             if(plotTo != null) {
                 if((plotTo.isDenied(player.getUniqueId()) || plotTo.isDenied(Utils.UUID_EVERYONE)) && !player.hasPermission("plot.admin.nodeny")) {
                     event.setCancelled(true);
@@ -195,14 +195,14 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onDamage(EntityDamageEvent event) {
         final Entity entity = event.getEntity();
-        final PlotManager plotManager = this.plugin.getPlotManager(entity.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(entity.getLevel()).join();
 
         if(event instanceof EntityDamageByEntityEvent)
             return;
 
         if(plotManager != null) {
             Plot plot;
-            if((plot = plotManager.getMergedPlot(entity.getFloorX(), entity.getFloorZ())) != null) {
+            if((plot = plotManager.getMergedPlot(entity.getFloorX(), entity.getFloorZ()).join()) != null) {
                 if(!((boolean) PlotConfig.ConfigEnum.DAMAGE.getConfig().get(plot)))
                     event.setCancelled(true);
             } else
@@ -214,10 +214,10 @@ public class PlotListener implements Listener {
     public void onDamageByEntity(EntityDamageByEntityEvent event) {
         final Entity entity = event.getEntity();
         Entity damager = event.getDamager();
-        final PlotManager plotManager = this.plugin.getPlotManager(entity.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(entity.getLevel()).join();
 
         if(plotManager != null) {
-            final Plot plot = plotManager.getMergedPlot(entity.getFloorX(), entity.getFloorZ());
+            final Plot plot = plotManager.getMergedPlot(entity.getFloorX(), entity.getFloorZ()).join();
             damager = damager instanceof EntityProjectile && ((EntityProjectile) damager).shootingEntity != null ? ((EntityProjectile) damager).shootingEntity : damager;
 
             if(plot != null) {
@@ -236,11 +236,11 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onFlow(LiquidFlowEvent event) {
         final Block blockSource = event.getSource();
-        final PlotManager plotManager = this.plugin.getPlotManager(blockSource.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(blockSource.getLevel()).join();
         if(plotManager != null) {
             final Block blockTo = event.getTo();
-            final Plot plotFrom = plotManager.getMergedPlot(blockSource.getFloorX(), blockSource.getFloorZ());
-            final Plot plotTo = plotManager.getMergedPlot(blockTo.getFloorX(), blockTo.getFloorZ());
+            final Plot plotFrom = plotManager.getMergedPlot(blockSource.getFloorX(), blockSource.getFloorZ()).join();
+            final Plot plotTo = plotManager.getMergedPlot(blockTo.getFloorX(), blockTo.getFloorZ()).join();
 
             if(plotFrom != null && plotTo == null) event.setCancelled(true);
             if(plotTo != null && plotFrom == null) event.setCancelled(true);
@@ -252,11 +252,11 @@ public class PlotListener implements Listener {
         final Block blockSource = event.getSource();
         if(blockSource == null) return;
 
-        final PlotManager plotManager = this.plugin.getPlotManager(blockSource.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(blockSource.getLevel()).join();
         if(plotManager != null) {
             final Block block = event.getBlock();
-            final Plot plotFrom = plotManager.getMergedPlot(blockSource.getFloorX(), blockSource.getFloorZ());
-            final Plot plotTo = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
+            final Plot plotFrom = plotManager.getMergedPlot(blockSource.getFloorX(), blockSource.getFloorZ()).join();
+            final Plot plotTo = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ()).join();
 
             if(plotFrom != null && plotTo == null) event.setCancelled(true);
             if(plotTo != null && plotFrom == null) event.setCancelled(true);
@@ -266,32 +266,32 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onDecay(LeavesDecayEvent event) {
         final Block block = event.getBlock();
-        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel()).join();
         if(plotManager == null) return;
 
-        final Plot plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
+        final Plot plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ()).join();
         if(plot == null) event.setCancelled(true);
     }
 
     @EventHandler
     public void onUpdate(BlockUpdateEvent event) {
         final Block block = event.getBlock();
-        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel()).join();
         if(plotManager == null) return;
 
-        final Plot plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
+        final Plot plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ()).join();
         if(plot == null) event.setCancelled(true);
     }
 
     @EventHandler
     public void onPiston(BlockPistonEvent event) {
         final Block block = event.getBlock();
-        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel()).join();
         if(plotManager != null) {
-            final Plot blockPlot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
+            final Plot blockPlot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ()).join();
 
             for(Block movingBlock : event.getBlocks()) {
-                final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ());
+                final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ()).join();
 
                 if(blockPlot != null && movingBlockPlot == null) {
                     event.setCancelled(true);
@@ -311,7 +311,7 @@ public class PlotListener implements Listener {
             }
 
             for(Block movingBlock : event.getDestroyedBlocks()) {
-                final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ());
+                final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ()).join();
 
                 if(blockPlot != null && movingBlockPlot == null) {
                     event.setCancelled(true);
@@ -335,11 +335,11 @@ public class PlotListener implements Listener {
     @EventHandler
     public void onGrow(StructureGrowEvent event) {
         final Block block = event.getBlock();
-        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel());
+        final PlotManager plotManager = this.plugin.getPlotManager(block.getLevel()).join();
         if(plotManager != null) {
-            final Plot blockPlot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
+            final Plot blockPlot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ()).join();
             for(Block movingBlock : event.getBlockList()) {
-                final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ());
+                final Plot movingBlockPlot = plotManager.getMergedPlot(movingBlock.getFloorX(), movingBlock.getFloorZ()).join();
                 if(blockPlot != null && movingBlockPlot == null) {
                     event.setCancelled(true);
                     break;

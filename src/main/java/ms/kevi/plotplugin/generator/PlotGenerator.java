@@ -68,7 +68,7 @@ public class PlotGenerator extends Generator {
     @Override
     public int getDimension() {
         final PlotManager plotManager;
-        if(this.level != null && (plotManager = this.plugin.getPlotManager(this.level)) != null)
+        if(this.level != null && (plotManager = this.plugin.getPlotManager(this.level).join()) != null)
             return plotManager.getLevelSettings().getDimension();
         return Level.DIMENSION_OVERWORLD;
     }
@@ -92,7 +92,7 @@ public class PlotGenerator extends Generator {
         if(fullChunk.getProvider() == null || fullChunk.getProvider().getLevel() == null) return;
 
         this.level = fullChunk.getProvider().getLevel();
-        final PlotManager plotManager = this.plugin.getPlotManager(this.level);
+        final PlotManager plotManager = this.plugin.getPlotManager(this.level).join();
         if(plotManager == null) return;
 
         final ShapeType[] shapes = plotManager.getShapes(fullChunk.getX() << 4, fullChunk.getZ() << 4);

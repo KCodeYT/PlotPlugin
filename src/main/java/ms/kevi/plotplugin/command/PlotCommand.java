@@ -77,8 +77,10 @@ public class PlotCommand extends Command {
 
         for(SubCommand subCommand : this.subCommands) {
             if(!subCommand.hasPermission(player)) continue;
-            if(subCommand.getAliases().contains(subName))
-                return subCommand.execute(player, args);
+            if(subCommand.getAliases().contains(subName)) {
+                subCommand.execute(player, args);
+                return true;
+            }
         }
 
         player.sendMessage(this.translate(player, TranslationKey.HELP_TITLE));

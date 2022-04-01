@@ -23,7 +23,6 @@ import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
 import ms.kevi.plotplugin.util.Utils;
 
@@ -39,42 +38,42 @@ public class WarpCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel())) == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
-            return false;
-        }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            if(plotManager == null && this.plugin.getDefaultPlotLevel() == null || plotManager == null && (plotManager = this.plugin.getPlotManager(this.plugin.getDefaultPlotLevel()).join()) == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
+                return;
+            }
 
-        final String[] plotIds = args.length > 0 ?
-                args[0].split(";").length > 1 ? args[0].split(";") :
-                        args[0].split(":").length > 1 ? args[0].split(":") :
-                                args[0].split(",").length > 1 ? args[0].split(",") :
-                                        new String[0] : new String[0];
+            final String[] plotIds = args.length > 0 ?
+                    args[0].split(";").length > 1 ? args[0].split(";") :
+                            args[0].split(":").length > 1 ? args[0].split(":") :
+                                    args[0].split(",").length > 1 ? args[0].split(",") :
+                                            new String[0] : new String[0];
 
-        final Integer plotX = plotIds.length != 0 ? Utils.parseIntegerWithNull(plotIds[0]) : null;
-        final Integer plotZ = plotIds.length != 0 ? Utils.parseIntegerWithNull(plotIds[1]) : null;
+            final Integer plotX = plotIds.length != 0 ? Utils.parseIntegerWithNull(plotIds[0]) : null;
+            final Integer plotZ = plotIds.length != 0 ? Utils.parseIntegerWithNull(plotIds[1]) : null;
 
-        if(plotX == null || plotZ == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_ID));
-            return false;
-        }
+            if(plotX == null || plotZ == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_ID));
+                return;
+            }
 
-        final Plot plot = plotManager.getPlotById(plotX, plotZ);
+            final Plot plot = plotManager.getPlotById(plotX, plotZ).join();
 
-        if(!plot.hasOwner() && !player.hasPermission("plot.command.warp.free")) {
-            player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE_FREE));
-            return false;
-        }
+            if(!plot.hasOwner() && !player.hasPermission("plot.command.warp.free")) {
+                player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE_FREE));
+                return;
+            }
 
-        if((!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.nodeny")) {
-            plotManager.teleportPlayerToPlot(player, plot);
-            player.sendMessage(this.translate(player, TranslationKey.WARP_SUCCESS, (plotX + ";" + plotZ)));
-            return true;
-        }
+            if((!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.nodeny")) {
+                plotManager.teleportPlayerToPlot(player, plot);
+                player.sendMessage(this.translate(player, TranslationKey.WARP_SUCCESS, (plotX + ";" + plotZ)));
+                return;
+            }
 
-        player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE));
-        return false;
+            player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE));
+        });
     }
 
 }

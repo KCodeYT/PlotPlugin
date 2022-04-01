@@ -27,12 +27,10 @@ import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.schematic.Schematic;
 import ms.kevi.plotplugin.schematic.SchematicBlock;
 import ms.kevi.plotplugin.util.ChunkVector;
 import ms.kevi.plotplugin.util.ShapeType;
-import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -49,14 +47,15 @@ public class SetRoadsCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        if(plotManager == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
-            return false;
-        }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            if(plotManager == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
+                return;
+            }
 
-        TaskExecutor.executeAsync(() -> {
+            player.sendMessage(this.translate(player, TranslationKey.SETROADS_STARTING));
+
             final Level level = player.getLevel();
             final PlotGenerator plotGenerator = (PlotGenerator) level.getGenerator();
 
@@ -104,7 +103,7 @@ public class SetRoadsCommand extends SubCommand {
 
             if(schematic.isEmpty()) {
                 if(plotManager.getPlotSchematic().getSchematic() != null) {
-                    plotManager.getPlotSchematic().remove(plotManager.getPlotSchematicFile());
+                    plotManager.getPlotSchematic().remove();
                     player.sendMessage(this.translate(player, TranslationKey.SETROADS_ROAD_REMOVED));
                     return;
                 }
@@ -114,12 +113,9 @@ public class SetRoadsCommand extends SubCommand {
             }
 
             plotManager.getPlotSchematic().init(schematic);
-            plotManager.getPlotSchematic().save(plotManager.getPlotSchematicFile());
+            plotManager.getPlotSchematic().save();
             player.sendMessage(this.translate(player, TranslationKey.SETROADS_FINISHED));
         });
-
-        player.sendMessage(this.translate(player, TranslationKey.SETROADS_STARTING));
-        return true;
     }
 
 }

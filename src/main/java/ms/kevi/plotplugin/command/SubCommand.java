@@ -64,7 +64,7 @@ public abstract class SubCommand {
         return this.permission == null || player.hasPermission(this.permission);
     }
 
-    public abstract boolean execute(Player player, String[] args);
+    public abstract void execute(Player player, String[] args);
 
     protected void addParameter(CommandParameter parameter) {
         this.parameters.add(parameter);

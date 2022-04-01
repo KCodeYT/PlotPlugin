@@ -1,5 +1,8 @@
 # Language used by this plugin, corresponding file should exist in lang folder!
 default_lang: en_US
 
-#Plots per home page (/homes)
+# Plots per home page (/homes)
 plots_per_page: 5
+
+# Provider used for the plot managers (e.g. "yaml")
+provider: yaml

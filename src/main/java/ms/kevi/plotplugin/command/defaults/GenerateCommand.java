@@ -40,13 +40,13 @@ public class GenerateCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
+    public void execute(Player player, String[] args) {
         final String levelName = args.length > 0 ? args[0] : "";
         final boolean defaultLevel = args.length > 1 && Utils.parseBoolean(args[1]);
 
         if(levelName.trim().isEmpty()) {
             player.sendMessage(this.translate(player, TranslationKey.NO_WORLD));
-            return false;
+            return;
         }
 
         if(!this.plugin.getServer().isLevelGenerated(levelName)) {
@@ -54,13 +54,11 @@ public class GenerateCommand extends SubCommand {
             this.plugin.getLevelRegistrationMap().put(player, levelRegistration);
             player.sendMessage(this.translate(player, TranslationKey.GENERATE_START, levelName));
             player.sendMessage(this.translate(player, TranslationKey.GENERATE_DIMENSION, levelRegistration.getLevelSettings().getDimension()));
-            return true;
         } else {
             if(!this.plugin.getServer().isLevelLoaded(levelName))
                 this.plugin.getServer().loadLevel(levelName);
             player.teleport(this.plugin.getServer().getLevelByName(levelName).getSpawnLocation());
             player.sendMessage(this.translate(player, TranslationKey.GENERATE_FAILURE));
-            return false;
         }
     }
 

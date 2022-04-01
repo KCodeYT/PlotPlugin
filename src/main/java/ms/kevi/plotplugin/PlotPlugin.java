@@ -32,6 +32,8 @@ import ms.kevi.plotplugin.listener.PlotListener;
 import ms.kevi.plotplugin.manager.PlayerManager;
 import ms.kevi.plotplugin.manager.PlayerNameFunction;
 import ms.kevi.plotplugin.manager.PlotManager;
+import ms.kevi.plotplugin.provider.Provider;
+import ms.kevi.plotplugin.provider.YamlProvider;
 import ms.kevi.plotplugin.util.PlotLevelRegistration;
 import ms.kevi.plotplugin.util.PlotLevelSettings;
 import ms.kevi.plotplugin.util.Utils;
@@ -42,6 +44,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -60,8 +63,6 @@ public class PlotPlugin extends PluginBase {
     @Getter
     private Language language;
 
-    @Getter
-    private Map<String, PlotManager> plotManagerMap;
     private PlayerManager playerManager;
 
     @Getter
@@ -80,6 +81,9 @@ public class PlotPlugin extends PluginBase {
 
     @Getter
     private int plotsPerPage = 5;
+
+    @Getter
+    private Provider provider;
 
     @Override
     public void onLoad() {
@@ -126,6 +130,20 @@ public class PlotPlugin extends PluginBase {
 
         this.plotsPerPage = config.getInt("plots_per_page");
 
+        if(!config.exists("provider")) {
+            config.set("provider", "yaml");
+            config.save();
+        }
+
+        switch(config.get("provider").toString().toLowerCase()) {
+            case "yaml":
+                this.provider = new YamlProvider(this);
+                break;
+            default:
+                this.getLogger().error("The provider '" + config.get("provider") + "' is not supported!");
+                return;
+        }
+
         try {
             final String defaultLang = config.getString("default_lang");
 
@@ -136,15 +154,13 @@ public class PlotPlugin extends PluginBase {
             return;
         }
 
-        this.plotManagerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         this.levelRegistrationMap = new HashMap<>();
 
         final Server server = this.getServer();
 
         for(Object o : this.worldsConfig.getList("levels", new ArrayList<>())) {
             if(o instanceof final String levelName) {
-                final PlotManager plotManager = new PlotManager(this, levelName);
-                this.plotManagerMap.put(levelName, plotManager);
+                final PlotManager plotManager = this.provider.loadOrCreateManager(levelName, new PlotLevelSettings()).join();
 
                 if(!server.isLevelGenerated(levelName))
                     server.generateLevel(levelName, ThreadLocalRandom.current().nextLong(), PlotGenerator.class);
@@ -155,10 +171,7 @@ public class PlotPlugin extends PluginBase {
                     level = server.getLevelByName(levelName);
                 }
 
-                if(level == null) {
-                    this.plotManagerMap.remove(levelName);
-                    continue;
-                }
+                if(level == null) continue;
 
                 if(this.worldsConfig.getString("default", "").equalsIgnoreCase(levelName))
                     this.defaultPlotLevel = level;
@@ -173,12 +186,6 @@ public class PlotPlugin extends PluginBase {
         server.getPluginManager().registerEvents(new PlotLevelRegistrationListener(this), this);
 
         server.getCommandMap().register("plot", new PlotCommand(this));
-
-        server.getScheduler().scheduleDelayedTask(this, () -> {
-            for(PlotManager plotManager : this.plotManagerMap.values()) {
-                plotManager.savePlots();
-            }
-        }, 6000);
     }
 
     private void loadPlayerNames() {
@@ -190,28 +197,22 @@ public class PlotPlugin extends PluginBase {
 
     @Override
     public void onDisable() {
-
+        this.provider.getAllPlotManagers().join().forEach(PlotManager::savePlots);
     }
 
-    public void reloadPlots() {
-        for(PlotManager plotManager : this.plotManagerMap.values())
-            plotManager.reload();
-    }
-
-    public PlotManager getPlotManager(Level level) {
-        if(level == null) return null;
+    public CompletableFuture<PlotManager> getPlotManager(Level level) {
+        if(level == null) return CompletableFuture.completedFuture(null);
         return this.getPlotManager(level.getFolderName());
     }
 
-    public PlotManager getPlotManager(String levelName) {
-        return this.plotManagerMap.getOrDefault(levelName, null);
+    public CompletableFuture<PlotManager> getPlotManager(String levelName) {
+        return this.provider.loadOrCreateManager(levelName, new PlotLevelSettings());
     }
 
     public Level createLevel(String levelName, boolean defaultLevel, PlotLevelSettings levelSettings) {
         if(this.getServer().isLevelGenerated(levelName)) return null;
 
-        final PlotManager plotManager = new PlotManager(this, levelName, levelSettings);
-        this.plotManagerMap.put(levelName, plotManager);
+        final PlotManager plotManager = this.provider.loadOrCreateManager(levelName, levelSettings).join();
 
         this.getServer().generateLevel(levelName, ThreadLocalRandom.current().nextLong(), PlotGenerator.class);
         final Level level = this.getServer().getLevelByName(levelName);

@@ -21,7 +21,6 @@ import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.lang.TranslationKey;
-import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
 
 /**
@@ -35,23 +34,23 @@ public class DisposeCommand extends SubCommand {
     }
 
     @Override
-    public boolean execute(Player player, String[] args) {
-        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        final Plot plot;
-        if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
-            return false;
-        }
+    public void execute(Player player, String[] args) {
+        this.plugin.getPlotManager(player.getLevel()).whenCompleteAsync((plotManager, throwable) -> {
+            final Plot plot;
+            if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ()).join()) == null) {
+                player.sendMessage(this.translate(player, TranslationKey.NO_PLOT));
+                return;
+            }
 
-        if(player.hasPermission("plot.command.admin.dispose") || plot.isOwner(player.getUniqueId())) {
-            plotManager.disposePlot(plot);
-            plotManager.savePlots();
-            player.sendMessage(this.translate(player, TranslationKey.DISPOSE_SUCCESS));
-            return true;
-        } else {
-            player.sendMessage(this.translate(player, TranslationKey.DISPOSE_FAILURE));
-            return false;
-        }
+            if(player.hasPermission("plot.command.admin.dispose") || plot.isOwner(player.getUniqueId())) {
+                plotManager.disposePlot(plot);
+                plotManager.savePlots();
+
+                player.sendMessage(this.translate(player, TranslationKey.DISPOSE_SUCCESS));
+            } else {
+                player.sendMessage(this.translate(player, TranslationKey.DISPOSE_FAILURE));
+            }
+        });
     }
 
 }
