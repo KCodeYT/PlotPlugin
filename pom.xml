@@ -6,7 +6,14 @@
 
     <groupId>ms.kevi</groupId>
     <artifactId>plotplugin</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
     <repositories>
         <repository>
