@@ -100,11 +100,11 @@ public class PlotPlugin extends PluginBase {
                 return;
             }
 
-            try(final InputStreamReader inputReader = new InputStreamReader(this.getResource("lang"));
+            try(final InputStreamReader inputReader = new InputStreamReader(this.getResource("lang/lang_list.txt"));
                 final BufferedReader bufferedReader = new BufferedReader(inputReader)) {
                 String line;
                 while((line = bufferedReader.readLine()) != null)
-                    this.saveResource("lang/" + line);
+                    this.saveResource("lang/" + line + ".txt");
             } catch(Exception e) {
                 this.getLogger().error("Could not find the language resources of this plugin!", e);
                 return;
