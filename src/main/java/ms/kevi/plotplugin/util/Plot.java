@@ -16,10 +16,11 @@
 
 package ms.kevi.plotplugin.util;
 
-import ms.kevi.plotplugin.manager.PlotManager;
+import cn.nukkit.math.Vector3;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import ms.kevi.plotplugin.manager.PlotManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -39,6 +40,8 @@ public class Plot {
         plot.helpers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("helpers"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.config.putAll(Plot.<Map<String, Object>>getOrDefault(plotMap.get("config"), new HashMap<>()));
+        final List<Double> homePositionList = Plot.<List<Double>>getOrDefault(plotMap.get("home-position"), new ArrayList<>());
+        plot.homePosition = homePositionList.size() == 3 ? new Vector3(homePositionList.get(0), homePositionList.get(1), homePositionList.get(2)) : null;
         for(int i = 0; i < plot.mergedPlots.length; i++)
             plot.mergedPlots[i] = (Boolean) ((List<?>) plotMap.getOrDefault("merges", new ArrayList<>())).get(i);
         return plot;
@@ -60,6 +63,7 @@ public class Plot {
     private final List<UUID> helpers;
     private final List<UUID> deniedPlayers;
     private final Map<String, Object> config;
+    private Vector3 homePosition;
 
     private final Boolean[] mergedPlots;
     private Plot origin;
@@ -220,7 +224,8 @@ public class Plot {
 
     public Plot getBasePlot() {
         if(this.origin != null) return this.origin;
-        return this.origin = this;
+        this.recalculateOrigin();
+        return this.origin;
     }
 
     @Override
@@ -247,6 +252,7 @@ public class Plot {
         map.put("helpers", this.helpers.stream().map(UUID::toString).collect(Collectors.toList()));
         map.put("denied", this.deniedPlayers.stream().map(UUID::toString).collect(Collectors.toList()));
         map.put("config", this.config);
+        map.put("home-position", this.homePosition == null ? Collections.emptyList() : Arrays.asList(this.homePosition.getX(), this.homePosition.getY(), this.homePosition.getZ()));
         map.put("merges", this.mergedPlots);
 
         return map;

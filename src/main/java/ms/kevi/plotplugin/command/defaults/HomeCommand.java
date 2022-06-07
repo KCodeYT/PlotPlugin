@@ -53,7 +53,7 @@ public class HomeCommand extends SubCommand {
         if(plotId < 0) plotId = 0;
 
         final String targetName = (args.length >= 2 ? this.plugin.findPlayerName(args[0]) : player.getName()).trim();
-        final UUID targetId = this.plugin.getUniqueIdByName(targetName);
+        final UUID targetId = this.plugin.getUniqueIdByName(targetName, false);
 
         if(targetName.isEmpty() || targetId == null) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
@@ -64,7 +64,7 @@ public class HomeCommand extends SubCommand {
         if((plots = plotManager.getPlotsByOwner(targetId)).size() != 0) {
             if(plotId < plots.size()) {
                 final Plot plot = plots.get(plotId);
-                final boolean canPerform = (!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.nodeny");
+                final boolean canPerform = (!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.bypass.deny");
                 if(targetName.equalsIgnoreCase(player.getName())) {
                     player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS_OWN));
                     plotManager.teleportPlayerToPlot(player, plots.get(plotId));

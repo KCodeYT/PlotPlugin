@@ -17,8 +17,6 @@
 package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
-import cn.nukkit.command.data.CommandParamType;
-import cn.nukkit.command.data.CommandParameter;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
@@ -26,17 +24,14 @@ import ms.kevi.plotplugin.lang.TranslationKey;
 import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
 
-import java.util.UUID;
-
 /**
  * @author Kevims KCodeYT
  * @version 1.0
  */
-public class SetOwnerCommand extends SubCommand {
+public class DeleteHomeCommand extends SubCommand {
 
-    public SetOwnerCommand(PlotPlugin plugin, PlotCommand parent) {
-        super(plugin, parent, "setowner");
-        this.addParameter(CommandParameter.newType("player", CommandParamType.TARGET));
+    public DeleteHomeCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "deletehome", "delhome", "removehome", "rmhome");
     }
 
     @Override
@@ -48,30 +43,19 @@ public class SetOwnerCommand extends SubCommand {
             return false;
         }
 
-        final String targetName = (args.length > 0 ? args[0] : "").trim();
-        final UUID targetId = this.plugin.getUniqueIdByName(targetName, false);
-        final Player target = targetId != null ? player.getServer().getPlayer(targetId).orElse(null) : null;
-
-        if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.setowner")) {
-            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
-            return false;
-        }
-
-        if(targetName.trim().isEmpty() || targetId == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
-            return false;
-        }
-
-        if(!player.hasPermission("plot.command.admin.setowner") && !plot.isOwner(player.getUniqueId())) {
+        if(!player.hasPermission("plot.command.admin.deletehome") && !plot.isOwner(player.getUniqueId())) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }
 
-        plot.setOwner(targetId);
+        if(plot.getHomePosition() == null) {
+            player.sendMessage(this.translate(player, TranslationKey.DELETEHOME_FAILURE_NO_HOME_SET));
+            return false;
+        }
+
+        for(Plot mergedPlot : plotManager.getConnectedPlots(plot)) mergedPlot.setHomePosition(null);
         plotManager.savePlots();
-        if(target != null)
-            target.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
-        player.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS, this.plugin.getCorrectName(targetId)));
+        player.sendMessage(this.translate(player, TranslationKey.DELETEHOME_SUCCESS));
         return true;
     }
 

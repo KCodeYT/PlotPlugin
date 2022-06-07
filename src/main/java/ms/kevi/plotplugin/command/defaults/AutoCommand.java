@@ -62,7 +62,7 @@ public class AutoCommand extends SubCommand {
                 final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, true);
                 this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
 
-                finalPlotManager.teleportPlayerToPlot(player, plot);
+                finalPlotManager.teleportPlayerToPlot(player, plot, false);
                 player.sendMessage(this.translate(player, TranslationKey.AUTO_SUCCESS));
             });
             return true;
