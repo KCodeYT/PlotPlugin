@@ -23,7 +23,6 @@ import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.Location;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.math.BlockVector3;
@@ -510,6 +509,7 @@ public class PlotManager {
             final Plot plot = this.getPlotById(plotId);
             this.changeBorder(plot, plot.hasOwner() ? claimBlock : wallBlock);
             this.changeWall(plot, wallFillingBlock);
+            this.clearWallAbove(plot);
             plot.recalculateOrigin();
             this.savePlots();
         }
@@ -794,6 +794,93 @@ public class PlotManager {
         asyncLevelWorker.runQueue();
     }
 
+    public void clearWallAbove(Plot plot) {
+        final BlockState blockState = BlockState.AIR;
+        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
+        final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
+        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
+        final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension()) + this.levelSettings.getGroundHeight() + 2;
+        final int maxY = LevelUtils.getChunkMaxY(this.levelSettings.getDimension());
+
+        if(!plot.isMerged(0)) {
+            final int z = bottom.getZ();
+            asyncLevelWorker.queueFill(
+                    new BlockVector3(bottom.getX(), minY, z),
+                    new BlockVector3(top.getX() - 1, maxY, z),
+                    blockState
+            );
+        } else {
+            final Plot rPlot = this.getPlotById(plot.getRelative(0));
+            if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+                final int z = bottom.getZ();
+                asyncLevelWorker.queueFill(
+                        new BlockVector3(top.getX(), minY, z),
+                        new BlockVector3(this.getExtendedTopPlotPos(rPlot).getX() - 1, maxY, z),
+                        blockState
+                );
+            }
+        }
+
+        if(!plot.isMerged(3)) {
+            final int x = bottom.getX();
+            asyncLevelWorker.queueFill(
+                    new BlockVector3(x, minY, bottom.getZ()),
+                    new BlockVector3(x, maxY, top.getZ() - 1),
+                    blockState
+            );
+        } else {
+            final Plot rPlot = this.getPlotById(plot.getRelative(3));
+            if(rPlot.isMerged(0) && !plot.isMerged(0)) {
+                final int z = this.getBottomPlotPos(plot).getZ();
+                asyncLevelWorker.queueFill(
+                        new BlockVector3(this.getBottomPlotPos(plot).getX(), minY, z),
+                        new BlockVector3(bottom.getX() - 1, maxY, z),
+                        blockState
+                );
+            }
+        }
+
+        if(!plot.isMerged(2)) {
+            final int z = top.getZ();
+            asyncLevelWorker.queueFill(
+                    new BlockVector3(bottom.getX(), minY, z),
+                    new BlockVector3(top.getX() + (plot.isMerged(1) ? -1 : 0), maxY, z),
+                    blockState
+            );
+        } else {
+            final Plot rPlot = this.getPlotById(plot.getRelative(2));
+            if(rPlot.isMerged(3) && !plot.isMerged(3)) {
+                final int z = top.getZ() - 1;
+                asyncLevelWorker.queueFill(
+                        new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, minY, z),
+                        new BlockVector3(bottom.getX() - 1, maxY, z),
+                        blockState
+                );
+            }
+        }
+
+        if(!plot.isMerged(1)) {
+            final int x = top.getX();
+            asyncLevelWorker.queueFill(
+                    new BlockVector3(x, minY, bottom.getZ()),
+                    new BlockVector3(x, maxY, top.getZ() + (plot.isMerged(2) ? -1 : 0)),
+                    blockState
+            );
+        } else {
+            final Plot rPlot = this.getPlotById(plot.getRelative(1));
+            if(rPlot.isMerged(2) && !plot.isMerged(2)) {
+                final int x = top.getX() - 1;
+                asyncLevelWorker.queueFill(
+                        new BlockVector3(x, minY, top.getZ()),
+                        new BlockVector3(x, maxY, this.getExtendedTopPlotPos(rPlot).getZ() - 1),
+                        blockState
+                );
+            }
+        }
+
+        asyncLevelWorker.runQueue();
+    }
+
     public void changeWall(Plot plot, BlockState blockState) {
         final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
         final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
@@ -1038,23 +1125,43 @@ public class PlotManager {
     }
 
     public void teleportPlayerToPlot(Player player, Plot plot, boolean homeAllowed) {
-        Vector3 plotVec = this.getPosByPlot(plot.getBasePlot()).add(
-                ((float) this.levelSettings.getPlotSize() / 2),
-                1f,
-                -1.5f
-        );
+        Vector3 plotVec = null;
 
         if(homeAllowed) {
             final Vector3 homePosition = plot.getHomePosition();
             if(homePosition != null) plotVec = homePosition.clone();
+
+            if(plotVec != null) {
+                final Plot mergedPlot = this.getMergedPlot(plotVec.getFloorX(), plotVec.getFloorZ());
+                if(mergedPlot == null || !plot.getBasePlot().equals(mergedPlot.getBasePlot())) {
+                    plot.setHomePosition(null);
+                    this.savePlots();
+                    plotVec = null;
+                }
+            }
         }
 
-        for(int y = plotVec.getFloorY(); this.level.isOverWorld() ? y <= 319 : y <= 255; y++) {
-            plotVec.setY(y);
-            if(this.level.standable(plotVec)) break;
+        if(plotVec == null)
+            plotVec = this.getPosByPlot(plot.getBasePlot()).add(
+                    ((float) this.levelSettings.getPlotSize() / 2),
+                    1f,
+                    -1.5f
+            );
+
+        final int y = plotVec.getFloorY();
+        final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
+        final int maxY = LevelUtils.getChunkMaxY(this.levelSettings.getDimension());
+        for(int offset = 0; ; offset++) {
+            if(plotVec.getY() < minY && plotVec.getY() > maxY) break;
+
+            plotVec.setY(y - offset);
+            if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
+
+            plotVec.setY(y + offset);
+            if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
         }
 
-        player.teleport(plotVec);
+        player.teleport(plotVec.add(0, 0.1, 0));
     }
 
 }
