@@ -45,6 +45,7 @@ public class PlotCommand extends Command {
         this.subCommands.add(new AutoCommand(this.plugin, this));
         this.subCommands.add(new ClaimCommand(this.plugin, this));
         this.subCommands.add(new ClearCommand(this.plugin, this));
+        this.subCommands.add(new DeleteHomeCommand(this.plugin, this));
         this.subCommands.add(new DenyCommand(this.plugin, this));
         this.subCommands.add(new DisposeCommand(this.plugin, this));
         this.subCommands.add(new GenerateCommand(this.plugin, this));
@@ -57,6 +58,7 @@ public class PlotCommand extends Command {
         this.subCommands.add(new RegenRoadCommand(this.plugin, this));
         this.subCommands.add(new ReloadCommand(this.plugin, this));
         this.subCommands.add(new RemoveHelperCommand(this.plugin, this));
+        this.subCommands.add(new SetHomeCommand(this.plugin, this));
         this.subCommands.add(new SetOwnerCommand(this.plugin, this));
         this.subCommands.add(new SetRoadsCommand(this.plugin, this));
         this.subCommands.add(new SettingCommand(this.plugin, this));

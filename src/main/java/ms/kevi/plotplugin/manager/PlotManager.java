@@ -30,13 +30,13 @@ import cn.nukkit.math.BlockVector3;
 import cn.nukkit.math.Vector2;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.utils.Config;
+import lombok.Getter;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.event.PlotClearEvent;
 import ms.kevi.plotplugin.generator.PlotGenerator;
+import ms.kevi.plotplugin.util.*;
 import ms.kevi.plotplugin.util.async.AsyncLevelWorker;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
-import lombok.Getter;
-import ms.kevi.plotplugin.util.*;
 
 import java.io.File;
 import java.util.*;
@@ -311,6 +311,9 @@ public class PlotManager {
             plotBConfig.clear();
             plotBConfig.putAll(config);
         }
+
+        if(plotA.getHomePosition() != null) plotB.setHomePosition(plotA.getHomePosition());
+        if(plotB.getHomePosition() != null) plotA.setHomePosition(plotB.getHomePosition());
     }
 
     private void finishPlotMerge(List<Plot> plots) {
@@ -1031,8 +1034,22 @@ public class PlotManager {
     }
 
     public void teleportPlayerToPlot(Player player, Plot plot) {
-        final Vector3 plotVec = this.getPosByPlot(plot.getBasePlot());
-        player.teleport(new Location(plotVec.getX() + ((float) this.levelSettings.getPlotSize() / 2), plotVec.getY() + 1f, plotVec.getZ() - 1.5f, this.level));
+        this.teleportPlayerToPlot(player, plot, true);
+    }
+
+    public void teleportPlayerToPlot(Player player, Plot plot, boolean homeAllowed) {
+        Vector3 plotVec = this.getPosByPlot(plot.getBasePlot()).add(
+                ((float) this.levelSettings.getPlotSize() / 2),
+                1f,
+                -1.5f
+        );
+
+        if(homeAllowed) {
+            final Vector3 homePosition = plot.getHomePosition();
+            if(homePosition != null) plotVec = homePosition;
+        }
+
+        player.teleport(Location.fromObject(plotVec, this.level));
     }
 
 }

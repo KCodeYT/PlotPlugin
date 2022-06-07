@@ -71,6 +71,7 @@ public enum TranslationKey {
     HELP_CLAIM,
     HELP_CLEAR,
     HELP_DENY,
+    HELP_DELETEHOME,
     HELP_DISPOSE,
     HELP_END,
     HELP_GENERATE,
@@ -83,6 +84,7 @@ public enum TranslationKey {
     HELP_REGENROAD,
     HELP_RELOAD,
     HELP_REMOVEHELPER,
+    HELP_SETHOME,
     HELP_SETOWNER,
     HELP_SETROADS,
     HELP_SETTING,
@@ -153,7 +155,10 @@ public enum TranslationKey {
     WARP_FAILURE_FREE,
     WARP_SUCCESS,
     KICK_CANNOT_PERFORM,
-    KICK_PLAYER_KICKED;
+    KICK_PLAYER_KICKED,
+    SETHOME_SUCCESS,
+    DELETEHOME_FAILURE_NO_HOME_SET,
+    DELETEHOME_SUCCESS;
 
     @Getter
     private final String key;

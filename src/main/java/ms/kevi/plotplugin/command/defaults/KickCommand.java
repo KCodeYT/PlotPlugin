@@ -89,7 +89,7 @@ public class KickCommand extends SubCommand {
             return false;
         }
 
-        plotManager.teleportPlayerToPlot(target, plot.getBasePlot());
+        plotManager.teleportPlayerToPlot(target, plot.getBasePlot(), false);
         player.sendMessage(this.translate(player, TranslationKey.KICK_PLAYER_KICKED, target.getName()));
         return true;
     }
