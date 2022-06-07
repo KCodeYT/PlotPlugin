@@ -23,7 +23,6 @@ import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.Location;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.math.BlockVector3;
@@ -1049,12 +1048,20 @@ public class PlotManager {
             if(homePosition != null) plotVec = homePosition.clone();
         }
 
-        for(int y = plotVec.getFloorY(); this.level.isOverWorld() ? y <= 319 : y <= 255; y++) {
-            plotVec.setY(y);
-            if(this.level.standable(plotVec)) break;
+        final int y = plotVec.getFloorY();
+        final int minY = this.level.isOverWorld() ? -64 : 0;
+        final int maxY = this.level.isOverWorld() ? 319 : this.level.isNether() ? 127 : 255;
+        for(int offset = 0; ; offset++) {
+            if(plotVec.getY() < minY && plotVec.getY() > maxY) break;
+
+            plotVec.setY(y - offset);
+            if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
+
+            plotVec.setY(y + offset);
+            if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
         }
 
-        player.teleport(plotVec);
+        player.teleport(plotVec.add(0, 0.1, 0));
     }
 
 }
