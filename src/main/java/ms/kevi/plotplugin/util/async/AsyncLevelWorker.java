@@ -54,8 +54,10 @@ public class AsyncLevelWorker {
                     if(fullChunk == null) continue;
                     this.addChunk(fullChunk);
 
-                    for(int y = startPos.getY(); y <= endPos.getY(); y++)
-                        fullChunk.setBlockState(x & 15, y, z & 15, blockState);
+                    for(int y = startPos.getY(); y <= endPos.getY(); y++) {
+                        fullChunk.setBlockStateAtLayer(x & 15, y, z & 15, 0, blockState);
+                        fullChunk.setBlockStateAtLayer(x & 15, y, z & 15, 1, blockState);
+                    }
                 }
             }
         });
