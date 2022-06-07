@@ -52,7 +52,7 @@ public class KickCommand extends SubCommand {
         final UUID targetId = this.plugin.getUniqueIdByName(targetName, false);
         final Player target = targetId != null ? player.getServer().getPlayer(targetId).orElse(null) : null;
 
-        if(!player.hasPermission("plot.command.admin.removehelper") && !plot.isOwner(player.getUniqueId())) {
+        if(!player.hasPermission("plot.command.admin.kick") && !plot.isOwner(player.getUniqueId())) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }

@@ -67,7 +67,7 @@ public class WarpCommand extends SubCommand {
             return false;
         }
 
-        if((!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.nodeny")) {
+        if((!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.bypass.deny")) {
             plotManager.teleportPlayerToPlot(player, plot);
             player.sendMessage(this.translate(player, TranslationKey.WARP_SUCCESS, (plotX + ";" + plotZ)));
             return true;
