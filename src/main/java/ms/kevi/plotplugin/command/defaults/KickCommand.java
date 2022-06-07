@@ -32,10 +32,10 @@ import java.util.UUID;
  * @author Kevims KCodeYT
  * @version 1.0
  */
-public class SetOwnerCommand extends SubCommand {
+public class KickCommand extends SubCommand {
 
-    public SetOwnerCommand(PlotPlugin plugin, PlotCommand parent) {
-        super(plugin, parent, "setowner");
+    public KickCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "kick");
         this.addParameter(CommandParameter.newType("player", CommandParamType.TARGET));
     }
 
@@ -52,26 +52,45 @@ public class SetOwnerCommand extends SubCommand {
         final UUID targetId = this.plugin.getUniqueIdByName(targetName, false);
         final Player target = targetId != null ? player.getServer().getPlayer(targetId).orElse(null) : null;
 
-        if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.setowner")) {
-            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
-            return false;
-        }
-
-        if(targetName.trim().isEmpty() || targetId == null) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
-            return false;
-        }
-
-        if(!player.hasPermission("plot.command.admin.setowner") && !plot.isOwner(player.getUniqueId())) {
+        if(!player.hasPermission("plot.command.admin.removehelper") && !plot.isOwner(player.getUniqueId())) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }
 
-        plot.setOwner(targetId);
-        plotManager.savePlots();
-        if(target != null)
-            target.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
-        player.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS, this.plugin.getCorrectName(targetId)));
+        if(targetName.equalsIgnoreCase(player.getName())) {
+            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
+            return false;
+        }
+
+        if(targetName.isEmpty() || targetId == null) {
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));
+            return false;
+        }
+
+        if(target == null) {
+            player.sendMessage(this.translate(player, TranslationKey.PLAYER_NOT_ONLINE));
+            return false;
+        }
+
+        if(target.hasPermission("plot.admin.bypass.kick") || plot.isHelper(targetId) || plot.isOwner(targetId)) {
+            player.sendMessage(this.translate(player, TranslationKey.KICK_CANNOT_PERFORM));
+            return false;
+        }
+
+        final PlotManager targetPlotManager = this.plugin.getPlotManager(target.getLevel());
+        final Plot targetPlot;
+        if(targetPlotManager == null || (targetPlot = targetPlotManager.getMergedPlot(target.getFloorX(), target.getFloorZ())) == null) {
+            player.sendMessage(this.translate(player, TranslationKey.KICK_CANNOT_PERFORM));
+            return false;
+        }
+
+        if(!targetPlot.getBasePlot().equals(plot.getBasePlot())) {
+            player.sendMessage(this.translate(player, TranslationKey.KICK_CANNOT_PERFORM));
+            return false;
+        }
+
+        plotManager.teleportPlayerToPlot(target, plot.getBasePlot());
+        player.sendMessage(this.translate(player, TranslationKey.KICK_PLAYER_KICKED, target.getName()));
         return true;
     }
 

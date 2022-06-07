@@ -53,7 +53,7 @@ public class HomeCommand extends SubCommand {
         if(plotId < 0) plotId = 0;
 
         final String targetName = (args.length >= 2 ? this.plugin.findPlayerName(args[0]) : player.getName()).trim();
-        final UUID targetId = this.plugin.getUniqueIdByName(targetName);
+        final UUID targetId = this.plugin.getUniqueIdByName(targetName, false);
 
         if(targetName.isEmpty() || targetId == null) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLAYER));

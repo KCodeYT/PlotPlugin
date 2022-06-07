@@ -16,10 +16,10 @@
 
 package ms.kevi.plotplugin.util;
 
-import ms.kevi.plotplugin.manager.PlotManager;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import ms.kevi.plotplugin.manager.PlotManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -220,7 +220,8 @@ public class Plot {
 
     public Plot getBasePlot() {
         if(this.origin != null) return this.origin;
-        return this.origin = this;
+        this.recalculateOrigin();
+        return this.origin;
     }
 
     @Override

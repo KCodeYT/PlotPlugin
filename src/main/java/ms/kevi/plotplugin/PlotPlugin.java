@@ -242,8 +242,12 @@ public class PlotPlugin extends PluginBase {
     }
 
     public UUID getUniqueIdByName(String playerName) {
+        return this.getUniqueIdByName(playerName, true);
+    }
+
+    public UUID getUniqueIdByName(String playerName, boolean allowEveryone) {
         final String firstPlayerName = playerName.trim();
-        if(firstPlayerName.equals(Utils.STRING_EVERYONE))
+        if(allowEveryone && firstPlayerName.equals(Utils.STRING_EVERYONE))
             return Utils.UUID_EVERYONE;
 
         for(Map.Entry<String, Object> entry : this.playersConfig.getAll().entrySet()) {

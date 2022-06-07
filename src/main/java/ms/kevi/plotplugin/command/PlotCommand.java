@@ -51,6 +51,7 @@ public class PlotCommand extends Command {
         this.subCommands.add(new HomeCommand(this.plugin, this));
         this.subCommands.add(new HomesCommand(this.plugin, this));
         this.subCommands.add(new InfoCommand(this.plugin, this));
+        this.subCommands.add(new KickCommand(this.plugin, this));
         this.subCommands.add(new MergeCommand(this.plugin, this));
         this.subCommands.add(new RegenAllRoadsCommand(this.plugin, this));
         this.subCommands.add(new RegenRoadCommand(this.plugin, this));

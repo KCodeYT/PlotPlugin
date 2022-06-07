@@ -76,6 +76,7 @@ public enum TranslationKey {
     HELP_GENERATE,
     HELP_HOME,
     HELP_HOMES,
+    HELP_KICK,
     HELP_INFO,
     HELP_MERGE,
     HELP_REGENALLROADS,
@@ -125,6 +126,7 @@ public enum TranslationKey {
     NO_PLOT_WORLD,
     NO_WORLD,
     PLAYER_SELF,
+    PLAYER_NOT_ONLINE,
     PLOT_POPUP_NO_OWNER,
     PLOT_POPUP_OWNER,
     REGENALLROADS_FINISHED,
@@ -149,7 +151,9 @@ public enum TranslationKey {
     UNLINK_SUCCESS,
     WARP_FAILURE,
     WARP_FAILURE_FREE,
-    WARP_SUCCESS;
+    WARP_SUCCESS,
+    KICK_CANNOT_PERFORM,
+    KICK_PLAYER_KICKED;
 
     @Getter
     private final String key;
