@@ -1046,10 +1046,15 @@ public class PlotManager {
 
         if(homeAllowed) {
             final Vector3 homePosition = plot.getHomePosition();
-            if(homePosition != null) plotVec = homePosition;
+            if(homePosition != null) plotVec = homePosition.clone();
         }
 
-        player.teleport(Location.fromObject(plotVec, this.level));
+        for(int y = plotVec.getFloorY(); this.level.isOverWorld() ? y <= 319 : y <= 255; y++) {
+            plotVec.setY(y);
+            if(this.level.standable(plotVec)) break;
+        }
+
+        player.teleport(plotVec);
     }
 
 }
