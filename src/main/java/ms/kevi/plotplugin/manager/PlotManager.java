@@ -1037,16 +1037,28 @@ public class PlotManager {
     }
 
     public void teleportPlayerToPlot(Player player, Plot plot, boolean homeAllowed) {
-        Vector3 plotVec = this.getPosByPlot(plot.getBasePlot()).add(
-                ((float) this.levelSettings.getPlotSize() / 2),
-                1f,
-                -1.5f
-        );
+        Vector3 plotVec = null;
 
         if(homeAllowed) {
             final Vector3 homePosition = plot.getHomePosition();
             if(homePosition != null) plotVec = homePosition.clone();
+
+            if(plotVec != null) {
+                final Plot mergedPlot = this.getMergedPlot(plotVec.getFloorX(), plotVec.getFloorZ());
+                if(mergedPlot == null || !plot.getBasePlot().equals(mergedPlot.getBasePlot())) {
+                    plot.setHomePosition(null);
+                    this.savePlots();
+                    plotVec = null;
+                }
+            }
         }
+
+        if(plotVec == null)
+            plotVec = this.getPosByPlot(plot.getBasePlot()).add(
+                    ((float) this.levelSettings.getPlotSize() / 2),
+                    1f,
+                    -1.5f
+            );
 
         final int y = plotVec.getFloorY();
         final int minY = this.level.isOverWorld() ? -64 : 0;
