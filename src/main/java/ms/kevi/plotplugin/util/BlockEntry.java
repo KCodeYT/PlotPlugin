@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @Builder
 @Value
-public class WallEntry {
+public class BlockEntry {
 
     boolean isDefault;
     String name;
@@ -37,8 +37,8 @@ public class WallEntry {
     String imageData;
     String permission;
 
-    public static WallEntry of(Map<?, ?> map) {
-        return WallEntry.builder().
+    public static BlockEntry of(Map<?, ?> map) {
+        return BlockEntry.builder().
                 isDefault(map.get("name").equals("reset_to_default")).
                 name((String) map.get("name")).
                 blockState(map.containsKey("block_id") ? BlockState.of((int) map.get("block_id"), (int) map.get("block_data")) : null).

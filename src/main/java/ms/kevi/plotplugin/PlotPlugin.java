@@ -35,7 +35,7 @@ import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.PlotLevelRegistration;
 import ms.kevi.plotplugin.util.PlotLevelSettings;
 import ms.kevi.plotplugin.util.Utils;
-import ms.kevi.plotplugin.util.WallEntry;
+import ms.kevi.plotplugin.util.BlockEntry;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 import java.io.BufferedReader;
@@ -86,7 +86,10 @@ public class PlotPlugin extends PluginBase {
     private boolean addOtherCommands = true;
 
     @Getter
-    private List<WallEntry> wallEntries = new ArrayList<>();
+    private final List<BlockEntry> borderEntries = new ArrayList<>();
+
+    @Getter
+    private final List<BlockEntry> wallEntries = new ArrayList<>();
 
     @Override
     public void onLoad() {
@@ -140,9 +143,20 @@ public class PlotPlugin extends PluginBase {
 
         this.addOtherCommands = config.getBoolean("add_other_commands");
 
+        if(!config.exists("borders")) {
+            final List<Map<String, Object>> defaultWalls = new ArrayList<>();
+            defaultWalls.add(Utils.createMap(List.of("name", "image_type", "image_data"), List.of("reset_to_default", "PATH", "textures/ui/undoArrow")));
+            defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data"), List.of("Diamond", 57, 0, "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/c/c8/Block_of_Diamond_JE5_BE3.png")));
+            defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data", "permission"), List.of("Emerald", 133, 0, "plot.wall.emerald", "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/0/0b/Block_of_Emerald_JE4_BE3.png")));
+            defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data", "permission"), List.of("Gold", 41, 0, "plot.wall.gold", "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/7/72/Block_of_Gold_JE6_BE3.png")));
+
+            config.set("borders", defaultWalls);
+            config.save();
+        }
+
         if(!config.exists("walls")) {
             final List<Map<String, Object>> defaultWalls = new ArrayList<>();
-            defaultWalls.add(Utils.createMap(List.of("name", "image_type", "image_data"), List.of("reset_to_default", "PATH", "blocks\\barrier.png")));
+            defaultWalls.add(Utils.createMap(List.of("name", "image_type", "image_data"), List.of("reset_to_default", "PATH", "textures/ui/undoArrow")));
             defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data"), List.of("Diamond", 57, 0, "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/c/c8/Block_of_Diamond_JE5_BE3.png")));
             defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data", "permission"), List.of("Emerald", 133, 0, "plot.wall.emerald", "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/0/0b/Block_of_Emerald_JE4_BE3.png")));
             defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data", "permission"), List.of("Gold", 41, 0, "plot.wall.gold", "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/7/72/Block_of_Gold_JE6_BE3.png")));
@@ -151,7 +165,8 @@ public class PlotPlugin extends PluginBase {
             config.save();
         }
 
-        this.wallEntries.addAll(config.getMapList("walls").stream().map(WallEntry::of).toList());
+        this.borderEntries.addAll(config.getMapList("borders").stream().map(BlockEntry::of).toList());
+        this.wallEntries.addAll(config.getMapList("walls").stream().map(BlockEntry::of).toList());
 
         try {
             final String defaultLang = config.getString("default_lang");

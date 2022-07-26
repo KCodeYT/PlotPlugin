@@ -37,10 +37,10 @@ import java.util.Map;
  * @author Kevims KCodeYT
  * @version 1.0
  */
-public class WallCommand extends SubCommand {
+public class BorderCommand extends SubCommand {
 
-    public WallCommand(PlotPlugin plugin, PlotCommand parent) {
-        super(plugin, parent, "wall");
+    public BorderCommand(PlotPlugin plugin, PlotCommand parent) {
+        super(plugin, parent, "border");
     }
 
     @Override
@@ -52,15 +52,15 @@ public class WallCommand extends SubCommand {
             return false;
         }
 
-        if(!player.hasPermission("plot.command.admin.wand") && !plot.isOwner(player.getUniqueId())) {
+        if(!player.hasPermission("plot.command.admin.wall") && !plot.isOwner(player.getUniqueId())) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }
 
-        final FormWindowSimple window = new FormWindowSimple(this.translate(player, TranslationKey.WALL_FORM_TITLE), "");
+        final FormWindowSimple window = new FormWindowSimple(this.translate(player, TranslationKey.BORDER_FORM_TITLE), "");
 
         final Map<ElementButton, BlockEntry> buttons = new HashMap<>();
-        for(BlockEntry entry : this.plugin.getWallEntries()) {
+        for(BlockEntry entry : this.plugin.getBorderEntries()) {
             final String imageType = entry.getImageType();
             final ElementButtonImageData imageData;
             if(imageType != null) {
@@ -75,10 +75,10 @@ public class WallCommand extends SubCommand {
 
             final ElementButton button;
             if(entry.isDefault()) {
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_RESET_TO_DEFAULT_BUTTON).replace("\\n", "\n"), imageData));
+                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.BORDER_RESET_TO_DEFAULT_BUTTON).replace("\\n", "\n"), imageData));
             } else {
                 final boolean hasPerm = entry.getPermission() == null || player.hasPermission(entry.getPermission());
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_FORM_BUTTON, entry.getName(), this.translate(player, hasPerm ? TranslationKey.WALL_BUTTON_HAS_PERM : TranslationKey.WALL_BUTTON_NO_PERM)).replace("\\n", "\n"), imageData));
+                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.BORDER_FORM_BUTTON, entry.getName(), this.translate(player, hasPerm ? TranslationKey.BORDER_BUTTON_HAS_PERM : TranslationKey.BORDER_BUTTON_NO_PERM)).replace("\\n", "\n"), imageData));
             }
 
             buttons.put(button, entry);
@@ -91,18 +91,18 @@ public class WallCommand extends SubCommand {
                 if(button == null || (entry = buttons.get(button)) == null) return;
 
                 if(entry.getPermission() != null && !player.hasPermission(entry.getPermission())) {
-                    player.sendMessage(this.translate(player, TranslationKey.WALL_NO_PERMS, entry.getName()));
+                    player.sendMessage(this.translate(player, TranslationKey.BORDER_NO_PERMS, entry.getName()));
                     return;
                 }
 
                 if(entry.isDefault()) {
                     for(Plot mergedPlot : plotManager.getConnectedPlots(plot))
-                        plotManager.changeWall(mergedPlot, plotManager.getLevelSettings().getWallFillingState());
-                    player.sendMessage(this.translate(player, TranslationKey.WALL_RESET_TO_DEFAULT_SUCCESS));
+                        plotManager.changeBorder(mergedPlot, plotManager.getLevelSettings().getClaimPlotState());
+                    player.sendMessage(this.translate(player, TranslationKey.BORDER_RESET_TO_DEFAULT_SUCCESS));
                 } else {
                     for(Plot mergedPlot : plotManager.getConnectedPlots(plot))
-                        plotManager.changeWall(mergedPlot, entry.getBlockState());
-                    player.sendMessage(this.translate(player, TranslationKey.WALL_SUCCESS, entry.getName()));
+                        plotManager.changeBorder(mergedPlot, entry.getBlockState());
+                    player.sendMessage(this.translate(player, TranslationKey.BORDER_SUCCESS, entry.getName()));
                 }
             }
         }));

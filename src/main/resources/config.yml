@@ -4,14 +4,37 @@ default_lang: en_US
 #Plots per home page (/homes)
 plots_per_page: 5
 
-#Add "other" commands like /plot wall or /plot wand
+#Add "other" commands like /plot border or /plot wall
 add_other_commands: true
+
+#Plot border command configuration
+borders:
+  - name: "reset_to_default"
+    image_type: PATH
+    image_data: "textures/ui/undoArrow"
+  - name: "Diamond"
+    block_id: 57
+    block_data: 0
+    image_type: URL
+    image_data: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/c/c8/Block_of_Diamond_JE5_BE3.png"
+  - name: "Emerald"
+    block_id: 133
+    block_data: 0
+    permission: "plot.wall.emerald"
+    image_type: URL
+    image_data: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/0/0b/Block_of_Emerald_JE4_BE3.png"
+  - name: "Gold"
+    block_id: 41
+    block_data: 0
+    permission: "plot.wall.gold"
+    image_type: URL
+    image_data: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/7/72/Block_of_Gold_JE6_BE3.png"
 
 #Plot wall command configuration
 walls:
   - name: "reset_to_default"
     image_type: PATH
-    image_data: "textures/blocks/barrier"
+    image_data: "textures/ui/undoArrow"
   - name: "Diamond"
     block_id: 57
     block_data: 0
