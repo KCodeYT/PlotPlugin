@@ -21,6 +21,8 @@ import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.level.ChunkManager;
+import cn.nukkit.level.DimensionData;
+import cn.nukkit.level.DimensionEnum;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.generator.Generator;
@@ -63,6 +65,14 @@ public class PlotGenerator extends Generator {
 
     public PlotGenerator(Map<String, Object> ignored) {
         this.plugin = PlotPlugin.INSTANCE;
+    }
+
+    @Override
+    public DimensionData getDimensionData() {
+        final PlotManager plotManager;
+        if(this.level != null && (plotManager = this.plugin.getPlotManager(this.level)) != null)
+            return DimensionEnum.getDataFromId(plotManager.getLevelSettings().getDimension());
+        return DimensionEnum.OVERWORLD.getDimensionData();
     }
 
     @Override
