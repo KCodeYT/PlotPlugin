@@ -16,6 +16,8 @@
 
 package ms.kevi.plotplugin.util;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -53,6 +55,14 @@ public class Utils {
         } catch(Throwable throwable) {
             return false;
         }
+    }
+
+    public static <K, V> Map<K, V> createMap(List<K> keys, List<V> values) {
+        if(keys.size() != values.size()) throw new IllegalArgumentException("Keys and values must be the same size");
+        final Map<K, V> map = new java.util.HashMap<>();
+        for(int i = 0; i < keys.size(); i++) map.put(keys.get(i), values.get(i));
+
+        return map;
     }
 
 }

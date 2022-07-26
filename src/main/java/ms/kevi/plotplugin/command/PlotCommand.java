@@ -21,6 +21,7 @@ import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.defaults.*;
+import ms.kevi.plotplugin.command.other.WallCommand;
 import ms.kevi.plotplugin.lang.TranslationKey;
 
 import java.util.Arrays;
@@ -66,6 +67,10 @@ public class PlotCommand extends Command {
         this.subCommands.add(new UndenyCommand(this.plugin, this));
         this.subCommands.add(new UnlinkCommand(this.plugin, this));
         this.subCommands.add(new WarpCommand(this.plugin, this));
+
+        if(this.plugin.isAddOtherCommands()) {
+            this.subCommands.add(new WallCommand(this.plugin, this));
+        }
     }
 
     @Override
