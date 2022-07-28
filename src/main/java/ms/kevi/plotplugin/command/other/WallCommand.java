@@ -41,6 +41,7 @@ public class WallCommand extends SubCommand {
 
     public WallCommand(PlotPlugin plugin, PlotCommand parent) {
         super(plugin, parent, "wall");
+        this.setPermission("plot.command.wall");
     }
 
     @Override
@@ -52,7 +53,7 @@ public class WallCommand extends SubCommand {
             return false;
         }
 
-        if(!player.hasPermission("plot.command.admin.wand") && !plot.isOwner(player.getUniqueId())) {
+        if(!player.hasPermission("plot.command.admin.wall") && !plot.isOwner(player.getUniqueId())) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }

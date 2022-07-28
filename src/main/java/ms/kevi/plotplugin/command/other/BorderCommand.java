@@ -40,7 +40,8 @@ import java.util.Map;
 public class BorderCommand extends SubCommand {
 
     public BorderCommand(PlotPlugin plugin, PlotCommand parent) {
-        super(plugin, parent, "border");
+        super(plugin, parent, "border", "b");
+        this.setPermission("plot.command.border");
     }
 
     @Override
@@ -52,7 +53,7 @@ public class BorderCommand extends SubCommand {
             return false;
         }
 
-        if(!player.hasPermission("plot.command.admin.wall") && !plot.isOwner(player.getUniqueId())) {
+        if(!player.hasPermission("plot.command.admin.border") && !plot.isOwner(player.getUniqueId())) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }

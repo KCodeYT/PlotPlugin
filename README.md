@@ -60,12 +60,21 @@ Commands and Permissions
 | ~         | unlink          | plot.command.admin.unlink          | ---                           |
 | ~         | warp            | ---                                | w                             |
 
+Commands that need to be enabled in config.yml
+------------------------------
+
+| Command | Sub command | Permission          | Aliases |
+|---------|-------------|---------------------|---------|
+| /plot   | border      | plot.command.border | b       |
+| ~       | wall        | plot.command.wall   | ---     |
+
 Other Permissions
 ------------------------------
 
 | Permission                      | Discription                                                              |
 |---------------------------------|--------------------------------------------------------------------------|
 | plot.command.admin.addhelper    | Bypasses the owner check when adding a helper to a plot.                 |
+| plot.command.admin.border       | Bypasses the owner check when changing the plot border block.            |
 | plot.command.admin.clear        | Bypasses the owner check when clearing a plot.                           |
 | plot.command.admin.deletehome   | Bypasses the owner check when deleting the spawn point of a plot         |
 | plot.command.admin.deny         | Bypasses the owner check when denying a player from a plot.              |
@@ -79,6 +88,7 @@ Other Permissions
 | plot.command.admin.config       | Bypasses the owner check when setting the configuration of a plot.       |
 | plot.command.admin.undeny       | Bypasses the owner check when undenying a player from a plot.            |
 | plot.command.admin.unlink       | Bypasses the owner check when unlinking a plot.                          |
+| plot.command.admin.wall         | Bypasses the owner check when changing the plot wall block.              |
 | plot.admin.bypass.deny          | Bypasses the denial of a player from a plot.                             |
 | plot.admin.bypass.kick          | Bypasses the kick of a player from a plot.                               |
 | plot.admin.interact             | Allows you to interact with blocks on the road.                          |
