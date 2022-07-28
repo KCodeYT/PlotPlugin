@@ -98,4 +98,4 @@ Other Permissions
 | plot.admin.break                | Allows you to break blocks on the road.                                  |
 | plot.admin.place                | Allows you to place blocks on the road.                                  |
 | plot.merge.unlimited            | Allows you to merge unlimited plots.                                     |
-| plot.merge.limit.<any number>   | Limits the player to only merge up to the given amount of plots.         |
+| plot.merge.limit.\<any number>  | Limits the player to only merge up to the given amount of plots.         |
