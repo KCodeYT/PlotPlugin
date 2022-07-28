@@ -79,11 +79,11 @@ warp-success=&6&lCitybuild &8&l» &r&aDu wurdest zu dem Grundstück mit der ID &
 warp-failure=&6&lCitybuild &8&l» &r&cDu bist auf dem Grundstück gesperrt!
 help-title=&7====== &6Command Hilfe &7======
 help-reload=&6/p reload &7| &6Lädt die Welten und Sprachen konfigurationen neu
-help-unlink=&6/p unlink &7| &6Trennt das Grundstück von seinen Nachbarn
+help-unlink=&6/p unlink &7| &6Trennt alle verbundenen Grundstücke von ihren verbundenen Nachbarn
 help-generate=&6/p generate [level name] [default plot world] &7| &6Erstelle eine neue Plot Welt
 help-regenroad=&6/p regenroad &7| &6Lasse den Weg in deinem Chunk erneut generieren
 help-regenallroads=&6/p regenroad [radius] &7| &6Lasse den Weg in einem Radius erneut generieren
-help-merge=&6/p merge &7| &6Verbinde das Grundstück mit dem nachbar Grundstück
+help-merge=&6/p merge &7| &6Verbinde das Grundstück mit dem Grundstück, welches du anschaust
 help-setroads=&6/p setroads &7| &6Erstelle Schematic für die Grundstück Wege
 help-info=&6/p info &7| &6Lasse dir die Informationen über das aktuelle Grundstück anzeigen
 help-auto=&6/p auto &7| &6Teleportiere und beanspruche das nächste Freie Grundstück

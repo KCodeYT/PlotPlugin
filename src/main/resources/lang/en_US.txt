@@ -81,11 +81,11 @@ warp-success=&6&lCitybuild &8&l» &r&aYou have been teleported to the plot with 
 warp-failure=&6&lCitybuild &8&l» &r&cYou are excluded from this plot!
 help-title=&7====== &6Command Help &7======
 help-reload=&6/p reload &7| &6Reloads worlds and language configurations
-help-unlink=&6/p unlink &7| &6Separates the plot from its neighbors
+help-unlink=&6/p unlink &7| &6Separates all connected plots from its merged neighbors
 help-generate=&6/p generate [level name] [default plot world] &7| &6Creates a new plot world
 help-regenroad=&6/p regenroad &7| &6Regenerates the road in your chunk
 help-regenallroads=&6/p regenroad [radius] &7| &6Regenerates the road in the given radius
-help-merge=&6/p merge &7| &6Connect your plot with its neighbor
+help-merge=&6/p merge &7| &6Connect your plot with the plot you are looking at
 help-setroads=&6/p setroads &7| &6Create schematic for plot roads
 help-info=&6/p info &7| &6Displays information about the current plot
 help-auto=&6/p auto &7| &6Teleport and claim the next free plot
