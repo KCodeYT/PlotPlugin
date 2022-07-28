@@ -22,6 +22,8 @@ import cn.nukkit.event.HandlerList;
 import ms.kevi.plotplugin.util.Plot;
 import lombok.Getter;
 
+import java.util.Set;
+
 /**
  * @author Kevims KCodeYT
  * @version 1.0
@@ -34,11 +36,13 @@ public class PlotPreMergeEvent extends PlotEvent implements Cancellable {
 
     private final Player player;
     private final int direction;
+    private final Set<Plot> plots;
 
-    public PlotPreMergeEvent(Player player, Plot plot, int direction) {
+    public PlotPreMergeEvent(Player player, Plot plot, int direction, Set<Plot> plots) {
         super(plot);
         this.player = player;
         this.direction = direction;
+        this.plots = plots;
     }
 
 }

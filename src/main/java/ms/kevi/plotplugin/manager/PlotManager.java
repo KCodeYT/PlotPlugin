@@ -251,19 +251,22 @@ public class PlotManager {
         return tmpSet;
     }
 
-    public boolean startMerge(Plot plot, int dir) {
-        final Plot relativePlot = this.getPlotById(plot.getRelative(dir));
-
-        final List<Plot> plots = new ArrayList<>();
+    public Set<Plot> calculatePlotsToMerge(Plot plot, int dir) {
+        final Set<Plot> plots = new LinkedHashSet<>();
         plots.addAll(this.getConnectedPlots(plot));
-        plots.addAll(this.getConnectedPlots(relativePlot));
+        plots.addAll(this.getConnectedPlots(this.getPlotById(plot.getRelative(dir))));
 
+        return plots;
+    }
+
+    public boolean startMerge(Plot plot, Set<Plot> plots) {
         final WhenDone whenDone = new WhenDone(() -> {
             this.finishPlotMerge(plots);
-            plot.recalculateOrigin();
 
-            for(Plot other : plots)
+            for(Plot other : plots) {
+                other.recalculateOrigin();
                 if(!other.equals(plot)) this.mergePlotData(plot, other);
+            }
 
             this.savePlots();
         });
@@ -315,7 +318,7 @@ public class PlotManager {
         if(plotB.getHomePosition() != null) plotA.setHomePosition(plotB.getHomePosition());
     }
 
-    private void finishPlotMerge(List<Plot> plots) {
+    private void finishPlotMerge(Set<Plot> plots) {
         final BlockState claimBlock = this.levelSettings.getClaimPlotState();
         final BlockState wallBlock = this.levelSettings.getWallPlotState();
         final BlockState wallFillingBlock = this.levelSettings.getWallFillingState();

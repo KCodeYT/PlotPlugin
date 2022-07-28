@@ -18,8 +18,10 @@ package ms.kevi.plotplugin.event;
 
 import cn.nukkit.Player;
 import cn.nukkit.event.HandlerList;
-import ms.kevi.plotplugin.util.Plot;
 import lombok.Getter;
+import ms.kevi.plotplugin.util.Plot;
+
+import java.util.Set;
 
 /**
  * @author Kevims KCodeYT
@@ -32,12 +34,12 @@ public class PlotMergeEvent extends PlotEvent {
     private static final HandlerList handlers = new HandlerList();
 
     private final Player player;
-    private final int direction;
+    private final Set<Plot> plots;
 
-    public PlotMergeEvent(Player player, Plot plot, int direction) {
+    public PlotMergeEvent(Player player, Plot plot, Set<Plot> plots) {
         super(plot);
         this.player = player;
-        this.direction = direction;
+        this.plots = plots;
     }
 
 }
