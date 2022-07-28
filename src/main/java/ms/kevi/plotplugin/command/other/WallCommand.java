@@ -26,12 +26,15 @@ import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.lang.TranslationKey;
 import ms.kevi.plotplugin.manager.PlotManager;
-import ms.kevi.plotplugin.util.Plot;
 import ms.kevi.plotplugin.util.BlockEntry;
+import ms.kevi.plotplugin.util.Plot;
 
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+
+import static cn.nukkit.form.element.ElementButtonImageData.IMAGE_DATA_TYPE_PATH;
+import static cn.nukkit.form.element.ElementButtonImageData.IMAGE_DATA_TYPE_URL;
 
 /**
  * @author Kevims KCodeYT
@@ -62,26 +65,28 @@ public class WallCommand extends SubCommand {
 
         final Map<ElementButton, BlockEntry> buttons = new HashMap<>();
         for(BlockEntry entry : this.plugin.getWallEntries()) {
-            final String imageType = entry.getImageType();
-            final ElementButtonImageData imageData;
-            if(imageType != null) {
-                switch(imageType.toLowerCase(Locale.ROOT)) {
-                    case "url" ->
-                            imageData = new ElementButtonImageData(ElementButtonImageData.IMAGE_DATA_TYPE_URL, entry.getImageData());
-                    case "path" ->
-                            imageData = new ElementButtonImageData(ElementButtonImageData.IMAGE_DATA_TYPE_PATH, entry.getImageData());
-                    default -> imageData = new ElementButtonImageData(ElementButtonImageData.IMAGE_DATA_TYPE_URL, "");
-                }
-            } else imageData = new ElementButtonImageData(ElementButtonImageData.IMAGE_DATA_TYPE_URL, "");
-
-            final ElementButton button;
+            final String text;
             if(entry.isDefault()) {
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_RESET_TO_DEFAULT_BUTTON), imageData));
+                text = this.translate(player, TranslationKey.WALL_RESET_TO_DEFAULT_BUTTON);
             } else {
                 final boolean hasPerm = entry.getPermission() == null || player.hasPermission(entry.getPermission());
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_FORM_BUTTON, entry.getName(), this.translate(player, hasPerm ? TranslationKey.WALL_BUTTON_HAS_PERM : TranslationKey.WALL_BUTTON_NO_PERM)), imageData));
+                final String permText = this.translate(player, hasPerm ? TranslationKey.WALL_BUTTON_HAS_PERM : TranslationKey.WALL_BUTTON_NO_PERM);
+
+                text = this.translate(player, TranslationKey.WALL_FORM_BUTTON, entry.getName(), permText);
             }
 
+            final String imageType = entry.getImageType();
+            final ElementButtonImageData imageData;
+            switch(imageType == null ? "" : imageType.toLowerCase(Locale.ROOT)) {
+                case "url" -> imageData = new ElementButtonImageData(IMAGE_DATA_TYPE_URL, entry.getImageData());
+                case "path" -> imageData = new ElementButtonImageData(IMAGE_DATA_TYPE_PATH, entry.getImageData());
+                default -> imageData = null;
+            }
+
+            final ElementButton button = new ElementButton(text);
+            if(imageData != null) button.addImage(imageData);
+
+            window.addButton(button);
             buttons.put(button, entry);
         }
 
