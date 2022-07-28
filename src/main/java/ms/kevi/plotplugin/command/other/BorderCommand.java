@@ -76,10 +76,10 @@ public class BorderCommand extends SubCommand {
 
             final ElementButton button;
             if(entry.isDefault()) {
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.BORDER_RESET_TO_DEFAULT_BUTTON).replace("\\n", "\n"), imageData));
+                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.BORDER_RESET_TO_DEFAULT_BUTTON), imageData));
             } else {
                 final boolean hasPerm = entry.getPermission() == null || player.hasPermission(entry.getPermission());
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.BORDER_FORM_BUTTON, entry.getName(), this.translate(player, hasPerm ? TranslationKey.BORDER_BUTTON_HAS_PERM : TranslationKey.BORDER_BUTTON_NO_PERM)).replace("\\n", "\n"), imageData));
+                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.BORDER_FORM_BUTTON, entry.getName(), this.translate(player, hasPerm ? TranslationKey.BORDER_BUTTON_HAS_PERM : TranslationKey.BORDER_BUTTON_NO_PERM)), imageData));
             }
 
             buttons.put(button, entry);

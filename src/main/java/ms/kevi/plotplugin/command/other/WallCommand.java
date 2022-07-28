@@ -76,10 +76,10 @@ public class WallCommand extends SubCommand {
 
             final ElementButton button;
             if(entry.isDefault()) {
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_RESET_TO_DEFAULT_BUTTON).replace("\\n", "\n"), imageData));
+                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_RESET_TO_DEFAULT_BUTTON), imageData));
             } else {
                 final boolean hasPerm = entry.getPermission() == null || player.hasPermission(entry.getPermission());
-                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_FORM_BUTTON, entry.getName(), this.translate(player, hasPerm ? TranslationKey.WALL_BUTTON_HAS_PERM : TranslationKey.WALL_BUTTON_NO_PERM)).replace("\\n", "\n"), imageData));
+                window.addButton(button = new ElementButton(this.translate(player, TranslationKey.WALL_FORM_BUTTON, entry.getName(), this.translate(player, hasPerm ? TranslationKey.WALL_BUTTON_HAS_PERM : TranslationKey.WALL_BUTTON_NO_PERM)), imageData));
             }
 
             buttons.put(button, entry);

@@ -75,11 +75,13 @@ public class Language {
     public String translate(Player player, TranslationKey key, Object... params) {
         final LangEntry langEntry = this.languages.getOrDefault(this.getLocaleByPlayer(player), this.languages.get(this.defaultLang));
 
-        String message = langEntry.getTranslations().get(key);
+        String message = langEntry.getTranslations().get(key).
+                replace("&", "" + TextFormat.ESCAPE).
+                replace("\\n", "\n");
         for(int i = 0; i < params.length; i++)
             message = message.replace("{" + i + "}", Objects.toString(params[i]));
 
-        return message.replaceAll("&", "" + TextFormat.ESCAPE);
+        return message;
     }
 
     public void reload() throws IOException {
