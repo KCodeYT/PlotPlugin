@@ -23,6 +23,7 @@ import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.level.Level;
+import cn.nukkit.level.Position;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.math.BlockVector3;
@@ -251,19 +252,22 @@ public class PlotManager {
         return tmpSet;
     }
 
-    public boolean startMerge(Plot plot, int dir) {
-        final Plot relativePlot = this.getPlotById(plot.getRelative(dir));
-
-        final List<Plot> plots = new ArrayList<>();
+    public Set<Plot> calculatePlotsToMerge(Plot plot, int dir) {
+        final Set<Plot> plots = new LinkedHashSet<>();
         plots.addAll(this.getConnectedPlots(plot));
-        plots.addAll(this.getConnectedPlots(relativePlot));
+        plots.addAll(this.getConnectedPlots(this.getPlotById(plot.getRelative(dir))));
 
+        return plots;
+    }
+
+    public boolean startMerge(Plot plot, Set<Plot> plots) {
         final WhenDone whenDone = new WhenDone(() -> {
             this.finishPlotMerge(plots);
-            plot.recalculateOrigin();
 
-            for(Plot other : plots)
+            for(Plot other : plots) {
+                other.recalculateOrigin();
                 if(!other.equals(plot)) this.mergePlotData(plot, other);
+            }
 
             this.savePlots();
         });
@@ -315,7 +319,7 @@ public class PlotManager {
         if(plotB.getHomePosition() != null) plotA.setHomePosition(plotB.getHomePosition());
     }
 
-    private void finishPlotMerge(List<Plot> plots) {
+    private void finishPlotMerge(Set<Plot> plots) {
         final BlockState claimBlock = this.levelSettings.getClaimPlotState();
         final BlockState wallBlock = this.levelSettings.getWallPlotState();
         final BlockState wallFillingBlock = this.levelSettings.getWallFillingState();
@@ -1161,7 +1165,7 @@ public class PlotManager {
             if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
         }
 
-        player.teleport(plotVec.add(0, 0.1, 0));
+        player.teleport(Position.fromObject(plotVec.add(0, 0.1, 0), this.level));
     }
 
 }

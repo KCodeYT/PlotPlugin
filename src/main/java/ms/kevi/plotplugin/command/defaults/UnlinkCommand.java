@@ -32,7 +32,7 @@ public class UnlinkCommand extends SubCommand {
 
     public UnlinkCommand(PlotPlugin plugin, PlotCommand parent) {
         super(plugin, parent, "unlink");
-        this.setPermission("plot.command.admin.unlink");
+        this.setPermission("plot.command.unlink");
     }
 
     @Override

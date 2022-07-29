@@ -45,6 +45,28 @@ public class ClaimCommand extends SubCommand {
             return false;
         }
 
+        final int ownedPlots = plotManager.getPlotsByOwner(player.getUniqueId()).size();
+        if(!player.isOp()) {
+            int maxLimit = -1;
+            for(String permission : player.getEffectivePermissions().keySet()) {
+                if(permission.startsWith("plot.limit.")) {
+                    try {
+                        final String limitStr = permission.substring("plot.limit.".length());
+                        if(limitStr.isBlank()) continue;
+                        final int limit = Integer.parseInt(limitStr);
+
+                        if(limit > maxLimit) maxLimit = limit;
+                    } catch(NumberFormatException ignored) {
+                    }
+                }
+            }
+
+            if(maxLimit > 0 && ownedPlots >= maxLimit) {
+                player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE_TOO_MANY, ownedPlots));
+                return false;
+            }
+        }
+
         if(!plot.hasOwner()) {
             final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true);
             this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
