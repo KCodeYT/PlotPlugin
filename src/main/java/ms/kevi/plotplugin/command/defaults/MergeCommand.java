@@ -65,9 +65,27 @@ public class MergeCommand extends SubCommand {
         }
 
         if(isOwner) {
-            if(!player.hasPermission("plot.merge.unlimited") || (player.hasPermission("plot.merge.limit." + plotsToMerge.size()) && !player.isOp())) {
-                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_TOO_MANY, plotsToMerge.size()));
-                return false;
+            if(!player.hasPermission("plot.merge.unlimited") && !player.isOp()) {
+                if(!player.isOp()) {
+                    int maxLimit = -1;
+                    for(String permission : player.getEffectivePermissions().keySet()) {
+                        if(permission.startsWith("plot.merge.limit.")) {
+                            try {
+                                final String limitStr = permission.substring("plot.merge.limit.".length());
+                                if(limitStr.isBlank()) continue;
+                                final int limit = Integer.parseInt(limitStr);
+
+                                if(limit > maxLimit) maxLimit = limit;
+                            } catch(NumberFormatException ignored) {
+                            }
+                        }
+                    }
+
+                    if(maxLimit > 0 && plotsToMerge.size() > maxLimit) {
+                        player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_TOO_MANY, plotsToMerge.size()));
+                        return false;
+                    }
+                }
             }
 
             if(plot.isMerged(dir)) {
