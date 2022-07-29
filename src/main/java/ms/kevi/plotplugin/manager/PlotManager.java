@@ -23,6 +23,7 @@ import cn.nukkit.blockentity.BlockEntity;
 import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.entity.Entity;
 import cn.nukkit.level.Level;
+import cn.nukkit.level.Position;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.math.BlockVector3;
@@ -1164,7 +1165,7 @@ public class PlotManager {
             if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
         }
 
-        player.teleport(plotVec.add(0, 0.1, 0));
+        player.teleport(Position.fromObject(plotVec.add(0, 0.1, 0), this.level));
     }
 
 }
