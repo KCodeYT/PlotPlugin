@@ -44,6 +44,12 @@ public class AutoCommand extends SubCommand {
             return false;
         }
 
+        final int ownedPlots = plotManager.getPlotsByOwner(player.getUniqueId()).size();
+        if(!player.isOp() && player.hasPermission("plot.limit." + (ownedPlots + 1))) {
+            player.sendMessage(this.translate(player, TranslationKey.AUTO_FAILURE_TOO_MANY, ownedPlots));
+            return false;
+        }
+
         final Plot plot = plotManager.getNextFreePlot();
 
         if(plot != null) {

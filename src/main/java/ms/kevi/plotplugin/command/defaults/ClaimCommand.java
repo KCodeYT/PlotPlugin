@@ -45,6 +45,12 @@ public class ClaimCommand extends SubCommand {
             return false;
         }
 
+        final int ownedPlots = plotManager.getPlotsByOwner(player.getUniqueId()).size();
+        if(!player.isOp() && player.hasPermission("plot.limit." + (ownedPlots + 1))) {
+            player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE_TOO_MANY, ownedPlots));
+            return false;
+        }
+
         if(!plot.hasOwner()) {
             final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true);
             this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);

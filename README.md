@@ -31,34 +31,34 @@ How can I create a plot world?
 Commands and Permissions
 ------------------------------
 
-| Command   | Sub command     | Permission                         | Aliases                       |
-|-----------|-----------------|------------------------------------|-------------------------------|
-| /plot     | ---             | ---                                | ---                           |
-| ~         | addhelper       | ---                                | add, trust                    |
-| ~         | auto            | ---                                | a                             |
-| ~         | claim           | ---                                | c                             |
-| ~         | clear           | ---                                | ---                           |
-| ~         | delethome       | ---                                | delhome, removehome, rmhome   |
-| ~         | deny            | ---                                | ---                           |
-| ~         | dispose         | ---                                | reset                         |
-| ~         | generate        | plot.command.admin.generate        | ---                           |
-| ~         | home            | ---                                | h, visit, v                   |
-| ~         | homes           | ---                                | ---                           |
-| ~         | info            | ---                                | i                             |
-| ~         | kick            | ---                                | ---                           |
-| ~         | merge           | plot.command.admin.merge           | ---                           |
-| ~         | regenallroads   | plot.command.admin.regenallroads   | ---                           |
-| ~         | regenroad       | plot.command.admin.regenroad       | ---                           |
-| ~         | reload          | plot.command.admin.reload          | ---                           |
-| ~         | removehelper    | ---                                | remove, untrust               |
-| ~         | sethome         | ---                                | ---                           |
-| ~         | setowner        | ---                                | ---                           |
-| ~         | setroads        | plot.command.admin.setroads        | ---                           |
-| ~         | setting         | ---                                | config                        |
-| ~         | teleport        | plot.command.admin.teleport        | tp                            |
-| ~         | undeny          | ---                                | ---                           |
-| ~         | unlink          | plot.command.admin.unlink          | ---                           |
-| ~         | warp            | ---                                | w                             |
+| Command   | Sub command     | Permission                       | Aliases                       |
+|-----------|-----------------|----------------------------------|-------------------------------|
+| /plot     | ---             | ---                              | ---                           |
+| ~         | addhelper       | ---                              | add, trust                    |
+| ~         | auto            | ---                              | a                             |
+| ~         | claim           | ---                              | c                             |
+| ~         | clear           | ---                              | ---                           |
+| ~         | delethome       | ---                              | delhome, removehome, rmhome   |
+| ~         | deny            | ---                              | ---                           |
+| ~         | dispose         | ---                              | reset                         |
+| ~         | generate        | plot.command.admin.generate      | ---                           |
+| ~         | home            | ---                              | h, visit, v                   |
+| ~         | homes           | ---                              | ---                           |
+| ~         | info            | ---                              | i                             |
+| ~         | kick            | ---                              | ---                           |
+| ~         | merge           | plot.command.merge               | ---                           |
+| ~         | regenallroads   | plot.command.admin.regenallroads | ---                           |
+| ~         | regenroad       | plot.command.admin.regenroad     | ---                           |
+| ~         | reload          | plot.command.admin.reload        | ---                           |
+| ~         | removehelper    | ---                              | remove, untrust               |
+| ~         | sethome         | ---                              | ---                           |
+| ~         | setowner        | ---                              | ---                           |
+| ~         | setroads        | plot.command.admin.setroads      | ---                           |
+| ~         | setting         | ---                              | config                        |
+| ~         | teleport        | plot.command.admin.teleport      | tp                            |
+| ~         | undeny          | ---                              | ---                           |
+| ~         | unlink          | plot.command.unlink              | ---                           |
+| ~         | warp            | ---                              | w                             |
 
 Commands that need to be enabled in config.yml
 ------------------------------
@@ -99,3 +99,4 @@ Other Permissions
 | plot.admin.place                | Allows you to place blocks on the road.                                  |
 | plot.merge.unlimited            | Allows you to merge unlimited plots.                                     |
 | plot.merge.limit.\<any number>  | Limits the player to only merge up to the given amount of plots.         |
+| plot.limit.\<any number>        | Limits the player to only claim up to the given amount of plots.         |

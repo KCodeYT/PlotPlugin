@@ -38,7 +38,7 @@ public class MergeCommand extends SubCommand {
 
     public MergeCommand(PlotPlugin plugin, PlotCommand parent) {
         super(plugin, parent, "merge");
-        this.setPermission("plot.command.admin.merge");
+        this.setPermission("plot.command.merge");
     }
 
     @Override
