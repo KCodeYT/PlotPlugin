@@ -27,7 +27,6 @@ import ms.kevi.plotplugin.lang.TranslationKey;
 import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
 
-import java.util.HashSet;
 import java.util.Set;
 
 /**
