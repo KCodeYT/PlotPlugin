@@ -32,7 +32,7 @@ jobs:
       uses: actions/upload-artifact@v3.0.0
       with:
         name: PowerNukkitX
-        path: PowerNukkitX/target/powernukkitx-1.6.0.0-PNX-SNAPSHOT-shaded.jar
+        path: PowerNukkitX/target/powernukkitx-1.6.0.0-PNX-shaded.jar
 
     - name: Get name and version from pom.xml
       run: |
