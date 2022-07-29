@@ -60,6 +60,7 @@ jobs:
       with:
         tag_name: ${{env.VER}}
         release_name: PlotPlugin v${{env.VER}}
+        draft: false
         prerelease: true
 
     - name: Upload plugin as snapshot release
