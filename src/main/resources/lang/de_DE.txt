@@ -72,6 +72,7 @@ info-end=&7====== &6Grundstücks Info &7======
 info-failure=&6&lCitybuild &8&l» &r&cDieses Grundstück gehört keiner Person.
 removed-helper=&6&lCitybuild &8&l» &r&6{0}&r&a ist nun kein Helfer mehr!
 no-helper=&6&lCitybuild &8&l» &r&6{0}&r&c ist kein Helfer!
+setowner-failure-too-many=&6&lCitybuild &8&l» &r&cDieser Spieler besitzt bereits die maximale Anzahl an Grundstücken!
 setowner-success-target=&6&lCitybuild &8&l» &r&aDu wurdest zum Besitzer des Grundstückes &6{0}&r&a ernannt!
 setowner-success=&6&lCitybuild &8&l» &r&6{0}&r&a ist nun Besitzer von diesem Grundstück!
 undeny-success=&6&lCitybuild &8&l» &r&6{0}&r&a darf nun dein Grundstück wieder betreten!
