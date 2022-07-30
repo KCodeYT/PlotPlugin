@@ -36,6 +36,7 @@ public class SetOwnerCommand extends SubCommand {
 
     public SetOwnerCommand(PlotPlugin plugin, PlotCommand parent) {
         super(plugin, parent, "setowner");
+        this.setPermission("plot.command.setowner");
         this.addParameter(CommandParameter.newType("player", CommandParamType.TARGET));
     }
 
@@ -52,8 +53,8 @@ public class SetOwnerCommand extends SubCommand {
         final UUID targetId = this.plugin.getUniqueIdByName(targetName, false);
         final Player target = targetId != null ? player.getServer().getPlayer(targetId).orElse(null) : null;
 
-        if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.setowner")) {
-            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
+        if(!plot.isOwner(player.getUniqueId()) && !player.hasPermission("plot.command.admin.setowner")) {
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
             return false;
         }
 
@@ -62,15 +63,42 @@ public class SetOwnerCommand extends SubCommand {
             return false;
         }
 
-        if(!player.hasPermission("plot.command.admin.setowner") && !plot.isOwner(player.getUniqueId())) {
-            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
+        if(target == null) {
+            player.sendMessage(this.translate(player, TranslationKey.PLAYER_NOT_ONLINE));
             return false;
+        }
+
+        if(targetName.equalsIgnoreCase(player.getName()) && !player.hasPermission("plot.command.admin.setowner")) {
+            player.sendMessage(this.translate(player, TranslationKey.PLAYER_SELF));
+            return false;
+        }
+
+        final int ownedPlots = plotManager.getPlotsByOwner(targetId).size();
+        if(!target.isOp() && !player.hasPermission("plot.command.admin.setowner")) {
+            int maxLimit = -1;
+            for(String permission : target.getEffectivePermissions().keySet()) {
+                if(permission.startsWith("plot.limit.")) {
+                    try {
+                        final String limitStr = permission.substring("plot.limit.".length());
+                        if(limitStr.isBlank()) continue;
+                        final int limit = Integer.parseInt(limitStr);
+
+                        if(limit > maxLimit) maxLimit = limit;
+                    } catch(NumberFormatException ignored) {
+                    }
+                }
+            }
+
+            if(maxLimit > 0 && ownedPlots >= maxLimit) {
+                player.sendMessage(this.translate(player, TranslationKey.SETOWNER_FAILURE_TOO_MANY));
+                return false;
+            }
         }
 
         plot.setOwner(targetId);
         plotManager.savePlots();
-        if(target != null)
-            target.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
+
+        target.sendMessage(this.translate(target, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
         player.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS, this.plugin.getCorrectName(targetId)));
         return true;
     }

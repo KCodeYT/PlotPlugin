@@ -74,6 +74,7 @@ info-end=&7====== &6Plot Info &7======
 info-failure=&6&lCitybuild &8&l» &r&cThis plot is not owned by a player.
 removed-helper=&6&lCitybuild &8&l» &r&6{0}&r&a is now no longer a helper!
 no-helper=&6&lCitybuild &8&l» &r&6{0}&r&c is not a helper!
+setowner-failure-too-many=&6&lCitybuild &8&l» &r&cThis player already has the maximum amount of plots!
 setowner-success-target=&6&lCitybuild &8&l» &r&aYou have been appointed the owner of the plot &6{0}&r&a!
 setowner-success=&6&lCitybuild &8&l» &r&6{0}&r&a is now owner of this plot!
 undeny-success=&6&lCitybuild &8&l» &r&6{0}&r&a may now enter your plot again!
