@@ -4,6 +4,9 @@ default_lang: en_US
 #Plots per home page (/homes)
 plots_per_page: 5
 
+#Shows the command parameters for each sub command
+show_command_params: true
+
 #Add "other" commands like /plot border or /plot wall
 add_other_commands: true
 

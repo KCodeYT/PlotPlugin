@@ -83,6 +83,9 @@ public class PlotPlugin extends PluginBase {
     private int plotsPerPage = 5;
 
     @Getter
+    private boolean showCommandParams = true;
+
+    @Getter
     private boolean addOtherCommands = true;
 
     @Getter
@@ -135,6 +138,13 @@ public class PlotPlugin extends PluginBase {
         }
 
         this.plotsPerPage = config.getInt("plots_per_page");
+
+        if(!config.exists("show_command_params")) {
+            config.set("show_command_params", this.showCommandParams);
+            config.save();
+        }
+
+        this.showCommandParams = config.getBoolean("show_command_params");
 
         if(!config.exists("add_other_commands")) {
             config.set("add_other_commands", this.addOtherCommands);

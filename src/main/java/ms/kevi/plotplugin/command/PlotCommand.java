@@ -19,6 +19,8 @@ package ms.kevi.plotplugin.command;
 import cn.nukkit.Player;
 import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
+import cn.nukkit.command.data.CommandEnum;
+import cn.nukkit.command.data.CommandParameter;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.defaults.*;
 import ms.kevi.plotplugin.command.other.BorderCommand;
@@ -72,6 +74,25 @@ public class PlotCommand extends Command {
         if(this.plugin.isAddOtherCommands()) {
             this.subCommands.add(new BorderCommand(this.plugin, this));
             this.subCommands.add(new WallCommand(this.plugin, this));
+        }
+
+        if(this.plugin.isShowCommandParams()) {
+            this.commandParameters.clear();
+
+            int i = 0;
+            for(SubCommand subCommand : this.subCommands) {
+                final Set<CommandParameter> parameterSet = subCommand.getParameters();
+
+                for(String alias : subCommand.getAliases()) {
+                    final CommandParameter[] parameters = new CommandParameter[parameterSet.size() + 1];
+                    parameters[0] = CommandParameter.newEnum("subcommand", false, new CommandEnum("PlotSubcommand" + alias, alias));
+
+                    int j = 1;
+                    for(CommandParameter parameter : parameterSet) parameters[j++] = parameter;
+
+                    this.commandParameters.put("PlotArgs" + i++, parameters);
+                }
+            }
         }
     }
 
