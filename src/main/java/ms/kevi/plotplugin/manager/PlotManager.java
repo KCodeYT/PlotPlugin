@@ -250,6 +250,17 @@ public class PlotManager {
         return tmpSet;
     }
 
+    public Set<Plot> getDirectConnectedPlots(Plot plot) {
+        if(plot.hasNoMerges()) return Collections.singleton(plot);
+
+        final Set<Plot> tmpSet = new HashSet<>(Collections.singleton(plot));
+        for(int iDir = 0; iDir < 4; iDir++) {
+            if(plot.isMerged(iDir)) tmpSet.add(this.getPlotById(plot.getRelative(iDir)));
+        }
+
+        return tmpSet;
+    }
+
     public Set<Plot> calculatePlotsToMerge(Plot plot, int dir) {
         final Set<Plot> plots = new LinkedHashSet<>();
         plots.addAll(this.getConnectedPlots(plot));
@@ -514,15 +525,19 @@ public class PlotManager {
     }
 
     public void unlinkPlot(Plot plot) {
-        if(plot.hasNoMerges()) return;
+        this.unlinkPlot(plot, false);
+    }
 
-        final Set<Plot> plots = this.getConnectedPlots(plot);
+    public void unlinkPlot(Plot centerPlot, boolean onlyDirectNeighbors) {
+        if(centerPlot.hasNoMerges()) return;
+
+        final Set<Plot> plots = onlyDirectNeighbors ? this.getDirectConnectedPlots(centerPlot) : this.getConnectedPlots(centerPlot);
         final List<PlotId> vectors = new ArrayList<>();
         for(Plot current : plots) vectors.add(current.getId());
 
         final WhenDone whenDone = new WhenDone(() -> this.finishPlotUnlink(vectors));
 
-        for(Plot current : plots) {
+        for(Plot current : onlyDirectNeighbors ? Collections.singleton(centerPlot) : plots) {
             if(current.isMerged(1)) {
                 this.createRoadEast(current, whenDone);
                 if(current.isMerged(2)) {
@@ -534,9 +549,19 @@ public class PlotManager {
                 this.createRoadSouth(current, whenDone);
         }
 
-        for(Plot current : plots)
-            for(int iDir = 0; iDir < 4; iDir++)
-                current.setMerged(iDir, false);
+        if(onlyDirectNeighbors) {
+            for(int iDir = 0; iDir < 4; iDir++) {
+                if(centerPlot.isMerged(iDir)) {
+                    final Plot relativePlot = this.getPlotById(centerPlot.getRelative(iDir));
+                    relativePlot.setMerged(relativePlot.getRelativeDir(centerPlot.getId()), false);
+                    centerPlot.setMerged(iDir, false);
+                }
+            }
+        } else {
+            for(Plot current : plots)
+                for(int iDir = 0; iDir < 4; iDir++)
+                    current.setMerged(iDir, false);
+        }
 
         whenDone.start();
     }
@@ -1204,15 +1229,17 @@ public class PlotManager {
         return shapes;
     }
 
-    public void disposePlot(Plot plot) {
+    public boolean disposePlot(Plot plot) {
         final WhenDone whenDone = new WhenDone(() -> {
-            this.changeWall(plot, BlockState.of(this.levelSettings.getWallFillingBlockId(), this.levelSettings.getWallFillingBlockMeta()));
-            this.changeBorder(plot, BlockState.of(this.levelSettings.getWallPlotBlockId(), this.levelSettings.getWallPlotBlockMeta()));
+            plot.setOwner(null);
+            this.unlinkPlot(plot, true);
             this.removePlot(plot);
         });
 
-        if(!this.clearPlot(plot, whenDone)) return;
+        if(!this.clearPlot(plot, whenDone)) return false;
+
         whenDone.start();
+        return true;
     }
 
     public void teleportPlayerToPlot(Player player, Plot plot) {
