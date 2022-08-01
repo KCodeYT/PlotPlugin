@@ -398,7 +398,7 @@ public class PlotManager {
         for(Entity entity : this.level.getCollidingEntities(bb))
             if(!(entity instanceof Player)) entity.close();
 
-        for(Block block : this.level.getCollisionBlocks(bb)) {
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
             final BlockEntity blockEntity = block.getLevelBlockEntity();
             if(blockEntity != null) blockEntity.close();
         }
@@ -444,7 +444,7 @@ public class PlotManager {
         for(Entity entity : this.level.getCollidingEntities(bb))
             if(!(entity instanceof Player)) entity.close();
 
-        for(Block block : this.level.getCollisionBlocks(bb)) {
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
             final BlockEntity blockEntity = block.getLevelBlockEntity();
             if(blockEntity != null) blockEntity.close();
         }
@@ -489,7 +489,7 @@ public class PlotManager {
         for(Entity entity : this.level.getCollidingEntities(bb))
             if(!(entity instanceof Player)) entity.close();
 
-        for(Block block : this.level.getCollisionBlocks(bb)) {
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
             final BlockEntity blockEntity = block.getLevelBlockEntity();
             if(blockEntity != null) blockEntity.close();
         }
@@ -604,7 +604,7 @@ public class PlotManager {
         for(Entity entity : this.level.getCollidingEntities(bb))
             if(!(entity instanceof Player)) entity.close();
 
-        for(Block block : this.level.getCollisionBlocks(bb)) {
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
             final BlockEntity blockEntity = block.getLevelBlockEntity();
             if(blockEntity != null) blockEntity.close();
         }
@@ -664,7 +664,7 @@ public class PlotManager {
         for(Entity entity : this.level.getCollidingEntities(bb))
             if(!(entity instanceof Player)) entity.close();
 
-        for(Block block : this.level.getCollisionBlocks(bb)) {
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
             final BlockEntity blockEntity = block.getLevelBlockEntity();
             if(blockEntity != null) blockEntity.close();
         }
@@ -723,7 +723,7 @@ public class PlotManager {
         for(Entity entity : this.level.getCollidingEntities(bb))
             if(!(entity instanceof Player)) entity.close();
 
-        for(Block block : this.level.getCollisionBlocks(bb)) {
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
             final BlockEntity blockEntity = block.getLevelBlockEntity();
             if(blockEntity != null) blockEntity.close();
         }
