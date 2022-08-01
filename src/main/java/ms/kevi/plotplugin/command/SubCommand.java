@@ -18,11 +18,11 @@ package ms.kevi.plotplugin.command;
 
 import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParameter;
-import ms.kevi.plotplugin.PlotPlugin;
-import ms.kevi.plotplugin.lang.TranslationKey;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import ms.kevi.plotplugin.PlotPlugin;
+import ms.kevi.plotplugin.lang.TranslationKey;
 
 import java.util.*;
 

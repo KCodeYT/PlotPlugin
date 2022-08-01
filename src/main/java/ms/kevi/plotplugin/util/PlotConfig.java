@@ -16,9 +16,9 @@
 
 package ms.kevi.plotplugin.util;
 
-import ms.kevi.plotplugin.lang.TranslationKey;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import ms.kevi.plotplugin.lang.TranslationKey;
 
 /**
  * @author Kevims KCodeYT

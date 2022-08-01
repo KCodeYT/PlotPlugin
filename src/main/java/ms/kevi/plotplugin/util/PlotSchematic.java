@@ -16,9 +16,9 @@
 
 package ms.kevi.plotplugin.util;
 
+import lombok.Getter;
 import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.schematic.Schematic;
-import lombok.Getter;
 
 import java.io.File;
 

@@ -19,10 +19,10 @@ package ms.kevi.plotplugin.event;
 import cn.nukkit.Player;
 import cn.nukkit.event.Cancellable;
 import cn.nukkit.event.HandlerList;
-import ms.kevi.plotplugin.util.Plot;
-import ms.kevi.plotplugin.util.Waiter;
 import lombok.Getter;
 import lombok.Setter;
+import ms.kevi.plotplugin.util.Plot;
+import ms.kevi.plotplugin.util.Waiter;
 
 /**
  * @author Kevims KCodeYT

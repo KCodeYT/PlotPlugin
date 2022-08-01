@@ -17,9 +17,9 @@
 package ms.kevi.plotplugin.event;
 
 import cn.nukkit.event.Event;
-import ms.kevi.plotplugin.util.Plot;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import ms.kevi.plotplugin.util.Plot;
 
 /**
  * @author Kevims KCodeYT

@@ -18,8 +18,8 @@ package ms.kevi.plotplugin.event;
 
 import cn.nukkit.Player;
 import cn.nukkit.event.HandlerList;
-import ms.kevi.plotplugin.util.Plot;
 import lombok.Getter;
+import ms.kevi.plotplugin.util.Plot;
 
 /**
  * @author Kevims KCodeYT
