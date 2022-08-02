@@ -46,7 +46,7 @@ public class ClaimCommand extends SubCommand {
         }
 
         final int ownedPlots = plotManager.getPlotsByOwner(player.getUniqueId()).size();
-        if(!player.isOp()) {
+        if(!player.hasPermission("plot.limit.unlimited")) {
             int maxLimit = -1;
             for(String permission : player.getEffectivePermissions().keySet()) {
                 if(permission.startsWith("plot.limit.")) {
