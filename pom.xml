@@ -6,7 +6,7 @@
 
     <groupId>ms.kevi</groupId>
     <artifactId>plotplugin</artifactId>
-    <version>1.1.2</version>
+    <version>1.2.0-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
