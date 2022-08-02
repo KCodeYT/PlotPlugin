@@ -88,11 +88,10 @@ public class Plot {
     }
 
     public boolean addHelper(UUID playerId) {
-        if(!this.isHelper(playerId)) {
-            this.manager.getConnectedPlots(this).forEach(plot -> plot.addHelper0(playerId));
-            return true;
-        }
-        return false;
+        if(this.isHelper(playerId)) return false;
+
+        this.manager.getConnectedPlots(this).forEach(plot -> plot.addHelper0(playerId));
+        return true;
     }
 
     private void addHelper0(UUID playerId) {
@@ -118,11 +117,10 @@ public class Plot {
     }
 
     public boolean denyPlayer(UUID playerId) {
-        if(!this.isDenied(playerId)) {
-            this.manager.getConnectedPlots(this).forEach(plot -> plot.denyPlayer0(playerId));
-            return true;
-        }
-        return false;
+        if(this.isDenied(playerId)) return false;
+
+        this.manager.getConnectedPlots(this).forEach(plot -> plot.denyPlayer0(playerId));
+        return true;
     }
 
     private void denyPlayer0(UUID playerId) {

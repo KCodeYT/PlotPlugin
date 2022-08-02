@@ -19,15 +19,14 @@ package ms.kevi.plotplugin.command;
 import cn.nukkit.Player;
 import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
+import cn.nukkit.command.data.*;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.defaults.*;
 import ms.kevi.plotplugin.command.other.BorderCommand;
 import ms.kevi.plotplugin.command.other.WallCommand;
 import ms.kevi.plotplugin.lang.TranslationKey;
 
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Kevims KCodeYT
@@ -73,6 +72,24 @@ public class PlotCommand extends Command {
             this.subCommands.add(new BorderCommand(this.plugin, this));
             this.subCommands.add(new WallCommand(this.plugin, this));
         }
+
+        if(this.plugin.isShowCommandParams()) {
+            this.commandParameters.clear();
+
+            for(SubCommand subCommand : this.subCommands) {
+                final Set<CommandParameter> parameterSet = subCommand.getParameters();
+
+                for(String alias : subCommand.getAliases()) {
+                    final CommandParameter[] parameters = new CommandParameter[parameterSet.size() + 1];
+                    parameters[0] = CommandParameter.newEnum("subcommand", false, new CommandEnum("PlotSubcommand" + alias, alias));
+
+                    int i = 1;
+                    for(CommandParameter parameter : parameterSet) parameters[i++] = parameter;
+
+                    this.commandParameters.put(alias, parameters);
+                }
+            }
+        }
     }
 
     @Override
@@ -105,6 +122,24 @@ public class PlotCommand extends Command {
 
     protected String translate(Player player, TranslationKey key, Object... params) {
         return this.plugin.getLanguage().translate(player, key, params);
+    }
+
+    @Override
+    public CommandDataVersions generateCustomCommandData(Player player) {
+        final CommandDataVersions versions = super.generateCustomCommandData(player);
+        final CommandData commandData = versions.versions.get(0);
+
+        final Map<String, CommandOverload> overloads = new HashMap<>(commandData.overloads);
+        for(Map.Entry<String, CommandOverload> entry : overloads.entrySet()) {
+            for(SubCommand subCommand : this.subCommands) {
+                if(subCommand.getAliases().contains(entry.getKey())) {
+                    if(!subCommand.hasPermission(player)) commandData.overloads.remove(entry.getKey());
+                    break;
+                }
+            }
+        }
+
+        return versions;
     }
 
 }

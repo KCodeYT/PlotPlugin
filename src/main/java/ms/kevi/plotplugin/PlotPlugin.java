@@ -32,10 +32,10 @@ import ms.kevi.plotplugin.listener.PlotListener;
 import ms.kevi.plotplugin.manager.PlayerManager;
 import ms.kevi.plotplugin.manager.PlayerNameFunction;
 import ms.kevi.plotplugin.manager.PlotManager;
+import ms.kevi.plotplugin.util.BlockEntry;
 import ms.kevi.plotplugin.util.PlotLevelRegistration;
 import ms.kevi.plotplugin.util.PlotLevelSettings;
 import ms.kevi.plotplugin.util.Utils;
-import ms.kevi.plotplugin.util.BlockEntry;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 import java.io.BufferedReader;
@@ -81,6 +81,9 @@ public class PlotPlugin extends PluginBase {
 
     @Getter
     private int plotsPerPage = 5;
+
+    @Getter
+    private boolean showCommandParams = true;
 
     @Getter
     private boolean addOtherCommands = true;
@@ -135,6 +138,13 @@ public class PlotPlugin extends PluginBase {
         }
 
         this.plotsPerPage = config.getInt("plots_per_page");
+
+        if(!config.exists("show_command_params")) {
+            config.set("show_command_params", this.showCommandParams);
+            config.save();
+        }
+
+        this.showCommandParams = config.getBoolean("show_command_params");
 
         if(!config.exists("add_other_commands")) {
             config.set("add_other_commands", this.addOtherCommands);

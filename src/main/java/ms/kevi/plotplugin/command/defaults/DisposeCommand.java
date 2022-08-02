@@ -43,15 +43,19 @@ public class DisposeCommand extends SubCommand {
             return false;
         }
 
-        if(player.hasPermission("plot.command.admin.dispose") || plot.isOwner(player.getUniqueId())) {
-            plotManager.disposePlot(plot);
-            plotManager.savePlots();
-            player.sendMessage(this.translate(player, TranslationKey.DISPOSE_SUCCESS));
-            return true;
-        } else {
+        if(!plot.isOwner(player.getUniqueId()) && !player.hasPermission("plot.command.admin.dispose")) {
             player.sendMessage(this.translate(player, TranslationKey.DISPOSE_FAILURE));
             return false;
         }
+
+        if(!plotManager.disposePlot(plot)) {
+            player.sendMessage(this.translate(player, TranslationKey.DISPOSE_FAILURE_COULD_NOT_DISPOSE));
+            return false;
+        }
+
+        plotManager.savePlots();
+        player.sendMessage(this.translate(player, TranslationKey.DISPOSE_SUCCESS));
+        return true;
     }
 
 }

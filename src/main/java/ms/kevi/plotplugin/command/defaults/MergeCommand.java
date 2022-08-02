@@ -52,64 +52,55 @@ public class MergeCommand extends SubCommand {
         final int dir = (NukkitMath.floorDouble((player.getYaw() * 4 / 360) + 0.5) - 2) & 3;
         final Set<Plot> plotsToMerge = plotManager.calculatePlotsToMerge(plot, dir);
 
-        boolean isOwner = player.hasPermission("plot.command.admin.merge");
-        if(!isOwner) {
-            isOwner = true;
+        if(!player.hasPermission("plot.command.admin.merge")) {
             for(Plot plotToMerge : plotsToMerge) {
                 if(!plotToMerge.isOwner(player.getUniqueId())) {
-                    isOwner = false;
-                    break;
+                    player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_OWNER));
+                    return false;
                 }
             }
         }
 
-        if(isOwner) {
-            if(!player.hasPermission("plot.merge.unlimited") && !player.isOp()) {
-                if(!player.isOp()) {
-                    int maxLimit = -1;
-                    for(String permission : player.getEffectivePermissions().keySet()) {
-                        if(permission.startsWith("plot.merge.limit.")) {
-                            try {
-                                final String limitStr = permission.substring("plot.merge.limit.".length());
-                                if(limitStr.isBlank()) continue;
-                                final int limit = Integer.parseInt(limitStr);
+        if(!player.hasPermission("plot.merge.limit.unlimited")) {
+            int maxLimit = -1;
+            for(String permission : player.getEffectivePermissions().keySet()) {
+                if(permission.startsWith("plot.merge.limit.")) {
+                    try {
+                        final String limitStr = permission.substring("plot.merge.limit.".length());
+                        if(limitStr.isBlank()) continue;
+                        final int limit = Integer.parseInt(limitStr);
 
-                                if(limit > maxLimit) maxLimit = limit;
-                            } catch(NumberFormatException ignored) {
-                            }
-                        }
-                    }
-
-                    if(maxLimit > 0 && plotsToMerge.size() > maxLimit) {
-                        player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_TOO_MANY, plotsToMerge.size()));
-                        return false;
+                        if(limit > maxLimit) maxLimit = limit;
+                    } catch(NumberFormatException ignored) {
                     }
                 }
             }
 
-            if(plot.isMerged(dir)) {
-                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_ALREADY_MERGED));
+            if(maxLimit > 0 && plotsToMerge.size() > maxLimit) {
+                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_TOO_MANY, plotsToMerge.size()));
                 return false;
             }
+        }
 
-            final PlotPreMergeEvent plotPreMergeEvent = new PlotPreMergeEvent(player, plot, dir, plotsToMerge);
-            this.plugin.getServer().getPluginManager().callEvent(plotPreMergeEvent);
-            if(plotPreMergeEvent.isCancelled()) return false;
-
-            if(!plotManager.startMerge(plot, plotsToMerge)) {
-                player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_NO_PLOTS_FOUND));
-                return false;
-            }
-
-            final PlotMergeEvent plotMergeEvent = new PlotMergeEvent(player, plot, plotsToMerge);
-            this.plugin.getServer().getPluginManager().callEvent(plotMergeEvent);
-
-            player.sendMessage(this.translate(player, TranslationKey.MERGE_SUCCESS));
-            return true;
-        } else {
-            player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_OWNER));
+        if(plot.isMerged(dir)) {
+            player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_ALREADY_MERGED));
             return false;
         }
+
+        final PlotPreMergeEvent plotPreMergeEvent = new PlotPreMergeEvent(player, plot, dir, plotsToMerge);
+        this.plugin.getServer().getPluginManager().callEvent(plotPreMergeEvent);
+        if(plotPreMergeEvent.isCancelled()) return false;
+
+        if(!plotManager.startMerge(plot, plotsToMerge)) {
+            player.sendMessage(this.translate(player, TranslationKey.MERGE_FAILURE_NO_PLOTS_FOUND));
+            return false;
+        }
+
+        final PlotMergeEvent plotMergeEvent = new PlotMergeEvent(player, plot, plotsToMerge);
+        this.plugin.getServer().getPluginManager().callEvent(plotMergeEvent);
+
+        player.sendMessage(this.translate(player, TranslationKey.MERGE_SUCCESS));
+        return true;
     }
 
 }

@@ -33,6 +33,7 @@ deny-success=&6&lCitybuild &8&l» &r&6{0}&r&a darf nun nicht mehr dein Grundstü
 deny-failure=&6&lCitybuild &8&l» &r&6{0}&r&c darf bereits dein Grundstück nicht mehr betreten!
 dispose-success=&6&lCitybuild &8&l» &r&aDu hast erfolgreich dieses Grundstück freigegeben!
 dispose-failure=&6&lCitybuild &8&l» &r&cDu kannst dieses Grundstück nicht freigeben!
+dispose-failure-could-not-dispose=&6&lCitybuild &8&l» &r&cDieses Grundstück konnte nicht freigegeben werden!
 generate-start=&6&lCitybuild &8&l» &r&aErstelle Grundstückswelt &r&6{0}&r&a!
 generate-dimension=&6&lCitybuild &8&l» &r&aWähle eine Dimension für die Grundstückswelt &r&7(&r&aStandard&7: &r&6{0}&r&7)
 generate-plot-biome=&6&lCitybuild &8&l» &r&aWähle das standard Biome für die Grundstücke &r&7(&r&aStandard&7: &r&6{0}&r&7)

@@ -35,6 +35,7 @@ deny-success=&6&lCitybuild &8&l» &r&6{0}&r&a may now no longer enter your plot!
 deny-failure=&6&lCitybuild &8&l» &r&6{0}&r&c already cannot enter your plot!
 dispose-success=&6&lCitybuild &8&l» &r&aYou have successfully disposed this plot!
 dispose-failure=&6&lCitybuild &8&l» &r&cYou cannot dispose this plot!
+dispose-failure-could-not-dispose=&6&lCitybuild &8&l» &r&cThis plot could not be disposed!
 generate-start=&6&lCitybuild &8&l» &r&aCreating plot world &r&6{0}&r&a!
 generate-dimension=&6&lCitybuild &8&l» &r&aSelect dimension for the plot world &r&7(&r&aDefault&7: &r&6{0}&r&7)
 generate-plot-biome=&6&lCitybuild &8&l» &r&aSelect the default biome for the plots &r&7(&r&aDefault&7: &r&6{0}&r&7)

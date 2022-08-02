@@ -74,7 +74,7 @@ public class SetOwnerCommand extends SubCommand {
         }
 
         final int ownedPlots = plotManager.getPlotsByOwner(targetId).size();
-        if(!target.isOp() && !player.hasPermission("plot.command.admin.setowner")) {
+        if(!target.hasPermission("plot.limit.unlimited") && !player.hasPermission("plot.command.admin.setowner")) {
             int maxLimit = -1;
             for(String permission : target.getEffectivePermissions().keySet()) {
                 if(permission.startsWith("plot.limit.")) {

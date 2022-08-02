@@ -24,10 +24,10 @@ import cn.nukkit.event.Listener;
 import cn.nukkit.event.player.PlayerChatEvent;
 import cn.nukkit.item.Item;
 import cn.nukkit.level.Level;
+import lombok.RequiredArgsConstructor;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.lang.TranslationKey;
 import ms.kevi.plotplugin.util.PlotLevelRegistration;
-import lombok.RequiredArgsConstructor;
 
 /**
  * @author Kevims KCodeYT

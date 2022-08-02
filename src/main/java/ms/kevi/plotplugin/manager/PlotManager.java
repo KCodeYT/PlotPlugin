@@ -26,9 +26,7 @@ import cn.nukkit.level.Level;
 import cn.nukkit.level.Position;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.level.format.generic.BaseFullChunk;
-import cn.nukkit.math.BlockVector3;
-import cn.nukkit.math.Vector2;
-import cn.nukkit.math.Vector3;
+import cn.nukkit.math.*;
 import cn.nukkit.utils.Config;
 import lombok.Getter;
 import ms.kevi.plotplugin.PlotPlugin;
@@ -252,6 +250,17 @@ public class PlotManager {
         return tmpSet;
     }
 
+    public Set<Plot> getDirectConnectedPlots(Plot plot) {
+        if(plot.hasNoMerges()) return Collections.singleton(plot);
+
+        final Set<Plot> tmpSet = new HashSet<>(Collections.singleton(plot));
+        for(int iDir = 0; iDir < 4; iDir++) {
+            if(plot.isMerged(iDir)) tmpSet.add(this.getPlotById(plot.getRelative(iDir)));
+        }
+
+        return tmpSet;
+    }
+
     public Set<Plot> calculatePlotsToMerge(Plot plot, int dir) {
         final Set<Plot> plots = new LinkedHashSet<>();
         plots.addAll(this.getConnectedPlots(plot));
@@ -279,11 +288,11 @@ public class PlotManager {
 
                 relativeDir = toMerge0.getRelativeDir(toMerge1.getId());
                 if(relativeDir != -1 && !toMerge0.isMerged(relativeDir))
-                    this.mergePlot(toMerge0, toMerge1, whenDone);
+                    this.mergePlot(toMerge0, toMerge1, whenDone, false);
 
                 relativeDir = toMerge1.getRelativeDir(toMerge0.getId());
                 if(relativeDir != -1 && !toMerge1.isMerged(relativeDir))
-                    this.mergePlot(toMerge1, toMerge0, whenDone);
+                    this.mergePlot(toMerge1, toMerge0, whenDone, false);
             }
         }
 
@@ -330,7 +339,7 @@ public class PlotManager {
         }
     }
 
-    private void mergePlot(Plot lesserPlot, Plot greaterPlot, WhenDone whenDone) {
+    private void mergePlot(Plot lesserPlot, Plot greaterPlot, WhenDone whenDone, boolean force) {
         if(lesserPlot.getId().getX() == greaterPlot.getId().getX()) {
             if(lesserPlot.getId().getZ() > greaterPlot.getId().getZ()) {
                 final Plot tmp = lesserPlot;
@@ -338,9 +347,13 @@ public class PlotManager {
                 greaterPlot = tmp;
             }
 
-            if(!lesserPlot.isMerged(2)) {
-                lesserPlot.setMerged(2, true);
-                greaterPlot.setMerged(0, true);
+            final boolean first = !lesserPlot.isMerged(2);
+            if(first || force) {
+                if(first) {
+                    lesserPlot.setMerged(2, true);
+                    greaterPlot.setMerged(0, true);
+                }
+
                 this.removeRoadSouth(lesserPlot, whenDone);
                 final Plot diagonal = this.getPlotById(greaterPlot.getRelative(1));
                 if(diagonal.isMerged(7))
@@ -356,9 +369,13 @@ public class PlotManager {
                 greaterPlot = tmp;
             }
 
-            if(!lesserPlot.isMerged(1)) {
-                lesserPlot.setMerged(1, true);
-                greaterPlot.setMerged(3, true);
+            final boolean first = !lesserPlot.isMerged(1);
+            if(first || force) {
+                if(first) {
+                    lesserPlot.setMerged(1, true);
+                    greaterPlot.setMerged(3, true);
+                }
+
                 final Plot diagonal = this.getPlotById(greaterPlot.getRelative(2));
                 if(diagonal.isMerged(7))
                     this.removeRoadSouthEast(lesserPlot, whenDone);
@@ -384,12 +401,20 @@ public class PlotManager {
         final int zStart = pos1.getZ() - 1;
         final int zEnd = pos2.getZ() + 1;
 
-        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
-        asyncLevelWorker.queueFill(
-                new BlockVector3(xStart, minY + groundHeight + 1, zStart + 1),
-                new BlockVector3(xEnd, maxY, zEnd - 1),
-                BlockState.AIR
+        final AxisAlignedBB bb = new SimpleAxisAlignedBB(
+                xStart, minY, zStart + 1,
+                xEnd, maxY, zEnd - 1
         );
+
+        for(Entity entity : this.level.getCollidingEntities(bb))
+            if(!(entity instanceof Player)) entity.close();
+
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
+            final BlockEntity blockEntity = block.getLevelBlockEntity();
+            if(blockEntity != null) blockEntity.close();
+        }
+
+        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         asyncLevelWorker.queueFill(
                 new BlockVector3(xStart, minY + 1, zStart + 1),
                 new BlockVector3(xEnd, minY + groundHeight - 1, zEnd - 1),
@@ -399,6 +424,11 @@ public class PlotManager {
                 new BlockVector3(xStart, minY + groundHeight, zStart + 1),
                 new BlockVector3(xEnd, minY + groundHeight, zEnd - 1),
                 this.levelSettings.getLastLayerState()
+        );
+        asyncLevelWorker.queueFill(
+                new BlockVector3(xStart, minY + groundHeight + 1, zStart + 1),
+                new BlockVector3(xEnd, maxY, zEnd - 1),
+                BlockState.AIR
         );
         asyncLevelWorker.runQueue(whenDone);
     }
@@ -417,12 +447,20 @@ public class PlotManager {
         final int zStart = pos2.getZ() + 1;
         final int zEnd = zStart + roadSize - 1;
 
-        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
-        asyncLevelWorker.queueFill(
-                new BlockVector3(xStart + 1, minY + groundHeight + 1, zStart),
-                new BlockVector3(xEnd - 1, maxY, zEnd),
-                BlockState.AIR
+        final AxisAlignedBB bb = new SimpleAxisAlignedBB(
+                xStart + 1, minY, zStart,
+                xEnd - 1, maxY, zEnd
         );
+
+        for(Entity entity : this.level.getCollidingEntities(bb))
+            if(!(entity instanceof Player)) entity.close();
+
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
+            final BlockEntity blockEntity = block.getLevelBlockEntity();
+            if(blockEntity != null) blockEntity.close();
+        }
+
+        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         asyncLevelWorker.queueFill(
                 new BlockVector3(xStart + 1, minY + 1, zStart),
                 new BlockVector3(xEnd - 1, minY + groundHeight - 1, zEnd),
@@ -432,6 +470,11 @@ public class PlotManager {
                 new BlockVector3(xStart + 1, minY + groundHeight, zStart),
                 new BlockVector3(xEnd - 1, minY + groundHeight, zEnd),
                 this.levelSettings.getLastLayerState()
+        );
+        asyncLevelWorker.queueFill(
+                new BlockVector3(xStart + 1, minY + groundHeight + 1, zStart),
+                new BlockVector3(xEnd - 1, maxY, zEnd),
+                BlockState.AIR
         );
         asyncLevelWorker.runQueue(whenDone);
     }
@@ -449,12 +492,20 @@ public class PlotManager {
         final int zStart = pos.getZ() + 1;
         final int zEnd = zStart + roadSize - 1;
 
-        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
-        asyncLevelWorker.queueFill(
-                new BlockVector3(xStart, minY + groundHeight + 1, zStart),
-                new BlockVector3(xEnd, maxY, zEnd),
-                BlockState.AIR
+        final AxisAlignedBB bb = new SimpleAxisAlignedBB(
+                xStart, minY, zStart,
+                xEnd, maxY, zEnd
         );
+
+        for(Entity entity : this.level.getCollidingEntities(bb))
+            if(!(entity instanceof Player)) entity.close();
+
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
+            final BlockEntity blockEntity = block.getLevelBlockEntity();
+            if(blockEntity != null) blockEntity.close();
+        }
+
+        final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         asyncLevelWorker.queueFill(
                 new BlockVector3(xStart, minY + 1, zStart),
                 new BlockVector3(xEnd, minY + groundHeight - 1, zEnd),
@@ -465,28 +516,28 @@ public class PlotManager {
                 new BlockVector3(xEnd, minY + groundHeight, zEnd),
                 this.levelSettings.getLastLayerState()
         );
+        asyncLevelWorker.queueFill(
+                new BlockVector3(xStart, minY + groundHeight + 1, zStart),
+                new BlockVector3(xEnd, maxY, zEnd),
+                BlockState.AIR
+        );
         asyncLevelWorker.runQueue(whenDone);
     }
 
     public void unlinkPlot(Plot plot) {
-        this.unlinkPlot(plot, null);
+        this.unlinkPlot(plot, false);
     }
 
-    private void unlinkPlot(Plot plot, WhenDone finishDone) {
-        if(plot.hasNoMerges()) return;
+    public void unlinkPlot(Plot centerPlot, boolean onlyDirectNeighbors) {
+        if(centerPlot.hasNoMerges()) return;
 
-        final Set<Plot> plots = this.getConnectedPlots(plot);
+        final Set<Plot> plots = onlyDirectNeighbors ? this.getDirectConnectedPlots(centerPlot) : this.getConnectedPlots(centerPlot);
         final List<PlotId> vectors = new ArrayList<>();
         for(Plot current : plots) vectors.add(current.getId());
 
-        if(finishDone != null) finishDone.addTask();
+        final WhenDone whenDone = new WhenDone(() -> this.finishPlotUnlink(vectors));
 
-        final WhenDone whenDone = new WhenDone(() -> {
-            this.finishPlotUnlink(vectors);
-            if(finishDone != null) finishDone.done();
-        });
-
-        for(Plot current : plots) {
+        for(Plot current : onlyDirectNeighbors ? Collections.singleton(centerPlot) : plots) {
             if(current.isMerged(1)) {
                 this.createRoadEast(current, whenDone);
                 if(current.isMerged(2)) {
@@ -498,9 +549,20 @@ public class PlotManager {
                 this.createRoadSouth(current, whenDone);
         }
 
-        for(Plot current : plots)
-            for(int iDir = 0; iDir < 4; iDir++)
-                current.setMerged(iDir, false);
+        if(onlyDirectNeighbors) {
+            for(int iDir = 0; iDir < 4; iDir++) {
+                if(centerPlot.isMerged(iDir)) {
+                    final Plot relativePlot = this.getPlotById(centerPlot.getRelative(iDir));
+                    relativePlot.setMerged(relativePlot.getRelativeDir(centerPlot.getId()), false);
+                    centerPlot.setMerged(iDir, false);
+                }
+            }
+        } else {
+            for(Plot current : plots)
+                for(int iDir = 0; iDir < 4; iDir++)
+                    current.setMerged(iDir, false);
+        }
+
         whenDone.start();
     }
 
@@ -559,6 +621,19 @@ public class PlotManager {
         final int zStart = pos1.getZ() - 2;
         final int zEnd = pos2.getZ() + 2;
 
+        final AxisAlignedBB bb = new SimpleAxisAlignedBB(
+                xStart, minY, zStart + 2,
+                xEnd, maxY, zEnd - 1
+        );
+
+        for(Entity entity : this.level.getCollidingEntities(bb))
+            if(!(entity instanceof Player)) entity.close();
+
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
+            final BlockEntity blockEntity = block.getLevelBlockEntity();
+            if(blockEntity != null) blockEntity.close();
+        }
+
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         asyncLevelWorker.queueFill(
                 new BlockVector3(xStart, minY + groundHeight + 1, zStart + 2),
@@ -606,6 +681,19 @@ public class PlotManager {
         final int zStart = pos2.getZ() + 1;
         final int zEnd = zStart + roadSize - 1;
 
+        final AxisAlignedBB bb = new SimpleAxisAlignedBB(
+                xStart + 2, minY, zStart + 1,
+                xEnd - 1, maxY, zEnd
+        );
+
+        for(Entity entity : this.level.getCollidingEntities(bb))
+            if(!(entity instanceof Player)) entity.close();
+
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
+            final BlockEntity blockEntity = block.getLevelBlockEntity();
+            if(blockEntity != null) blockEntity.close();
+        }
+
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         asyncLevelWorker.queueFill(
                 new BlockVector3(xStart + 2, minY + groundHeight + 1, zStart + 1),
@@ -651,6 +739,19 @@ public class PlotManager {
         final int xEnd = xStart + roadSize - 1;
         final int zStart = pos.getZ() + 1;
         final int zEnd = zStart + roadSize - 1;
+
+        final AxisAlignedBB bb = new SimpleAxisAlignedBB(
+                xStart + 1, minY, zStart + 1,
+                xEnd - 1, maxY, zEnd - 1
+        );
+
+        for(Entity entity : this.level.getCollidingEntities(bb))
+            if(!(entity instanceof Player)) entity.close();
+
+        for(Block block : this.level.getCollisionBlocks(bb, false, true)) {
+            final BlockEntity blockEntity = block.getLevelBlockEntity();
+            if(blockEntity != null) blockEntity.close();
+        }
 
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         asyncLevelWorker.queueFill(
@@ -980,22 +1081,37 @@ public class PlotManager {
         this.plugin.getServer().getPluginManager().callEvent(plotClearEvent);
         if(plotClearEvent.isCancelled()) return false;
 
-        final Set<Plot> visited = new HashSet<>();
+        final Set<Plot> plots = new HashSet<>(this.getConnectedPlots(plot));
         if(finishDone != null) finishDone.addTask();
 
         final WhenDone whenDone = new WhenDone(() -> {
-            for(Plot visit : visited) this.finishClearPlot(visit);
+            for(Plot other : plots) this.finishPlotClear(other);
             if(finishDone != null) finishDone.done();
         });
 
-        final Set<Plot> connectedPlots = this.getConnectedPlots(plot);
-        visited.addAll(connectedPlots);
-        for(Plot connectedPlot : connectedPlots) this.unlinkPlot(connectedPlot, whenDone);
+        int relativeDir;
+        for(Plot toClear0 : plots) {
+            for(Plot toClear1 : plots) {
+                if(toClear0.equals(toClear1)) continue;
+
+                relativeDir = toClear0.getRelativeDir(toClear1.getId());
+                if(relativeDir != -1 && toClear0.isMerged(relativeDir))
+                    this.mergePlot(toClear0, toClear1, whenDone, true);
+
+                relativeDir = toClear1.getRelativeDir(toClear0.getId());
+                if(relativeDir != -1 && toClear1.isMerged(relativeDir))
+                    this.mergePlot(toClear1, toClear0, whenDone, true);
+            }
+        }
+
         whenDone.start();
         return true;
     }
 
-    private void finishClearPlot(Plot plot) {
+    private void finishPlotClear(Plot plot) {
+        this.changeBorder(plot, plot.hasOwner() ? this.levelSettings.getClaimPlotState() : this.levelSettings.getWallPlotState());
+        this.changeWall(plot, this.levelSettings.getWallFillingState());
+
         final Vector3 vector = this.getPosByPlot(plot);
 
         final int xMax = vector.getFloorX() + this.levelSettings.getPlotSize();
@@ -1004,7 +1120,7 @@ public class PlotManager {
         final int maxY = LevelUtils.getChunkMaxY(this.levelSettings.getDimension());
 
         TaskExecutor.executeAsync(() -> {
-            List<BaseFullChunk> fullChunks = new ArrayList<>();
+            final List<BaseFullChunk> fullChunks = new ArrayList<>();
             final Vector3 cPos = new Vector3(0, 0, 0);
             for(int x = vector.getFloorX(); x < xMax; ++x) {
                 for(int z = vector.getFloorZ(); z < zMax; ++z) {
@@ -1113,15 +1229,17 @@ public class PlotManager {
         return shapes;
     }
 
-    public void disposePlot(Plot plot) {
+    public boolean disposePlot(Plot plot) {
         final WhenDone whenDone = new WhenDone(() -> {
-            this.changeWall(plot, BlockState.of(this.levelSettings.getWallFillingBlockId(), this.levelSettings.getWallFillingBlockMeta()));
-            this.changeBorder(plot, BlockState.of(this.levelSettings.getWallPlotBlockId(), this.levelSettings.getWallPlotBlockMeta()));
+            plot.setOwner(null);
+            this.unlinkPlot(plot, true);
             this.removePlot(plot);
         });
 
-        if(!this.clearPlot(plot, whenDone)) return;
+        if(!this.clearPlot(plot, whenDone)) return false;
+
         whenDone.start();
+        return true;
     }
 
     public void teleportPlayerToPlot(Player player, Plot plot) {

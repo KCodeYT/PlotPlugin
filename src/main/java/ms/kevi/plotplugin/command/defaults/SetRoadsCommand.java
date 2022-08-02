@@ -75,7 +75,7 @@ public class SetRoadsCommand extends SubCommand {
 
                     for(int y = startPos.getFloorY(); y <= endPos.getFloorY(); y++) {
                         final Vector3 defaultBlockVector = new Vector3(x, y, z);
-                        final Vector3 blockVector = new Vector3(x - startPos.getFloorX(), y, z - startPos.getFloorZ());
+                        final Vector3 blockVector = new Vector3(x - startPos.getFloorX(), y - startPos.getFloorY(), z - startPos.getFloorZ());
 
                         final BlockState blockState0 = level.getBlockStateAt(x, y, z, 0);
                         final BlockState blockState1 = level.getBlockStateAt(x, y, z, 1);
