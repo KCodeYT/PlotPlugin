@@ -16,214 +16,165 @@
 
 package ms.kevi.plotplugin.schematic;
 
+import cn.nukkit.Server;
 import cn.nukkit.blockentity.BlockEntity;
-import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.math.BlockVector3;
 import cn.nukkit.math.Vector3;
-import cn.nukkit.nbt.stream.NBTInputStream;
-import cn.nukkit.nbt.stream.NBTOutputStream;
 import cn.nukkit.nbt.tag.CompoundTag;
 import cn.nukkit.utils.BinaryStream;
+import cn.nukkit.utils.Zlib;
+import com.github.luben.zstd.Zstd;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 import ms.kevi.plotplugin.PlotPlugin;
+import ms.kevi.plotplugin.schematic.format.SchematicSerializer;
+import ms.kevi.plotplugin.schematic.format.SchematicSerializers;
 import ms.kevi.plotplugin.util.Allowed;
 import ms.kevi.plotplugin.util.ShapeType;
-import ms.kevi.plotplugin.util.async.TaskHelper;
 
-import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.DataFormatException;
-import java.util.zip.Deflater;
-import java.util.zip.Inflater;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * @author Kevims KCodeYT
  * @version 1.0
  */
+@Getter
 @ToString
 @EqualsAndHashCode
 public class Schematic {
 
-    private final Map<Vector3, SchematicBlock> blocks;
+    private static final byte[] MAGIC = {0x53, 0x43, 0x48, 0x45, 0x4D};
+
+    private final List<SchematicBlock> blockPalette;
+    private final Object2IntMap<Vector3> blocks;
     private final Map<BlockVector3, SchematicBlockEntity> blockEntities;
 
     public Schematic() {
-        this.blocks = new HashMap<>();
+        this.blockPalette = new ArrayList<>();
+        this.blocks = new Object2IntArrayMap<>();
         this.blockEntities = new HashMap<>();
     }
 
     public boolean isEmpty() {
-        return this.blocks.isEmpty() && this.blockEntities.isEmpty();
+        return this.blockPalette.isEmpty() && this.blocks.isEmpty() && this.blockEntities.isEmpty();
     }
 
     public void addBlock(Vector3 vector3, SchematicBlock block) {
-        this.blocks.put(vector3, block);
+        int index = this.blockPalette.indexOf(block);
+        if(index == -1) {
+            this.blockPalette.add(block);
+            index = this.blockPalette.size() - 1;
+        }
+
+        this.blocks.put(vector3, index);
     }
 
     public void addBlockEntity(BlockVector3 blockVector3, String type, CompoundTag compoundTag) {
         this.blockEntities.put(blockVector3, new SchematicBlockEntity(type, compoundTag));
     }
 
-    public void buildInChunk(TaskHelper taskHelper, Vector3 vector3, FullChunk fullChunk, ShapeType[] shapes, Allowed<ShapeType> allowedShapes) {
+    public void buildInChunk(Vector3 vector3, FullChunk fullChunk, ShapeType[] shapes, Allowed<ShapeType> allowedShapes) {
         final int startX = vector3.getFloorX();
         final int startY = vector3.getFloorY();
         final int startZ = vector3.getFloorZ();
 
-        taskHelper.addAsyncTask(() -> {
-            for(Map.Entry<Vector3, SchematicBlock> entry : this.blocks.entrySet()) {
-                final SchematicBlock schematicBlock = entry.getValue();
+        for(Object2IntMap.Entry<Vector3> entry : this.blocks.object2IntEntrySet()) {
+            final Vector3 blockVector = entry.getKey();
+            final SchematicBlock schematicBlock = this.blockPalette.get(entry.getIntValue());
 
-                final int x = startX + entry.getKey().getFloorX();
-                final int y = startY + entry.getKey().getFloorY();
-                final int z = startZ + entry.getKey().getFloorZ();
+            final int x = startX + blockVector.getFloorX();
+            final int y = startY + blockVector.getFloorY();
+            final int z = startZ + blockVector.getFloorZ();
 
-                if(fullChunk.getX() == x >> 4 && fullChunk.getZ() == z >> 4) {
-                    final int bX = x & 15;
-                    final int bZ = z & 15;
-                    final ShapeType shapeType = shapes[(bZ << 4) | bX];
-                    if(allowedShapes.isDisallowed(shapeType)) continue;
+            if(fullChunk.getX() == x >> 4 && fullChunk.getZ() == z >> 4) {
+                final int bX = x & 15;
+                final int bZ = z & 15;
+                final ShapeType shapeType = shapes[(bZ << 4) | bX];
+                if(allowedShapes.isDisallowed(shapeType)) continue;
 
-                    fullChunk.setBlockStateAtLayer(bX, y, bZ, 0, schematicBlock.getLayer0());
-                    fullChunk.setBlockStateAtLayer(bX, y, bZ, 1, schematicBlock.getLayer1());
+                fullChunk.setBlockStateAtLayer(bX, y, bZ, 0, schematicBlock.getLayer0());
+                fullChunk.setBlockStateAtLayer(bX, y, bZ, 1, schematicBlock.getLayer1());
+            }
+        }
+
+        for(Map.Entry<BlockVector3, SchematicBlockEntity> entry : this.blockEntities.entrySet()) {
+            final SchematicBlockEntity blockEntity = entry.getValue();
+            final int x = startX + entry.getKey().getX();
+            final int y = startY + entry.getKey().getY();
+            final int z = startZ + entry.getKey().getZ();
+
+            if(fullChunk.getX() == x >> 4 && fullChunk.getZ() == z >> 4) {
+                final int bX = x & 15;
+                final int bZ = z & 15;
+                final ShapeType shapeType = shapes[(bZ << 4) | bX];
+                if(allowedShapes.isDisallowed(shapeType)) continue;
+
+                try {
+                    BlockEntity.createBlockEntity(blockEntity.getType(), fullChunk, blockEntity.getCompoundTag().
+                            putString("id", blockEntity.getType()).
+                            putInt("x", x).
+                            putInt("y", y).
+                            putInt("z", z)
+                    );
+                } catch(Exception e) {
+                    PlotPlugin.INSTANCE.getLogger().error("Could not create block entity " + blockEntity.getType() + " in Chunk[" + fullChunk.getX() + ", " + fullChunk.getZ() + "] at " + x + ":" + y + ":" + z + "!", e);
                 }
             }
-        });
-
-        taskHelper.addAsyncTask(() -> {
-            for(Map.Entry<BlockVector3, SchematicBlockEntity> entry : this.blockEntities.entrySet()) {
-                final SchematicBlockEntity blockEntity = entry.getValue();
-                final int x = startX + entry.getKey().getX();
-                final int y = startY + entry.getKey().getY();
-                final int z = startZ + entry.getKey().getZ();
-
-                if(fullChunk.getX() == x >> 4 && fullChunk.getZ() == z >> 4) {
-                    final int bX = x & 15;
-                    final int bZ = z & 15;
-                    final ShapeType shapeType = shapes[(bZ << 4) | bX];
-                    if(allowedShapes.isDisallowed(shapeType)) continue;
-
-                    taskHelper.addSyncTask(() -> {
-                        try {
-                            BlockEntity.createBlockEntity(blockEntity.getType(), fullChunk, blockEntity.getCompoundTag().
-                                    putString("id", blockEntity.getType()).
-                                    putInt("x", x).
-                                    putInt("y", y).
-                                    putInt("z", z)
-                            );
-                        } catch(Exception e) {
-                            PlotPlugin.INSTANCE.getLogger().error("Could not create block entity " + blockEntity.getType() + " in Chunk[" + fullChunk.getX() + ", " + fullChunk.getZ() + "] at " + x + ":" + y + ":" + z + "!", e);
-                        }
-                    });
-                }
-            }
-        });
+        }
     }
 
     public synchronized void init(File file) {
         try(final FileInputStream fileInputStream = new FileInputStream(file)) {
             final byte[] bytes = new byte[fileInputStream.available()];
-            final BinaryStream binaryStream = new BinaryStream(this.decompress(Arrays.copyOf(bytes, fileInputStream.read(bytes))));
-            final int blocks = binaryStream.getVarInt();
-            for(int i = 0; i < blocks; i++) {
-                final int blockX = binaryStream.getVarInt();
-                final int blockY = binaryStream.getVarInt();
-                final int blockZ = binaryStream.getVarInt();
+            final BinaryStream binaryStream = new BinaryStream(Arrays.copyOf(bytes, fileInputStream.read(bytes)));
 
-                final int layer0Id = binaryStream.getVarInt();
-                final int layer0Meta = binaryStream.getVarInt();
-                final int layer1Id = binaryStream.getVarInt();
-                final int layer1Meta = binaryStream.getVarInt();
+            if(!Arrays.equals(binaryStream.get(MAGIC.length), MAGIC)) {
+                binaryStream.setBuffer(Zlib.inflate(binaryStream.getBuffer()));
+                binaryStream.setOffset(0);
 
-                this.addBlock(new Vector3(blockX, blockY, blockZ), new SchematicBlock(BlockState.of(layer0Id, layer0Meta), BlockState.of(layer1Id, layer1Meta)));
+                SchematicSerializers.get(1).deserialize(this, binaryStream);
+                Server.getInstance().getScheduler().scheduleDelayedTask(null, () -> this.save(file), 1);
+                return;
             }
 
-            final int blockEntities = binaryStream.getVarInt();
-            for(int i = 0; i < blockEntities; i++) {
-                final int x = binaryStream.getVarInt();
-                final int y = binaryStream.getVarInt();
-                final int z = binaryStream.getVarInt();
+            final int version = binaryStream.getByte();
 
-                final String type = binaryStream.getString();
+            final int decompressedSize = binaryStream.getLInt();
+            binaryStream.setBuffer(Zstd.decompress(binaryStream.get(), decompressedSize));
+            binaryStream.setOffset(0);
 
-                final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(binaryStream.getByteArray());
-                final NBTInputStream nbtStream = new NBTInputStream(byteArrayInputStream);
-                final CompoundTag compoundTag = (CompoundTag) CompoundTag.readNamedTag(nbtStream);
-                nbtStream.close();
-                byteArrayInputStream.close();
-                this.addBlockEntity(new BlockVector3(x, y, z), type, compoundTag);
-            }
-        } catch(IOException | DataFormatException e) {
+            SchematicSerializers.get(version).deserialize(this, binaryStream);
+        } catch(IOException e) {
             e.printStackTrace();
         }
     }
 
     public synchronized void save(File file) {
         try(final FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-            synchronized(this.blocks) {
-                final BinaryStream binaryStream = new BinaryStream();
-                binaryStream.putVarInt(this.blocks.size());
-                for(Vector3 blockVector : this.blocks.keySet()) {
-                    final SchematicBlock schematicBlock = this.blocks.get(blockVector);
+            final SchematicSerializer schematicSerializer = SchematicSerializers.getLatest();
+            final BinaryStream contentBinaryStream = new BinaryStream();
+            final BinaryStream headerBinaryStream = new BinaryStream();
 
-                    binaryStream.putVarInt(blockVector.getFloorX());
-                    binaryStream.putVarInt(blockVector.getFloorY());
-                    binaryStream.putVarInt(blockVector.getFloorZ());
+            schematicSerializer.serialize(this, contentBinaryStream);
 
-                    binaryStream.putVarInt(schematicBlock.getLayer0().getBlockId());
-                    binaryStream.putVarInt(schematicBlock.getLayer0().getHugeDamage().intValue());
-                    binaryStream.putVarInt(schematicBlock.getLayer1().getBlockId());
-                    binaryStream.putVarInt(schematicBlock.getLayer1().getHugeDamage().intValue());
-                }
+            headerBinaryStream.put(MAGIC);
+            headerBinaryStream.putByte((byte) schematicSerializer.version());
 
-                binaryStream.putVarInt(this.blockEntities.size());
-                for(BlockVector3 blockVector : this.blockEntities.keySet()) {
-                    final SchematicBlockEntity blockEntity = this.blockEntities.get(blockVector);
-                    binaryStream.putVarInt(blockVector.getX());
-                    binaryStream.putVarInt(blockVector.getY());
-                    binaryStream.putVarInt(blockVector.getZ());
+            headerBinaryStream.putLInt(contentBinaryStream.getCount());
+            headerBinaryStream.put(Zstd.compress(contentBinaryStream.get()));
 
-                    binaryStream.putString(blockEntity.getType());
-
-                    final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    final NBTOutputStream nbtStream = new NBTOutputStream(byteArrayOutputStream);
-                    CompoundTag.writeNamedTag(blockEntity.getCompoundTag(), nbtStream);
-                    byteArrayOutputStream.flush();
-                    binaryStream.putByteArray(byteArrayOutputStream.toByteArray());
-                    byteArrayOutputStream.close();
-                }
-
-                fileOutputStream.write(this.compress(binaryStream.getBuffer()));
-            }
+            fileOutputStream.write(headerBinaryStream.getBuffer());
         } catch(IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private byte[] compress(byte[] data) throws IOException {
-        final Deflater deflater = new Deflater();
-        deflater.setInput(data);
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-        deflater.finish();
-        final byte[] buffer = new byte[1024];
-        while(!deflater.finished())
-            outputStream.write(buffer, 0, deflater.deflate(buffer));
-        outputStream.close();
-        return outputStream.toByteArray();
-    }
-
-    private byte[] decompress(byte[] data) throws IOException, DataFormatException {
-        final Inflater inflater = new Inflater();
-        inflater.setInput(data);
-        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream(data.length);
-        final byte[] buffer = new byte[1024];
-        while(!inflater.finished())
-            outputStream.write(buffer, 0, inflater.inflate(buffer));
-        outputStream.close();
-        return outputStream.toByteArray();
     }
 
 }

@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package ms.kevi.plotplugin.schematic;
+package ms.kevi.plotplugin.schematic.format;
 
-import cn.nukkit.blockstate.BlockState;
-import lombok.Value;
+import cn.nukkit.utils.BinaryStream;
+import ms.kevi.plotplugin.schematic.Schematic;
 
 /**
  * @author Kevims KCodeYT
- * @version 1.0
  */
-@Value
-public class SchematicBlock {
+public interface SchematicSerializer {
 
-    BlockState layer0;
-    BlockState layer1;
+    void serialize(Schematic schematic, BinaryStream binaryStream);
+
+    void deserialize(Schematic schematic, BinaryStream binaryStream);
+
+    int version();
 
 }

@@ -36,7 +36,6 @@ import ms.kevi.plotplugin.util.LevelUtils;
 import ms.kevi.plotplugin.util.PlotLevelSettings;
 import ms.kevi.plotplugin.util.ShapeType;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
-import ms.kevi.plotplugin.util.async.TaskHelper;
 
 import java.util.*;
 
@@ -250,7 +249,6 @@ public class PlotGenerator extends Generator {
         final Set<Vector3> handledVectors = new HashSet<>();
         final int fullX = fullChunk.getX() << 4;
         final int fullZ = fullChunk.getZ() << 4;
-        final TaskHelper taskHelper = new TaskHelper();
 
         for(int blockX = fullX; blockX < fullX + 16; blockX++) {
             for(int blockZ = fullZ; blockZ < fullZ + 16; blockZ++) {
@@ -258,12 +256,9 @@ public class PlotGenerator extends Generator {
                 if(handledVectors.contains(plotArea)) continue;
 
                 handledVectors.add(plotArea);
-                schematic.buildInChunk(taskHelper, plotArea, fullChunk, shapes, allowedShapes);
+                schematic.buildInChunk(plotArea, fullChunk, shapes, allowedShapes);
             }
         }
-
-        taskHelper.runAsyncTasks();
-        TaskExecutor.execute(taskHelper::runSyncTasks);
     }
 
     @Override
