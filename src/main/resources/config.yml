@@ -1,13 +1,13 @@
 # Language used by this plugin, corresponding file should exist in lang folder!
 default_lang: en_US
 
-#Plots per home page (/homes)
+# Plots per home page (/homes)
 plots_per_page: 5
 
-#Shows the command parameters for each sub command
+# Shows the command parameters for each sub command
 show_command_params: true
 
-#Add "other" commands like /plot border or /plot wall
+# Add "other" commands like /plot border or /plot wall
 add_other_commands: true
 
 #Plot border command configuration

@@ -16,7 +16,7 @@
 
 package ms.kevi.plotplugin.util;
 
-import cn.nukkit.math.Vector3;
+import cn.nukkit.math.BlockVector3;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,7 +41,7 @@ public class Plot {
         plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.config.putAll(Plot.<Map<String, Object>>getOrDefault(plotMap.get("config"), new HashMap<>()));
         final List<Double> homePositionList = Plot.<List<Double>>getOrDefault(plotMap.get("home-position"), new ArrayList<>());
-        plot.homePosition = homePositionList.size() == 3 ? new Vector3(homePositionList.get(0), homePositionList.get(1), homePositionList.get(2)) : null;
+        plot.homePosition = homePositionList.size() == 3 ? new BlockVector3(homePositionList.get(0).intValue(), homePositionList.get(1).intValue(), homePositionList.get(2).intValue()) : null;
         for(int i = 0; i < plot.mergedPlots.length; i++)
             plot.mergedPlots[i] = (Boolean) ((List<?>) plotMap.getOrDefault("merges", new ArrayList<>())).get(i);
         return plot;
@@ -63,7 +63,7 @@ public class Plot {
     private final List<UUID> helpers;
     private final List<UUID> deniedPlayers;
     private final Map<String, Object> config;
-    private Vector3 homePosition;
+    private BlockVector3 homePosition;
 
     private final Boolean[] mergedPlots;
     private Plot origin;

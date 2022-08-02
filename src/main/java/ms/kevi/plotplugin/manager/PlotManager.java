@@ -1250,8 +1250,8 @@ public class PlotManager {
         Vector3 plotVec = null;
 
         if(homeAllowed) {
-            final Vector3 homePosition = plot.getHomePosition();
-            if(homePosition != null) plotVec = homePosition.clone();
+            final BlockVector3 homePosition = plot.getHomePosition();
+            if(homePosition != null) plotVec = homePosition.clone().add(0.5, 0.1, 0.5);
 
             if(plotVec != null) {
                 final Plot mergedPlot = this.getMergedPlot(plotVec.getFloorX(), plotVec.getFloorZ());
@@ -1269,19 +1269,6 @@ public class PlotManager {
                     1f,
                     -1.5f
             );
-
-        final int y = plotVec.getFloorY();
-        final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
-        final int maxY = LevelUtils.getChunkMaxY(this.levelSettings.getDimension());
-        for(int offset = 0; ; offset++) {
-            if(plotVec.getY() < minY && plotVec.getY() > maxY) break;
-
-            plotVec.setY(y - offset);
-            if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
-
-            plotVec.setY(y + offset);
-            if(plotVec.getY() >= minY && plotVec.getY() <= maxY && this.level.standable(plotVec)) break;
-        }
 
         player.teleport(Position.fromObject(plotVec.add(0, 0.1, 0), this.level));
     }
