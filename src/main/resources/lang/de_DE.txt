@@ -1,6 +1,6 @@
 activated=&aaktiviert
 deactivated=&cdeaktiviert
-too-close-to-home=&6&lCitybuild &8&l» &r&cDu kannst in der Nähe der Home-Position dieses Grundstücks nichts bauen oder platzieren!
+too-close-to-home=&6&lCitybuild &8&l» &r&cDu kannst in der Nähe der Home-Position dieses Grundstücks nichts abbauen oder platzieren!
 no-perms=&6&lCitybuild &8&l» &r&cDu darfst diesen Befehl nicht ausführen!
 no-plot=&6&lCitybuild &8&l» &r&cDu stehst auf keinem Grundstück!
 no-plot-world=&6&lCitybuild &8&l» &r&cDu bist in keiner Grundstücks Welt!
