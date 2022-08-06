@@ -68,30 +68,30 @@ public class AutoCommand extends SubCommand {
 
         final Plot plot = plotManager.getNextFreePlot();
 
-        if(plot != null) {
-            final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, true, true);
-            this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
-            final PlotManager finalPlotManager = plotManager;
-            plotPreClaimEvent.getWaiter().addTask(() -> {
-                if(plotPreClaimEvent.isCancelled())
-                    return;
-
-                plot.setOwner(player.getUniqueId());
-                if(plotPreClaimEvent.isBorderChanging())
-                    finalPlotManager.changeBorder(plot, finalPlotManager.getLevelSettings().getClaimPlotState());
-                finalPlotManager.savePlots();
-
-                final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, true);
-                this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
-
-                finalPlotManager.teleportPlayerToPlot(player, plot, false);
-                player.sendMessage(this.translate(player, TranslationKey.AUTO_SUCCESS));
-            });
-            return true;
-        } else {
+        if(plot == null) {
             player.sendMessage(this.translate(player, TranslationKey.AUTO_FAILURE));
             return false;
         }
+
+        final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, true, true);
+        this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
+        final PlotManager finalPlotManager = plotManager;
+        plotPreClaimEvent.getWaiter().addTask(() -> {
+            if(plotPreClaimEvent.isCancelled())
+                return;
+
+            plot.setOwner(player.getUniqueId());
+            if(plotPreClaimEvent.isBorderChanging())
+                finalPlotManager.changeBorder(plot, finalPlotManager.getLevelSettings().getClaimPlotState());
+            finalPlotManager.savePlots();
+
+            final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, true);
+            this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
+
+            finalPlotManager.teleportPlayerToPlot(player, plot, false);
+            player.sendMessage(this.translate(player, TranslationKey.AUTO_SUCCESS));
+        });
+        return true;
     }
 
 }

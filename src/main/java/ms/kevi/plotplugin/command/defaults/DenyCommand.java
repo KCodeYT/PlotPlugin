@@ -69,29 +69,29 @@ public class DenyCommand extends SubCommand {
             return false;
         }
 
-        if(plot.denyPlayer(targetId)) {
-            plotManager.savePlots();
-
-            if(target != null || isEveryone) {
-                if(!isEveryone) {
-                    final Plot plot1 = plotManager.getMergedPlot(target.getFloorX(), target.getFloorZ());
-                    if(plot1 != null && (plot.getId().equals(plot1.getId())) && !target.hasPermission("plot.admin.bypass.deny"))
-                        plotManager.teleportPlayerToPlot(target, plot1, false);
-                } else {
-                    for(Player onlinePlayer : this.plugin.getServer().getOnlinePlayers().values()) {
-                        final Plot plot1 = plotManager.getMergedPlot(onlinePlayer.getFloorX(), onlinePlayer.getFloorZ());
-                        if(!plot.isOwner(onlinePlayer.getUniqueId()) && !plot.isHelper(onlinePlayer.getUniqueId()) && plot1 != null && (plot.getId().equals(plot1.getId())) && !onlinePlayer.hasPermission("plot.admin.bypass.deny"))
-                            plotManager.teleportPlayerToPlot(onlinePlayer, plot1, false);
-                    }
-                }
-            }
-
-            player.sendMessage(this.translate(player, TranslationKey.DENY_SUCCESS, this.plugin.getCorrectName(targetId)));
-            return true;
-        } else {
+        if(!plot.denyPlayer(targetId)) {
             player.sendMessage(this.translate(player, TranslationKey.DENY_FAILURE, this.plugin.getCorrectName(targetId)));
             return false;
         }
+
+        plotManager.savePlots();
+
+        if(target != null || isEveryone) {
+            if(!isEveryone) {
+                final Plot plot1 = plotManager.getMergedPlot(target.getFloorX(), target.getFloorZ());
+                if(plot1 != null && (plot.getId().equals(plot1.getId())) && !target.hasPermission("plot.admin.bypass.deny"))
+                    plotManager.teleportPlayerToPlot(target, plot1, false);
+            } else {
+                for(Player onlinePlayer : this.plugin.getServer().getOnlinePlayers().values()) {
+                    final Plot plot1 = plotManager.getMergedPlot(onlinePlayer.getFloorX(), onlinePlayer.getFloorZ());
+                    if(!plot.isOwner(onlinePlayer.getUniqueId()) && !plot.isHelper(onlinePlayer.getUniqueId()) && plot1 != null && (plot.getId().equals(plot1.getId())) && !onlinePlayer.hasPermission("plot.admin.bypass.deny"))
+                        plotManager.teleportPlayerToPlot(onlinePlayer, plot1, false);
+                }
+            }
+        }
+
+        player.sendMessage(this.translate(player, TranslationKey.DENY_SUCCESS, this.plugin.getCorrectName(targetId)));
+        return true;
     }
 
 }

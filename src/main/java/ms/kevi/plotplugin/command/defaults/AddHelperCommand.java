@@ -66,14 +66,14 @@ public class AddHelperCommand extends SubCommand {
             return false;
         }
 
-        if(plot.addHelper(targetId)) {
-            plotManager.savePlots();
-            player.sendMessage(this.translate(player, TranslationKey.ADDED_HELPER, this.plugin.getCorrectName(targetId)));
-            return true;
-        } else {
+        if(!plot.addHelper(targetId)) {
             player.sendMessage(this.translate(player, TranslationKey.ALREADY_HELPER, this.plugin.getCorrectName(targetId)));
             return false;
         }
+
+        plotManager.savePlots();
+        player.sendMessage(this.translate(player, TranslationKey.ADDED_HELPER, this.plugin.getCorrectName(targetId)));
+        return true;
     }
 
 }

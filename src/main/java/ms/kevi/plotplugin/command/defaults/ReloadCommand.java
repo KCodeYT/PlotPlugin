@@ -40,13 +40,14 @@ public class ReloadCommand extends SubCommand {
         try {
             this.plugin.reloadPlots();
             this.plugin.getLanguage().reload();
-            player.sendMessage(this.translate(player, TranslationKey.RELOAD_SUCCESS));
-            return true;
         } catch(IOException e) {
             this.plugin.getLogger().warning("Could not reload configurations!", e);
             player.sendMessage(this.translate(player, TranslationKey.RELOAD_FAILURE));
             return false;
         }
+
+        player.sendMessage(this.translate(player, TranslationKey.RELOAD_SUCCESS));
+        return true;
     }
 
 }

@@ -58,7 +58,7 @@ public class TeleportCommand extends SubCommand {
         }));
 
         player.showFormWindow(window);
-        return false;
+        return true;
     }
 
 }

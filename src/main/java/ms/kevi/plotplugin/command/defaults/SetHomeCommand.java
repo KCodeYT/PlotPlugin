@@ -51,7 +51,9 @@ public class SetHomeCommand extends SubCommand {
 
         final BlockVector3 homePosition = player.add(0, 0.1, 0).floor().asBlockVector3();
         for(Plot mergedPlot : plotManager.getConnectedPlots(plot)) mergedPlot.setHomePosition(homePosition);
+
         plotManager.savePlots();
+
         player.sendMessage(this.translate(player, TranslationKey.SETHOME_SUCCESS));
         return true;
     }

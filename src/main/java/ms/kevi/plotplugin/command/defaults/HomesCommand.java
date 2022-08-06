@@ -52,32 +52,32 @@ public class HomesCommand extends SubCommand {
         for(PlotManager plotManager : this.plugin.getPlotManagerMap().values())
             plots.put(plotManager, plotManager.getPlotsByOwner(player.getUniqueId()));
 
-        if(plots.size() != 0) {
-            final List<Plot> allPlots = new ArrayList<>();
-            for(List<Plot> list : plots.values()) allPlots.addAll(list);
-
-            final PaginationList<Plot> pages = new PaginationList<>(allPlots, this.plugin.getPlotsPerPage());
-
-            if(page < 0 || page >= pages.size()) {
-                player.sendMessage(this.translate(player, TranslationKey.HOMES_FAILURE_PAGE_DID_NOT_EXIST, page + 1));
-                return false;
-            }
-
-            player.sendMessage(this.translate(player, TranslationKey.HOMES_TITLE, page + 1, pages.size()));
-
-            for(Plot plot : pages.get(page))
-                player.sendMessage(this.translate(player, TranslationKey.HOMES_ENTRY,
-                        plots.get(plot.getManager()).indexOf(plot) + 1,
-                        plot.getId(),
-                        plot.getManager().getLevel().getName()
-                ));
-
-            player.sendMessage(this.translate(player, TranslationKey.HOMES_END));
-            return true;
-        } else {
+        if(plots.isEmpty()) {
             player.sendMessage(this.translate(player, TranslationKey.HOMES_FAILURE));
             return false;
         }
+
+        final List<Plot> allPlots = new ArrayList<>();
+        for(List<Plot> list : plots.values()) allPlots.addAll(list);
+
+        final PaginationList<Plot> pages = new PaginationList<>(allPlots, this.plugin.getPlotsPerPage());
+
+        if(page < 0 || page >= pages.size()) {
+            player.sendMessage(this.translate(player, TranslationKey.HOMES_FAILURE_PAGE_DID_NOT_EXIST, page + 1));
+            return false;
+        }
+
+        player.sendMessage(this.translate(player, TranslationKey.HOMES_TITLE, page + 1, pages.size()));
+
+        for(Plot plot : pages.get(page))
+            player.sendMessage(this.translate(player, TranslationKey.HOMES_ENTRY,
+                    plots.get(plot.getManager()).indexOf(plot) + 1,
+                    plot.getId(),
+                    plot.getManager().getLevel().getName()
+            ));
+
+        player.sendMessage(this.translate(player, TranslationKey.HOMES_END));
+        return true;
     }
 
 }

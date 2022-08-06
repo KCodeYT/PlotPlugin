@@ -50,19 +50,16 @@ public class GenerateCommand extends SubCommand {
             return false;
         }
 
-        if(!this.plugin.getServer().isLevelGenerated(levelName)) {
-            final PlotLevelRegistration levelRegistration = new PlotLevelRegistration(levelName, defaultLevel);
-            this.plugin.getLevelRegistrationMap().put(player, levelRegistration);
-            player.sendMessage(this.translate(player, TranslationKey.GENERATE_START, levelName));
-            player.sendMessage(this.translate(player, TranslationKey.GENERATE_DIMENSION, levelRegistration.getLevelSettings().getDimension()));
-            return true;
-        } else {
-            if(!this.plugin.getServer().isLevelLoaded(levelName))
-                this.plugin.getServer().loadLevel(levelName);
-            player.teleport(this.plugin.getServer().getLevelByName(levelName).getSpawnLocation());
+        if(this.plugin.getServer().isLevelGenerated(levelName)) {
             player.sendMessage(this.translate(player, TranslationKey.GENERATE_FAILURE));
             return false;
         }
+
+        final PlotLevelRegistration levelRegistration = new PlotLevelRegistration(levelName, defaultLevel);
+        this.plugin.getLevelRegistrationMap().put(player, levelRegistration);
+        player.sendMessage(this.translate(player, TranslationKey.GENERATE_START, levelName));
+        player.sendMessage(this.translate(player, TranslationKey.GENERATE_DIMENSION, levelRegistration.getLevelSettings().getDimension()));
+        return true;
     }
 
 }

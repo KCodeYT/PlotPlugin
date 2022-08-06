@@ -71,14 +71,14 @@ public class SettingCommand extends SubCommand {
                 PlotConfig.ConfigEnum.PVE.getConfig().set(plot, pveValue);
                 plotManager.savePlots();
                 player.sendMessage(this.translate(player, TranslationKey.CONFIG_PVE, this.translate(player, pveValue ? TranslationKey.ACTIVATED : TranslationKey.DEACTIVATED)));
-                return false;
+                return true;
             }
             case "pvp" -> {
                 final boolean pvpValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.PVP.getConfig().set(plot, pvpValue);
                 plotManager.savePlots();
                 player.sendMessage(this.translate(player, TranslationKey.CONFIG_PVP, this.translate(player, pvpValue ? TranslationKey.ACTIVATED : TranslationKey.DEACTIVATED)));
-                return false;
+                return true;
             }
             default -> {
                 player.sendMessage(this.translate(player, TranslationKey.CONFIG_HELP_TITLE));
