@@ -106,12 +106,12 @@ public class PlotGenerator extends Generator {
 
         final ShapeType[] shapes = plotManager.getShapes(fullChunk.getX() << 4, fullChunk.getZ() << 4);
 
-        this.preGenerateChunk(plotManager, fullChunk, shapes, GENERATE_ALLOWED, true);
+        this.preGenerateChunk(plotManager, fullChunk, shapes, GENERATE_ALLOWED, true, null, null, null, null);
         final Schematic schematic = plotManager.getPlotSchematic().getSchematic();
-        if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, GENERATE_ALLOWED);
+        if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, GENERATE_ALLOWED, null, null, null, null);
     }
 
-    public void regenerateChunk(PlotManager plotManager, FullChunk fullChunk, boolean resend) {
+    public void regenerateChunk(PlotManager plotManager, FullChunk fullChunk) {
         final ShapeType[] shapes = plotManager.getShapes(fullChunk.getX() << 4, fullChunk.getZ() << 4);
 
         final List<Entity> toClose0 = new ArrayList<>();
@@ -138,19 +138,54 @@ public class PlotGenerator extends Generator {
             for(BlockEntity blockEntity : toClose1) blockEntity.close();
         });
 
-        this.preGenerateChunk(plotManager, fullChunk, shapes, REGENERATE_ALLOWED, false);
+        this.preGenerateChunk(plotManager, fullChunk, shapes, REGENERATE_ALLOWED, false, null, null, null, null);
 
         final Schematic schematic = plotManager.getPlotSchematic().getSchematic();
-        if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, REGENERATE_ALLOWED);
+        if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, REGENERATE_ALLOWED, null, null, null, null);
 
-        if(resend) {
-            final Level level = fullChunk.getProvider().getLevel();
-            level.getChunkPlayers(fullChunk.getX(), fullChunk.getZ()).values().forEach(player -> level.requestChunk(fullChunk.getX(), fullChunk.getZ(), player));
+        final Level level = fullChunk.getProvider().getLevel();
+        level.getChunkPlayers(fullChunk.getX(), fullChunk.getZ()).values().forEach(player -> level.requestChunk(fullChunk.getX(), fullChunk.getZ(), player));
+    }
+
+    public void regenerateChunkWithin(PlotManager plotManager, FullChunk fullChunk, int minX, int minZ, int maxX, int maxZ) {
+        final ShapeType[] shapes = plotManager.getShapes(fullChunk.getX() << 4, fullChunk.getZ() << 4);
+
+        final List<Entity> toClose0 = new ArrayList<>();
+        final List<BlockEntity> toClose1 = new ArrayList<>();
+
+        for(Entity entity : new ArrayList<>(fullChunk.getEntities().values())) {
+            if(entity instanceof Player) continue;
+            if(entity.getFloorX() < minX || entity.getFloorX() > maxX || entity.getFloorZ() < minZ || entity.getFloorZ() > maxZ)
+                continue;
+
+            if(REGENERATE_ALLOWED.isDisallowed(shapes[((entity.getFloorZ() & 15) << 4) | (entity.getFloorX() & 15)]))
+                continue;
+
+            toClose0.add(entity);
         }
+
+        for(BlockEntity blockEntity : new ArrayList<>(fullChunk.getBlockEntities().values())) {
+            if(blockEntity.getFloorX() < minX || blockEntity.getFloorX() > maxX || blockEntity.getFloorZ() < minZ || blockEntity.getFloorZ() > maxZ)
+                continue;
+            if(REGENERATE_ALLOWED.isDisallowed(shapes[((blockEntity.getFloorZ() & 15) << 4) | (blockEntity.getFloorX() & 15)]))
+                continue;
+
+            toClose1.add(blockEntity);
+        }
+
+        TaskExecutor.execute(() -> {
+            for(Entity entity : toClose0) entity.close();
+            for(BlockEntity blockEntity : toClose1) blockEntity.close();
+        });
+
+        this.preGenerateChunk(plotManager, fullChunk, shapes, REGENERATE_ALLOWED, false, minX, minZ, maxX, maxZ);
+
+        final Schematic schematic = plotManager.getPlotSchematic().getSchematic();
+        if(schematic != null) this.placeChunkSchematic(plotManager, schematic, fullChunk, shapes, REGENERATE_ALLOWED, minX, minZ, maxX, maxZ);
     }
 
     private void preGenerateChunk(PlotManager plotManager, FullChunk fullChunk, ShapeType[] shapes,
-                                  Allowed<ShapeType> allowedShapes, boolean ignoreAir) {
+                                  Allowed<ShapeType> allowedShapes, boolean ignoreAir, Integer minX, Integer minZ, Integer maxX, Integer maxZ) {
         final PlotLevelSettings levelSettings = plotManager.getLevelSettings();
 
         final BlockState firstLayerState = levelSettings.getFirstLayerState();
@@ -166,7 +201,10 @@ public class PlotGenerator extends Generator {
         final int chunkMaxY = LevelUtils.getChunkMaxY(dimension);
 
         for(int xBlock = 0; xBlock < 16; ++xBlock) {
+            if(minX != null && (xBlock + (fullChunk.getX() << 4) < minX || xBlock + (fullChunk.getX() << 4) > maxX)) continue;
             for(int zBlock = 0; zBlock < 16; ++zBlock) {
+                if(minZ != null && (zBlock + (fullChunk.getZ() << 4) < minZ || zBlock + (fullChunk.getZ() << 4) > maxZ)) continue;
+
                 final ShapeType shapeType = shapes[(zBlock << 4) | xBlock];
                 if(allowedShapes.isDisallowed(shapeType)) continue;
 
@@ -245,18 +283,21 @@ public class PlotGenerator extends Generator {
     }
 
     private void placeChunkSchematic(PlotManager plotManager, Schematic schematic, FullChunk fullChunk,
-                                     ShapeType[] shapes, Allowed<ShapeType> allowedShapes) {
+                                     ShapeType[] shapes, Allowed<ShapeType> allowedShapes, Integer minX, Integer minZ, Integer maxX, Integer maxZ) {
         final Set<Vector3> handledVectors = new HashSet<>();
         final int fullX = fullChunk.getX() << 4;
         final int fullZ = fullChunk.getZ() << 4;
 
         for(int blockX = fullX; blockX < fullX + 16; blockX++) {
+            if(minX != null && (blockX < minX || blockX > maxX)) continue;
             for(int blockZ = fullZ; blockZ < fullZ + 16; blockZ++) {
+                if(minZ != null && (blockZ < minZ || blockZ > maxZ)) continue;
+
                 final Vector3 plotArea = this.getPlotAreaStart(plotManager, blockX, blockZ);
                 if(handledVectors.contains(plotArea)) continue;
 
                 handledVectors.add(plotArea);
-                schematic.buildInChunk(plotArea, fullChunk, shapes, allowedShapes);
+                schematic.buildInChunk(plotArea, fullChunk, shapes, allowedShapes, minX, minZ, maxX, maxZ);
             }
         }
     }

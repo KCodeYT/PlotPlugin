@@ -17,6 +17,7 @@
 package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
+import cn.nukkit.command.data.CommandEnum;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import ms.kevi.plotplugin.PlotPlugin;
@@ -36,7 +37,7 @@ public class GenerateCommand extends SubCommand {
         super(plugin, parent, "generate");
         this.setPermission("plot.command.admin.generate");
         this.addParameter(CommandParameter.newType("level", CommandParamType.STRING));
-        this.addParameter(CommandParameter.newEnum("default", new String[]{"true", "false"}));
+        this.addParameter(CommandParameter.newEnum("default", new CommandEnum("should be default level?", "true", "false")));
     }
 
     @Override

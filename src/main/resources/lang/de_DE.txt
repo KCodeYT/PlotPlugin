@@ -122,6 +122,7 @@ merge-failure-no-plots-found=&6&lCitybuild &8&l» &r&cDu besitzt kein Grundstüc
 merge-failure-too-many=&6&lCitybuild &8&l» &r&cDu kannst diese &6{0} &r&cGrundstücke nicht zusammenführen!
 unlink-success=&6&lCitybuild &8&l» &r&aDu hast die Grundstücke erfolgreich von einander getrennt!
 unlink-failure=&6&lCitybuild &8&l» &r&cDie Grundstücke konnten leider nicht von einander getrennt werden!
+unlink-failure-unknown-type=&6&lCitybuild &8&l» &r&cBitte gebe einen validen Trennungstyp (all, neighbors) an!
 teleport-form-title=Wähle eine Plot Welt aus
 teleport-no-plot-world=&6&lCitybuild &8&l» &r&cDie Welt ist keine Grundstückswelt!
 teleport-success=&6&lCitybuild &8&l» &r&aDu wurdest erfolgreich in die &6{0}&r&a Grundstückswelt teleportiert!

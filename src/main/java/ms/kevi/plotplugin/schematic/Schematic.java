@@ -81,10 +81,10 @@ public class Schematic {
         this.blockEntities.put(blockVector3, new SchematicBlockEntity(type, compoundTag));
     }
 
-    public void buildInChunk(Vector3 vector3, FullChunk fullChunk, ShapeType[] shapes, Allowed<ShapeType> allowedShapes) {
-        final int startX = vector3.getFloorX();
-        final int startY = vector3.getFloorY();
-        final int startZ = vector3.getFloorZ();
+    public void buildInChunk(Vector3 start, FullChunk fullChunk, ShapeType[] shapes, Allowed<ShapeType> allowedShapes, Integer minX, Integer minZ, Integer maxX, Integer maxZ) {
+        final int startX = start.getFloorX();
+        final int startY = start.getFloorY();
+        final int startZ = start.getFloorZ();
 
         for(Object2IntMap.Entry<Vector3> entry : this.blocks.object2IntEntrySet()) {
             final Vector3 blockVector = entry.getKey();
@@ -93,6 +93,9 @@ public class Schematic {
             final int x = startX + blockVector.getFloorX();
             final int y = startY + blockVector.getFloorY();
             final int z = startZ + blockVector.getFloorZ();
+
+            if(minX != null && (x < minX || x > maxX)) continue;
+            if(minZ != null && (z < minZ || z > maxZ)) continue;
 
             if(fullChunk.getX() == x >> 4 && fullChunk.getZ() == z >> 4) {
                 final int bX = x & 15;
@@ -110,6 +113,9 @@ public class Schematic {
             final int x = startX + entry.getKey().getX();
             final int y = startY + entry.getKey().getY();
             final int z = startZ + entry.getKey().getZ();
+
+            if(minX != null && (x < minX || x > maxX)) continue;
+            if(minZ != null && (z < minZ || z > maxZ)) continue;
 
             if(fullChunk.getX() == x >> 4 && fullChunk.getZ() == z >> 4) {
                 final int bX = x & 15;

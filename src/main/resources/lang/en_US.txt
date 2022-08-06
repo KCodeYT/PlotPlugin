@@ -122,6 +122,7 @@ merge-failure-no-plots-found=&6&lCitybuild &8&l» &r&cYou do not own a plot whic
 merge-failure-too-many=&6&lCitybuild &8&l» &r&cYou are not allowed to merge &6{0} &r&cplots!
 unlink-success=&6&lCitybuild &8&l» &r&aYou have successfully separated the plots from each other!
 unlink-failure=&6&lCitybuild &8&l» &r&cUnfortunately, the plots could not be separated from each other!
+unlink-failure-unknown-type=&6&lCitybuild &8&l» &r&cPlease specify a valid unlink type (all, neighbors)!
 teleport-form-title=Select a plot world
 teleport-no-plot-world=&6&lCitybuild &8&l» &r&cThe world is not a plot world!
 teleport-success=&6&lCitybuild &8&l» &r&aYou have been successfully teleported to the plot world &6{0}&r&a!

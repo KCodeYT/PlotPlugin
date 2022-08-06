@@ -17,6 +17,7 @@
 package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
+import cn.nukkit.command.data.CommandEnum;
 import cn.nukkit.command.data.CommandParameter;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
@@ -37,7 +38,7 @@ public class SettingCommand extends SubCommand {
 
     public SettingCommand(PlotPlugin plugin, PlotCommand parent) {
         super(plugin, parent, "setting", "config");
-        this.addParameter(CommandParameter.newEnum("name", new String[]{"damage", "pve", "pvp"}));
+        this.addParameter(CommandParameter.newEnum("name", new CommandEnum("plot setting name", "damage", "pve", "pvp")));
     }
 
     @Override

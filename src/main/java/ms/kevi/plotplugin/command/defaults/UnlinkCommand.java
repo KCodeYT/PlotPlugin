@@ -17,12 +17,16 @@
 package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
+import cn.nukkit.command.data.CommandEnum;
+import cn.nukkit.command.data.CommandParameter;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
 import ms.kevi.plotplugin.lang.TranslationKey;
 import ms.kevi.plotplugin.manager.PlotManager;
 import ms.kevi.plotplugin.util.Plot;
+
+import java.util.Locale;
 
 /**
  * @author Kevims KCodeYT
@@ -33,10 +37,13 @@ public class UnlinkCommand extends SubCommand {
     public UnlinkCommand(PlotPlugin plugin, PlotCommand parent) {
         super(plugin, parent, "unlink");
         this.setPermission("plot.command.unlink");
+        this.addParameter(CommandParameter.newEnum("type", new CommandEnum("plot unlink type", "all", "neighbors")));
     }
 
     @Override
     public boolean execute(Player player, String[] args) {
+        final String type = args.length > 0 ? args[0].toLowerCase(Locale.ROOT) : "neighbors";
+
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
         final Plot plot;
         if(plotManager == null || (plot = plotManager.getMergedPlot(player.getFloorX(), player.getFloorZ())) == null) {
@@ -49,15 +56,23 @@ public class UnlinkCommand extends SubCommand {
             return false;
         }
 
-        if(!plot.hasNoMerges()) {
-            plotManager.unlinkPlot(plot);
-            plotManager.savePlots();
-            player.sendMessage(this.translate(player, TranslationKey.UNLINK_SUCCESS));
-            return true;
-        } else {
+        if(plot.hasNoMerges()) {
             player.sendMessage(this.translate(player, TranslationKey.UNLINK_FAILURE));
             return false;
         }
+
+        switch(type) {
+            case "all" -> plotManager.unlinkPlotFromAll(plot);
+            case "neighbors" -> plotManager.unlinkPlotFromNeighbors(plot);
+            default -> {
+                player.sendMessage(this.translate(player, TranslationKey.UNLINK_FAILURE_UNKNOWN_TYPE));
+                return false;
+            }
+        }
+
+        plotManager.savePlots();
+        player.sendMessage(this.translate(player, TranslationKey.UNLINK_SUCCESS));
+        return true;
     }
 
 }
