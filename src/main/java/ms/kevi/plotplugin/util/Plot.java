@@ -151,8 +151,13 @@ public class Plot {
 
     public boolean hasNoMerges() {
         for(boolean merged : this.mergedPlots)
-            if(merged)
-                return false;
+            if(merged) return false;
+        return true;
+    }
+
+    public boolean isFullyMerged() {
+        for(boolean merged : this.mergedPlots)
+            if(!merged) return false;
         return true;
     }
 

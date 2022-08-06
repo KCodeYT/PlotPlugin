@@ -817,6 +817,8 @@ public class PlotManager {
     }
 
     public void changeBorder(Plot plot, BlockState blockState) {
+        if(plot.isFullyMerged()) return;
+
         final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
         final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
@@ -903,6 +905,8 @@ public class PlotManager {
     }
 
     public void clearWallAbove(Plot plot) {
+        if(plot.isFullyMerged()) return;
+
         final BlockState blockState = BlockState.AIR;
         final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
         final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
@@ -990,6 +994,8 @@ public class PlotManager {
     }
 
     public void changeWall(Plot plot, BlockState blockState) {
+        if(plot.isFullyMerged()) return;
+
         final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
         final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
         final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
