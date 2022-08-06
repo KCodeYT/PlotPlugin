@@ -86,7 +86,7 @@ public class SetRoadsCommand extends SubCommand {
                                 chunkShapes.put(chunkVector, shapes = plotManager.getShapes(chunkVector.getX() << 4, chunkVector.getZ() << 4));
                             else shapes = chunkShapes.get(chunkVector);
 
-                            if(plotGenerator.getDefaultBlockStateAt(plotManager, shapes, defaultBlockVector).equals(blockState0))
+                            if(plotGenerator.isDefaultBlockStateAt(plotManager, shapes, defaultBlockVector, blockState0))
                                 continue;
                         }
 
