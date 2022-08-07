@@ -72,21 +72,24 @@ public class ClaimCommand extends SubCommand {
             return false;
         }
 
-        final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true);
+        final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true, true);
         this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
-        plotPreClaimEvent.getWaiter().addTask(() -> {
-            if(plotPreClaimEvent.isCancelled()) return;
 
-            plot.setOwner(player.getUniqueId());
-            if(plotPreClaimEvent.isBorderChanging())
-                plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
-            plotManager.savePlots();
+        if(plotPreClaimEvent.isCancelled()) {
+            if(plotPreClaimEvent.isShowCancelMessage())
+                player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE));
+            return false;
+        }
 
-            final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
-            this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
+        plot.setOwner(player.getUniqueId());
+        if(plotPreClaimEvent.isBorderChanging())
+            plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
+        plotManager.savePlots();
 
-            player.sendMessage(this.translate(player, TranslationKey.CLAIM_SUCCESS));
-        });
+        final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
+        this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
+
+        player.sendMessage(this.translate(player, TranslationKey.CLAIM_SUCCESS));
         return true;
     }
 
