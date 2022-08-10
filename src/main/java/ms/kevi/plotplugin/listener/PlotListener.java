@@ -161,6 +161,16 @@ public class PlotListener implements Listener {
             final Block block = event.getBlock();
             final Item item = event.getItem();
 
+            if(event.getAction() == PlayerInteractEvent.Action.PHYSICAL && block != null) {
+                final Plot plot;
+                if((plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ())) != null) {
+                    if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
+                        event.setCancelled(true);
+                }
+
+                return;
+            }
+
             if((block != null && ((!player.isSneaking() || item == null || item.isNull()) && block.canBeActivated())) || (item != null && item.canBeActivated())) {
                 final int x = (block == null || block.getId() == 0 ? player : block).getFloorX();
                 final int z = (block == null || block.getId() == 0 ? player : block).getFloorZ();
