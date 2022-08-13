@@ -124,16 +124,28 @@ public class PlotManager {
     }
 
     public Plot getMergedPlot(int x, int z) {
-        Plot plot;
-        if((plot = this.getPlot(x, z)) != null) return plot;
+        final int plotSize = this.levelSettings.getPlotSize();
+        final int totalSize = this.levelSettings.getTotalSize();
 
-        final int roadSize = this.levelSettings.getRoadSize();
-        if((plot = this.getPlot(x - roadSize, z)) != null && plot.isMerged(1)) return plot;
-        if((plot = this.getPlot(x, z - roadSize)) != null && plot.isMerged(2)) return plot;
-        if((plot = this.getPlot(x - roadSize, z - roadSize)) != null && plot.isMerged(5))
+        final int idX = x / totalSize;
+        final int idZ = z / totalSize;
+
+        final int difX = x >= 0 ? x % totalSize : Math.abs((x - plotSize + 1) % totalSize);
+        final int difZ = z >= 0 ? z % totalSize : Math.abs((z - plotSize + 1) % totalSize);
+
+        final Plot plot = this.getPlotById(PlotId.of(idX, idZ));
+        if(difX > plotSize - 1 && difZ > plotSize - 1) {
+            if(plot.isMerged(5)) return plot;
+            return null;
+        } else if(difX > plotSize - 1) {
+            if(plot.isMerged(1)) return plot;
+            return null;
+        } else if(difZ > plotSize - 1) {
+            if(plot.isMerged(2)) return plot;
+            return null;
+        } else {
             return plot;
-
-        return null;
+        }
     }
 
     public Plot getPlot(int x, int z) {
@@ -146,26 +158,14 @@ public class PlotManager {
     private PlotId getPlotIdByPos(int x, int z) {
         final int plotSize = this.levelSettings.getPlotSize();
         final int totalSize = plotSize + this.levelSettings.getRoadSize();
-        final int idX, idZ, difX, difZ;
 
-        if(x >= 0) {
-            idX = (int) Math.floor((float) x / totalSize);
-            difX = x % totalSize;
-        } else {
-            idX = (int) Math.ceil((float) (x - plotSize + 1) / totalSize);
-            difX = Math.abs((x - plotSize + 1) % totalSize);
-        }
+        final int idX = x / totalSize;
+        final int idZ = z / totalSize;
 
-        if(z >= 0) {
-            idZ = (int) Math.floor((float) z / totalSize);
-            difZ = z % totalSize;
-        } else {
-            idZ = (int) Math.ceil((float) (z - plotSize + 1) / totalSize);
-            difZ = Math.abs((z - plotSize + 1) % totalSize);
-        }
+        final int difX = x >= 0 ? x % totalSize : Math.abs((x - plotSize + 1) % totalSize);
+        final int difZ = z >= 0 ? z % totalSize : Math.abs((z - plotSize + 1) % totalSize);
 
-        if((difX > plotSize - 1) || (difZ > plotSize - 1))
-            return null;
+        if((difX > plotSize - 1) || (difZ > plotSize - 1)) return null;
         return PlotId.of(idX, idZ);
     }
 
