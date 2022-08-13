@@ -66,14 +66,14 @@ public class RemoveHelperCommand extends SubCommand {
             return false;
         }
 
-        if(plot.removeHelper(targetId)) {
-            plotManager.savePlots();
-            player.sendMessage(this.translate(player, TranslationKey.REMOVED_HELPER, this.plugin.getCorrectName(targetId)));
-            return true;
-        } else {
+        if(!plot.removeHelper(targetId)) {
             player.sendMessage(this.translate(player, TranslationKey.NO_HELPER, this.plugin.getCorrectName(targetId)));
             return false;
         }
+
+        plotManager.savePlots();
+        player.sendMessage(this.translate(player, TranslationKey.REMOVED_HELPER, this.plugin.getCorrectName(targetId)));
+        return true;
     }
 
 }

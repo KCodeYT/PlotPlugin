@@ -22,7 +22,6 @@ import cn.nukkit.event.HandlerList;
 import lombok.Getter;
 import lombok.Setter;
 import ms.kevi.plotplugin.util.Plot;
-import ms.kevi.plotplugin.util.Waiter;
 
 /**
  * @author Kevims KCodeYT
@@ -35,17 +34,17 @@ public class PlotPreClaimEvent extends PlotEvent implements Cancellable {
     @Getter
     private static final HandlerList handlers = new HandlerList();
 
-    private final Waiter waiter;
     private final Player player;
     private final boolean auto;
     private boolean borderChanging;
+    private boolean showCancelMessage;
 
-    public PlotPreClaimEvent(Player player, Plot plot, boolean auto, boolean borderChanging) {
+    public PlotPreClaimEvent(Player player, Plot plot, boolean auto, boolean borderChanging, boolean showCancelMessage) {
         super(plot);
-        this.waiter = new Waiter();
         this.player = player;
         this.auto = auto;
         this.borderChanging = borderChanging;
+        this.showCancelMessage = showCancelMessage;
     }
 
 }

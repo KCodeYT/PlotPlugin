@@ -17,7 +17,7 @@
 package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
-import cn.nukkit.math.Vector3;
+import cn.nukkit.math.BlockVector3;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
@@ -49,9 +49,11 @@ public class SetHomeCommand extends SubCommand {
             return false;
         }
 
-        final Vector3 homePosition = new Vector3(player.getFloorX(), player.getFloorY(), player.getFloorZ()).add(0.5, 1.1, 0.5);
+        final BlockVector3 homePosition = player.add(0, 0.1, 0).floor().asBlockVector3();
         for(Plot mergedPlot : plotManager.getConnectedPlots(plot)) mergedPlot.setHomePosition(homePosition);
+
         plotManager.savePlots();
+
         player.sendMessage(this.translate(player, TranslationKey.SETHOME_SUCCESS));
         return true;
     }

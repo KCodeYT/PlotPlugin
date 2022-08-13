@@ -1,7 +1,6 @@
-#Properties Config file
-#2022-01-31 03:01:36
 activated=&aactivated
 deactivated=&cdeactivated
+too-close-to-home=&6&lCitybuild &8&l» &r&cYou can't build / break blocks here, its too close to the home position of this plot!
 no-perms=&6&lCitybuild &8&l» &r&cYou are not permitted to execute this command!
 no-plot=&6&lCitybuild &8&l» &r&cYou are not on a plot!
 no-plot-world=&6&lCitybuild &8&l» &r&cYou are not in any plot world!
@@ -49,7 +48,7 @@ generate-wall-unowned=&6&lCitybuild &8&l» &r&aSelect block for plots without an
 generate-wall-claimed=&6&lCitybuild &8&l» &r&aSelect block for plots with an owner &r&7(&r&aDefault&7: &r&6{0}&r&7)
 generate-wall-filling=&6&lCitybuild &8&l» &r&aSelect block for plots under the edge &r&7(&r&aDefault&7: &r&6{0}&r&7)
 generate-ground-height=&6&lCitybuild &8&l» &r&aSelect the height of the plot world &r&7(&r&aDefault&7: &r&6{0}&r&7)
-generate-plot-size=&6&lCitybuild &8&l» &r&aSelect the height of a plot &r&7(&r&aDefault&7: &r&6{0}&r&7)
+generate-plot-size=&6&lCitybuild &8&l» &r&aSelect the size of a plot &r&7(&r&aDefault&7: &r&6{0}&r&7)
 generate-road-size=&6&lCitybuild &8&l» &r&aSelect the size of the roads &r&7(&r&aDefault&7: &r&6{0}&r&7)
 generate-success-default=&6&lCitybuild &8&l» &r&aThe world with name &6{0}&r&a was created and has been set as default plot world!
 generate-success=&6&lCitybuild &8&l» &r&aThe world with name &6{0}&r&a was created and has not been set as default plot world!
@@ -123,6 +122,7 @@ merge-failure-no-plots-found=&6&lCitybuild &8&l» &r&cYou do not own a plot whic
 merge-failure-too-many=&6&lCitybuild &8&l» &r&cYou are not allowed to merge &6{0} &r&cplots!
 unlink-success=&6&lCitybuild &8&l» &r&aYou have successfully separated the plots from each other!
 unlink-failure=&6&lCitybuild &8&l» &r&cUnfortunately, the plots could not be separated from each other!
+unlink-failure-unknown-type=&6&lCitybuild &8&l» &r&cPlease specify a valid unlink type (all, neighbors)!
 teleport-form-title=Select a plot world
 teleport-no-plot-world=&6&lCitybuild &8&l» &r&cThe world is not a plot world!
 teleport-success=&6&lCitybuild &8&l» &r&aYou have been successfully teleported to the plot world &6{0}&r&a!
@@ -139,6 +139,7 @@ kick-cannot-perform=&6&lCitybuild &8&l» &r&cYou cannot kick this player from yo
 kick-player-kicked=&6&lCitybuild &8&l» &r&aYou have successfully kicked &6{0} &r&afrom your plot!
 sethome-success=&6&lCitybuild &8&l» &r&aYou have successfully set the spawnpoint for plot!
 deletehome-failure-no-home-set=&6&lCitybuild &8&l» &r&cYou do not have a spawnpoint set for your plot!
+deletehome-success=&6&lCitybuild &8&l» &r&aYou have removed the spawnpoint for your plot!
 border-form-title=Select a border
 border-form-button={0}\n{1}
 border-button-has-perm=You can use this border

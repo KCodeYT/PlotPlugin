@@ -14,34 +14,27 @@
  * limitations under the License.
  */
 
-package ms.kevi.plotplugin.util.async;
-
-import java.util.ArrayList;
-import java.util.List;
+package ms.kevi.plotplugin.schematic.format;
 
 /**
  * @author Kevims KCodeYT
- * @version 1.0
  */
-public class TaskHelper {
+public class SchematicSerializers {
 
-    private final List<Runnable> asyncTasks = new ArrayList<>();
-    private final List<Runnable> syncTasks = new ArrayList<>();
+    private static final SchematicSerializer[] SERIALIZERS = {
+            SchematicSerializerV1.INSTANCE,
+            SchematicSerializerV2.INSTANCE
+    };
 
-    public void addAsyncTask(Runnable task) {
-        this.asyncTasks.add(task);
+    public static SchematicSerializer getLatest() {
+        return SERIALIZERS[SERIALIZERS.length - 1];
     }
 
-    public void addSyncTask(Runnable task) {
-        this.syncTasks.add(task);
-    }
+    public static SchematicSerializer get(int version) {
+        for(SchematicSerializer serializer : SERIALIZERS)
+            if(serializer.version() == version) return serializer;
 
-    public void runAsyncTasks() {
-        for(Runnable asyncTask : this.asyncTasks) asyncTask.run();
-    }
-
-    public void runSyncTasks() {
-        for(Runnable syncTask : this.syncTasks) syncTask.run();
+        throw new UnsupportedOperationException("Schematic file version " + version + " is not supported!");
     }
 
 }

@@ -16,7 +16,7 @@
 
 package ms.kevi.plotplugin.util;
 
-import cn.nukkit.math.Vector3;
+import cn.nukkit.math.BlockVector3;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,8 +40,8 @@ public class Plot {
         plot.helpers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("helpers"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.config.putAll(Plot.<Map<String, Object>>getOrDefault(plotMap.get("config"), new HashMap<>()));
-        final List<Double> homePositionList = Plot.<List<Double>>getOrDefault(plotMap.get("home-position"), new ArrayList<>());
-        plot.homePosition = homePositionList.size() == 3 ? new Vector3(homePositionList.get(0), homePositionList.get(1), homePositionList.get(2)) : null;
+        final List<Integer> homePositionList = Plot.<List<Integer>>getOrDefault(plotMap.get("home-position"), new ArrayList<>());
+        plot.homePosition = homePositionList.size() == 3 ? new BlockVector3(homePositionList.get(0), homePositionList.get(1), homePositionList.get(2)) : null;
         for(int i = 0; i < plot.mergedPlots.length; i++)
             plot.mergedPlots[i] = (Boolean) ((List<?>) plotMap.getOrDefault("merges", new ArrayList<>())).get(i);
         return plot;
@@ -63,7 +63,7 @@ public class Plot {
     private final List<UUID> helpers;
     private final List<UUID> deniedPlayers;
     private final Map<String, Object> config;
-    private Vector3 homePosition;
+    private BlockVector3 homePosition;
 
     private final Boolean[] mergedPlots;
     private Plot origin;
@@ -151,28 +151,23 @@ public class Plot {
 
     public boolean hasNoMerges() {
         for(boolean merged : this.mergedPlots)
-            if(merged)
-                return false;
+            if(merged) return false;
+        return true;
+    }
+
+    public boolean isFullyMerged() {
+        for(boolean merged : this.mergedPlots)
+            if(!merged) return false;
         return true;
     }
 
     public boolean isMerged(int direction) {
-        switch(direction) {
-            case 0:
-            case 1:
-            case 2:
-            case 3:
-                return this.mergedPlots[direction];
-            case 7:
-                int i = direction - 4;
-                int i2 = 0;
-                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).isMerged(i);
-            case 4:
-            case 5:
-            case 6:
-                i = direction - 4;
-                i2 = direction - 3;
-                return this.isMerged(i2) && this.isMerged(i) && this.manager.getPlotById(this.getRelative(i)).isMerged(i2) && this.manager.getPlotById(this.getRelative(i2)).isMerged(i);
+        if(direction < 0) return false;
+        if(direction < 4) return this.mergedPlots[direction];
+        if(direction < 8) {
+            final int f = direction - 4;
+            final int s = direction == 7 ? 0 : direction - 3;
+            return this.isMerged(f) && this.isMerged(s) && this.manager.getPlotById(this.getRelative(f)).isMerged(s) && this.manager.getPlotById(this.getRelative(s)).isMerged(f);
         }
 
         return false;
@@ -188,6 +183,10 @@ public class Plot {
             case 1 -> this.id.add(1, 0);
             case 2 -> this.id.add(0, 1);
             case 3 -> this.id.subtract(1, 0);
+            case 4 -> this.id.add(1, -1);
+            case 5 -> this.id.add(1, 1);
+            case 6 -> this.id.add(-1, 1);
+            case 7 -> this.id.subtract(1, 1);
             default -> this.id;
         };
     }

@@ -43,14 +43,19 @@ public class ClearCommand extends SubCommand {
             return false;
         }
 
-        if((player.hasPermission("plot.command.admin.clear") || plot.isOwner(player.getUniqueId())) && plotManager.clearPlot(plot)) {
-            plotManager.savePlots();
-            player.sendMessage(this.translate(player, TranslationKey.CLEAR_SUCCESS));
-            return true;
-        } else {
+        if(!plot.isOwner(player.getUniqueId()) && !player.hasPermission("plot.command.admin.clear")) {
+            player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_OWNER));
+            return false;
+        }
+
+        if(!plotManager.clearPlot(plot)) {
             player.sendMessage(this.translate(player, TranslationKey.CLEAR_FAILURE));
             return false;
         }
+
+        plotManager.savePlots();
+        player.sendMessage(this.translate(player, TranslationKey.CLEAR_SUCCESS));
+        return true;
     }
 
 }

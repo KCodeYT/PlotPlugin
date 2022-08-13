@@ -17,22 +17,16 @@
 package ms.kevi.plotplugin.schematic;
 
 import cn.nukkit.nbt.tag.CompoundTag;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.Value;
 
 /**
  * @author Kevims KCodeYT
  * @version 1.0
  */
-@Getter
-@ToString
-@EqualsAndHashCode
-@AllArgsConstructor
+@Value
 public class SchematicBlockEntity {
 
-    private String type;
-    private CompoundTag compoundTag;
+    String type;
+    CompoundTag compoundTag;
 
 }

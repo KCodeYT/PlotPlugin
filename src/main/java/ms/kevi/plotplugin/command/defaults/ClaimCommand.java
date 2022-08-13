@@ -67,27 +67,30 @@ public class ClaimCommand extends SubCommand {
             }
         }
 
-        if(!plot.hasOwner()) {
-            final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true);
-            this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
-            plotPreClaimEvent.getWaiter().addTask(() -> {
-                if(plotPreClaimEvent.isCancelled()) return;
-
-                plot.setOwner(player.getUniqueId());
-                if(plotPreClaimEvent.isBorderChanging())
-                    plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
-                plotManager.savePlots();
-
-                final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
-                this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
-
-                player.sendMessage(this.translate(player, TranslationKey.CLAIM_SUCCESS));
-            });
-            return true;
-        } else {
+        if(plot.hasOwner()) {
             player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE));
             return false;
         }
+
+        final PlotPreClaimEvent plotPreClaimEvent = new PlotPreClaimEvent(player, plot, false, true, true);
+        this.plugin.getServer().getPluginManager().callEvent(plotPreClaimEvent);
+
+        if(plotPreClaimEvent.isCancelled()) {
+            if(plotPreClaimEvent.isShowCancelMessage())
+                player.sendMessage(this.translate(player, TranslationKey.CLAIM_FAILURE));
+            return false;
+        }
+
+        plot.setOwner(player.getUniqueId());
+        if(plotPreClaimEvent.isBorderChanging())
+            plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
+        plotManager.savePlots();
+
+        final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
+        this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);
+
+        player.sendMessage(this.translate(player, TranslationKey.CLAIM_SUCCESS));
+        return true;
     }
 
 }

@@ -64,11 +64,16 @@ public class PlotListener implements Listener {
         if(plotManager != null && !player.hasPermission("plot.admin.place")) {
             final int x = event.getBlock().getFloorX();
             final int z = event.getBlock().getFloorZ();
+            final Plot plot = plotManager.getMergedPlot(x, z);
 
-            Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if(plot != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
+
+                if(plot.getHomePosition() != null && plot.getHomePosition().distance(event.getBlock()) < 5) {
+                    event.setCancelled(true);
+                    player.sendMessage(this.plugin.getLanguage().translate(player, TranslationKey.TOO_CLOSE_TO_HOME));
+                }
             } else {
                 event.setCancelled(true);
             }
@@ -83,11 +88,16 @@ public class PlotListener implements Listener {
         if(plotManager != null && !player.hasPermission("plot.admin.break")) {
             final int x = event.getBlock().getFloorX();
             final int z = event.getBlock().getFloorZ();
+            final Plot plot = plotManager.getMergedPlot(x, z);
 
-            Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if(plot != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
+
+                if(plot.getHomePosition() != null && plot.getHomePosition().distance(event.getBlock()) < 5) {
+                    event.setCancelled(true);
+                    player.sendMessage(this.plugin.getLanguage().translate(player, TranslationKey.TOO_CLOSE_TO_HOME));
+                }
             } else {
                 event.setCancelled(true);
             }
@@ -102,11 +112,16 @@ public class PlotListener implements Listener {
         if(plotManager != null && !player.hasPermission("plot.admin.bucket.emtpy")) {
             final int x = event.getBlockClicked().getFloorX();
             final int z = event.getBlockClicked().getFloorZ();
+            final Plot plot = plotManager.getMergedPlot(x, z);
 
-            Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if(plot != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
+
+                if(plot.getHomePosition() != null && plot.getHomePosition().distance(event.getBlockClicked()) < 5) {
+                    event.setCancelled(true);
+                    player.sendMessage(this.plugin.getLanguage().translate(player, TranslationKey.TOO_CLOSE_TO_HOME));
+                }
             } else {
                 event.setCancelled(true);
             }
@@ -121,11 +136,16 @@ public class PlotListener implements Listener {
         if(plotManager != null && !player.hasPermission("plot.admin.bucket.fill")) {
             final int x = event.getBlockClicked().getFloorX();
             final int z = event.getBlockClicked().getFloorZ();
+            final Plot plot = plotManager.getMergedPlot(x, z);
 
-            Plot plot;
-            if((plot = plotManager.getMergedPlot(x, z)) != null) {
+            if(plot != null) {
                 if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                     event.setCancelled(true);
+
+                if(plot.getHomePosition() != null && plot.getHomePosition().distance(event.getBlockClicked()) < 5) {
+                    event.setCancelled(true);
+                    player.sendMessage(this.plugin.getLanguage().translate(player, TranslationKey.TOO_CLOSE_TO_HOME));
+                }
             } else {
                 event.setCancelled(true);
             }
@@ -141,17 +161,51 @@ public class PlotListener implements Listener {
             final Block block = event.getBlock();
             final Item item = event.getItem();
 
-            if((block != null && ((!player.isSneaking() || item == null || item.isNull()) && block.canBeActivated())) || (item != null && item.canBeActivated())) {
-                final int x = (block == null ? player : block).getFloorX();
-                final int z = (block == null ? player : block).getFloorZ();
+            if(event.getAction() == PlayerInteractEvent.Action.PHYSICAL && block != null) {
+                final Plot plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
 
-                Plot plot;
-                if((plot = plotManager.getMergedPlot(x, z)) != null) {
+                if(plot != null) {
                     if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
                         event.setCancelled(true);
+                }
+
+                return;
+            }
+
+            if((block != null && ((!player.isSneaking() || item == null || item.isNull()) && block.canBeActivated())) || (item != null && item.canBeActivated())) {
+                final int x = (block == null || block.getId() == 0 ? player : block).getFloorX();
+                final int z = (block == null || block.getId() == 0 ? player : block).getFloorZ();
+                final Plot plot = plotManager.getMergedPlot(x, z);
+
+                if(plot != null) {
+                    if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
+                        event.setCancelled(true);
+
+                    if(plot.getHomePosition() != null && plot.getHomePosition().distance(event.getBlock()) < 5) {
+                        event.setCancelled(true);
+                        player.sendMessage(this.plugin.getLanguage().translate(player, TranslationKey.TOO_CLOSE_TO_HOME));
+                    }
                 } else {
                     event.setCancelled(true);
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onInteractWithEntity(PlayerInteractEntityEvent event) {
+        final Player player = event.getPlayer();
+        final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
+
+        if(plotManager != null && !player.hasPermission("plot.admin.interact")) {
+            final Entity entity = event.getEntity();
+            final Plot plot = plotManager.getMergedPlot(entity.getFloorX(), entity.getFloorZ());
+
+            if(plot != null) {
+                if(!plot.isOwner(player.getUniqueId()) && !plot.isHelper(player.getUniqueId()) && !plot.isHelper(Utils.UUID_EVERYONE))
+                    event.setCancelled(true);
+            } else {
+                event.setCancelled(true);
             }
         }
     }
@@ -164,6 +218,7 @@ public class PlotListener implements Listener {
         if(plotManager != null && event.getFrom() != null) {
             final Plot plotFrom = plotManager.getMergedPlot(event.getFrom().getFloorX(), event.getFrom().getFloorZ());
             final Plot plotTo = plotManager.getMergedPlot(event.getTo().getFloorX(), event.getTo().getFloorZ());
+
             if(plotTo != null) {
                 if((plotTo.isDenied(player.getUniqueId()) || plotTo.isDenied(Utils.UUID_EVERYONE)) && !player.hasPermission("plot.admin.bypass.deny")) {
                     event.setCancelled(true);
@@ -201,8 +256,8 @@ public class PlotListener implements Listener {
             return;
 
         if(plotManager != null) {
-            Plot plot;
-            if((plot = plotManager.getMergedPlot(entity.getFloorX(), entity.getFloorZ())) != null) {
+            Plot plot = plotManager.getMergedPlot(entity.getFloorX(), entity.getFloorZ());
+            if(plot != null) {
                 if(!((boolean) PlotConfig.ConfigEnum.DAMAGE.getConfig().get(plot)))
                     event.setCancelled(true);
             } else
@@ -221,7 +276,7 @@ public class PlotListener implements Listener {
             damager = damager instanceof EntityProjectile && ((EntityProjectile) damager).shootingEntity != null ? ((EntityProjectile) damager).shootingEntity : damager;
 
             if(plot != null) {
-                if(!((damager instanceof Player && (((Player) damager).hasPermission("plot.admin.damage")) || (entity instanceof Player ? ((boolean) PlotConfig.ConfigEnum.PVP.getConfig().get(plot)) : ((boolean) PlotConfig.ConfigEnum.PVE.getConfig().get(plot))) || (!(entity instanceof Player) && damager instanceof Player && plot.isOwner(((Player) damager).getUniqueId())))))
+                if(!((damager instanceof Player && (((Player) damager).hasPermission("plot.admin.damage")) || (entity instanceof Player ? ((boolean) PlotConfig.ConfigEnum.PVP.getConfig().get(plot)) : ((boolean) PlotConfig.ConfigEnum.PVE.getConfig().get(plot))) || (!(entity instanceof Player) && damager instanceof Player && plot.isOwner(damager.getUniqueId())))))
                     event.setCancelled(true);
             } else if(!(damager instanceof Player) || !((Player) damager).hasPermission("plot.admin.damage"))
                 event.setCancelled(true);
@@ -244,6 +299,11 @@ public class PlotListener implements Listener {
 
             if(plotFrom != null && plotTo == null) event.setCancelled(true);
             if(plotTo != null && plotFrom == null) event.setCancelled(true);
+
+            if(plotFrom != null && plotFrom.getHomePosition() != null && plotFrom.getHomePosition().distance(event.getBlock()) < 5)
+                event.setCancelled(true);
+            if(plotTo != null && plotTo.getHomePosition() != null && plotTo.getHomePosition().distance(event.getBlock()) < 5)
+                event.setCancelled(true);
         }
     }
 
@@ -260,6 +320,11 @@ public class PlotListener implements Listener {
 
             if(plotFrom != null && plotTo == null) event.setCancelled(true);
             if(plotTo != null && plotFrom == null) event.setCancelled(true);
+
+            if(plotFrom != null && plotFrom.getHomePosition() != null && plotFrom.getHomePosition().distance(event.getBlock()) < 5)
+                event.setCancelled(true);
+            if(plotTo != null && plotTo.getHomePosition() != null && plotTo.getHomePosition().distance(event.getBlock()) < 5)
+                event.setCancelled(true);
         }
     }
 
@@ -271,6 +336,8 @@ public class PlotListener implements Listener {
 
         final Plot plot = plotManager.getMergedPlot(block.getFloorX(), block.getFloorZ());
         if(plot == null) event.setCancelled(true);
+        else if(plot.getHomePosition() != null && plot.getHomePosition().distance(event.getBlock()) < 5)
+            event.setCancelled(true);
     }
 
     @EventHandler

@@ -60,34 +60,34 @@ public class HomeCommand extends SubCommand {
             return false;
         }
 
-        final List<Plot> plots;
-        if((plots = plotManager.getPlotsByOwner(targetId)).size() != 0) {
-            if(plotId < plots.size()) {
-                final Plot plot = plots.get(plotId);
-                final boolean canPerform = (!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.bypass.deny");
-                if(targetName.equalsIgnoreCase(player.getName())) {
-                    player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS_OWN));
-                    plotManager.teleportPlayerToPlot(player, plots.get(plotId));
-                } else if(canPerform) {
-                    player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS, this.plugin.getCorrectName(targetId)));
-                    plotManager.teleportPlayerToPlot(player, plots.get(plotId));
-                } else
-                    player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_DENIED));
-                return true;
-            } else {
-                if(targetName.equalsIgnoreCase(player.getName()))
-                    player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_OWN_ID, plotId + 1));
-                else
-                    player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_ID, this.plugin.getCorrectName(targetId), plotId + 1));
-                return false;
-            }
-        } else {
+        final List<Plot> plots = plotManager.getPlotsByOwner(targetId);
+        if(plots.isEmpty()) {
             if(targetName.equalsIgnoreCase(player.getName()))
                 player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_OWN));
             else
                 player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE, this.plugin.getCorrectName(targetId)));
             return false;
         }
+
+        if(plotId >= plots.size()) {
+            if(targetName.equalsIgnoreCase(player.getName()))
+                player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_OWN_ID, plotId + 1));
+            else
+                player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_ID, this.plugin.getCorrectName(targetId), plotId + 1));
+            return false;
+        }
+
+        final Plot plot = plots.get(plotId);
+        final boolean canPerform = (!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.bypass.deny");
+        if(targetName.equalsIgnoreCase(player.getName())) {
+            player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS_OWN));
+            plotManager.teleportPlayerToPlot(player, plots.get(plotId));
+        } else if(canPerform) {
+            player.sendMessage(this.translate(player, TranslationKey.HOME_SUCCESS, this.plugin.getCorrectName(targetId)));
+            plotManager.teleportPlayerToPlot(player, plots.get(plotId));
+        } else
+            player.sendMessage(this.translate(player, TranslationKey.HOME_FAILURE_DENIED));
+        return true;
     }
 
 }

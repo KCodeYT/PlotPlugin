@@ -61,7 +61,7 @@ public class RegenAllRoadsCommand extends SubCommand {
             for(int chunkX = -chunkRadius; chunkX <= chunkRadius; chunkX++) {
                 for(int chunkZ = -chunkRadius; chunkZ <= chunkRadius; chunkZ++) {
                     final FullChunk fullChunk = level.getChunk(pChunkX + chunkX, pChunkZ + chunkZ, false);
-                    if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk, true);
+                    if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk);
                 }
             }
 

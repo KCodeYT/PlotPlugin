@@ -17,6 +17,7 @@
 package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
+import cn.nukkit.command.data.CommandEnum;
 import cn.nukkit.command.data.CommandParameter;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
@@ -37,7 +38,7 @@ public class SettingCommand extends SubCommand {
 
     public SettingCommand(PlotPlugin plugin, PlotCommand parent) {
         super(plugin, parent, "setting", "config");
-        this.addParameter(CommandParameter.newEnum("name", new String[]{"damage", "pve", "pvp"}));
+        this.addParameter(CommandParameter.newEnum("name", new CommandEnum("plot setting name", "damage", "pve", "pvp")));
     }
 
     @Override
@@ -70,14 +71,14 @@ public class SettingCommand extends SubCommand {
                 PlotConfig.ConfigEnum.PVE.getConfig().set(plot, pveValue);
                 plotManager.savePlots();
                 player.sendMessage(this.translate(player, TranslationKey.CONFIG_PVE, this.translate(player, pveValue ? TranslationKey.ACTIVATED : TranslationKey.DEACTIVATED)));
-                return false;
+                return true;
             }
             case "pvp" -> {
                 final boolean pvpValue = args.length > 0 && Utils.parseBoolean(args[0]);
                 PlotConfig.ConfigEnum.PVP.getConfig().set(plot, pvpValue);
                 plotManager.savePlots();
                 player.sendMessage(this.translate(player, TranslationKey.CONFIG_PVP, this.translate(player, pvpValue ? TranslationKey.ACTIVATED : TranslationKey.DEACTIVATED)));
-                return false;
+                return true;
             }
             default -> {
                 player.sendMessage(this.translate(player, TranslationKey.CONFIG_HELP_TITLE));

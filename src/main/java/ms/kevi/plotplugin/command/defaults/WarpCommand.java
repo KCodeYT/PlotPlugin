@@ -67,14 +67,18 @@ public class WarpCommand extends SubCommand {
             return false;
         }
 
-        if((!plot.isDenied(player.getUniqueId()) && !plot.isDenied(Utils.UUID_EVERYONE)) || player.hasPermission("plot.admin.bypass.deny")) {
-            plotManager.teleportPlayerToPlot(player, plot);
-            player.sendMessage(this.translate(player, TranslationKey.WARP_SUCCESS, (plotX + ";" + plotZ)));
-            return true;
+        final boolean isDenied = plot.isDenied(player.getUniqueId()) || plot.isDenied(Utils.UUID_EVERYONE);
+        final boolean isOwnerOrHelper = plot.isOwner(player.getUniqueId()) || plot.isHelper(player.getUniqueId()) || plot.isHelper(Utils.UUID_EVERYONE);
+        final boolean hasPermission = player.hasPermission("plot.admin.bypass.deny");
+
+        if(isDenied && !isOwnerOrHelper && !hasPermission) {
+            player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE));
+            return false;
         }
 
-        player.sendMessage(this.translate(player, TranslationKey.WARP_FAILURE));
-        return false;
+        plotManager.teleportPlayerToPlot(player, plot);
+        player.sendMessage(this.translate(player, TranslationKey.WARP_SUCCESS, (plotX + ";" + plotZ)));
+        return true;
     }
 
 }

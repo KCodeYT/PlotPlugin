@@ -66,14 +66,14 @@ public class UndenyCommand extends SubCommand {
             return false;
         }
 
-        if(plot.unDenyPlayer(targetId)) {
-            plotManager.savePlots();
-            player.sendMessage(this.translate(player, TranslationKey.UNDENY_SUCCESS, this.plugin.getCorrectName(targetId)));
-            return true;
-        } else {
+        if(!plot.unDenyPlayer(targetId)) {
             player.sendMessage(this.translate(player, TranslationKey.UNDENY_FAILURE, this.plugin.getCorrectName(targetId)));
             return false;
         }
+
+        plotManager.savePlots();
+        player.sendMessage(this.translate(player, TranslationKey.UNDENY_SUCCESS, this.plugin.getCorrectName(targetId)));
+        return true;
     }
 
 }

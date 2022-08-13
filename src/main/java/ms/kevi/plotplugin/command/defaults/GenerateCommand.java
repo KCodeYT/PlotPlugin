@@ -17,6 +17,7 @@
 package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
+import cn.nukkit.command.data.CommandEnum;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import ms.kevi.plotplugin.PlotPlugin;
@@ -36,7 +37,7 @@ public class GenerateCommand extends SubCommand {
         super(plugin, parent, "generate");
         this.setPermission("plot.command.admin.generate");
         this.addParameter(CommandParameter.newType("level", CommandParamType.STRING));
-        this.addParameter(CommandParameter.newEnum("default", new String[]{"true", "false"}));
+        this.addParameter(CommandParameter.newEnum("default", new CommandEnum("should be default level?", "true", "false")));
     }
 
     @Override
@@ -49,19 +50,16 @@ public class GenerateCommand extends SubCommand {
             return false;
         }
 
-        if(!this.plugin.getServer().isLevelGenerated(levelName)) {
-            final PlotLevelRegistration levelRegistration = new PlotLevelRegistration(levelName, defaultLevel);
-            this.plugin.getLevelRegistrationMap().put(player, levelRegistration);
-            player.sendMessage(this.translate(player, TranslationKey.GENERATE_START, levelName));
-            player.sendMessage(this.translate(player, TranslationKey.GENERATE_DIMENSION, levelRegistration.getLevelSettings().getDimension()));
-            return true;
-        } else {
-            if(!this.plugin.getServer().isLevelLoaded(levelName))
-                this.plugin.getServer().loadLevel(levelName);
-            player.teleport(this.plugin.getServer().getLevelByName(levelName).getSpawnLocation());
+        if(this.plugin.getServer().isLevelGenerated(levelName)) {
             player.sendMessage(this.translate(player, TranslationKey.GENERATE_FAILURE));
             return false;
         }
+
+        final PlotLevelRegistration levelRegistration = new PlotLevelRegistration(levelName, defaultLevel);
+        this.plugin.getLevelRegistrationMap().put(player, levelRegistration);
+        player.sendMessage(this.translate(player, TranslationKey.GENERATE_START, levelName));
+        player.sendMessage(this.translate(player, TranslationKey.GENERATE_DIMENSION, levelRegistration.getLevelSettings().getDimension()));
+        return true;
     }
 
 }

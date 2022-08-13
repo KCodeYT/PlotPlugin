@@ -6,7 +6,7 @@
 
     <groupId>ms.kevi</groupId>
     <artifactId>plotplugin</artifactId>
-    <version>1.1.2</version>
+    <version>1.2.0</version>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>cn.powernukkitx</groupId>
             <artifactId>powernukkitx</artifactId>
-            <version>1.6.0.0-PNX</version>
+            <version>1.19.20-r1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -38,6 +38,11 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.luben</groupId>
+            <artifactId>zstd-jni</artifactId>
+            <version>1.5.2-3</version>
         </dependency>
     </dependencies>
 
