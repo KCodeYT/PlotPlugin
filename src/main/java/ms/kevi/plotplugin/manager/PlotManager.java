@@ -127,8 +127,8 @@ public class PlotManager {
         final int plotSize = this.levelSettings.getPlotSize();
         final int totalSize = this.levelSettings.getTotalSize();
 
-        final int idX = x / totalSize;
-        final int idZ = z / totalSize;
+        final int idX = x >= 0 ? x / totalSize : (x / totalSize) - 1;
+        final int idZ = x >= 0 ? z / totalSize : (z / totalSize) - 1;
 
         final int difX = x >= 0 ? x % totalSize : Math.abs((x - plotSize + 1) % totalSize);
         final int difZ = z >= 0 ? z % totalSize : Math.abs((z - plotSize + 1) % totalSize);
@@ -159,8 +159,8 @@ public class PlotManager {
         final int plotSize = this.levelSettings.getPlotSize();
         final int totalSize = plotSize + this.levelSettings.getRoadSize();
 
-        final int idX = x / totalSize;
-        final int idZ = z / totalSize;
+        final int idX = x >= 0 ? x / totalSize : (x / totalSize) - 1;
+        final int idZ = x >= 0 ? z / totalSize : (z / totalSize) - 1;
 
         final int difX = x >= 0 ? x % totalSize : Math.abs((x - plotSize + 1) % totalSize);
         final int difZ = z >= 0 ? z % totalSize : Math.abs((z - plotSize + 1) % totalSize);
