@@ -127,20 +127,23 @@ public class PlotManager {
         final int plotSize = this.levelSettings.getPlotSize();
         final int totalSize = this.levelSettings.getTotalSize();
 
-        final int idX = x >= 0 ? x / totalSize : (x / totalSize) - 1;
-        final int idZ = x >= 0 ? z / totalSize : (z / totalSize) - 1;
+        final int idX = x >= 0 ? x / totalSize : ((x + 1) / totalSize) - 1;
+        final int idZ = z >= 0 ? z / totalSize : ((z + 1) / totalSize) - 1;
 
-        final int difX = x >= 0 ? x % totalSize : Math.abs((x - plotSize + 1) % totalSize);
-        final int difZ = z >= 0 ? z % totalSize : Math.abs((z - plotSize + 1) % totalSize);
+        final int difX = x >= 0 ? (x + 1) % totalSize : totalSize + ((x + 1) % totalSize);
+        final int difZ = z >= 0 ? (z + 1) % totalSize : totalSize + ((z + 1) % totalSize);
+
+        final boolean xOnRoad = difX > plotSize || difX == 0;
+        final boolean zOnRoad = difZ > plotSize || difZ == 0;
 
         final Plot plot = this.getPlotById(PlotId.of(idX, idZ));
-        if(difX > plotSize - 1 && difZ > plotSize - 1) {
+        if(xOnRoad && zOnRoad) {
             if(plot.isMerged(5)) return plot;
             return null;
-        } else if(difX > plotSize - 1) {
+        } else if(xOnRoad) {
             if(plot.isMerged(1)) return plot;
             return null;
-        } else if(difZ > plotSize - 1) {
+        } else if(zOnRoad) {
             if(plot.isMerged(2)) return plot;
             return null;
         } else {
@@ -159,13 +162,16 @@ public class PlotManager {
         final int plotSize = this.levelSettings.getPlotSize();
         final int totalSize = plotSize + this.levelSettings.getRoadSize();
 
-        final int idX = x >= 0 ? x / totalSize : (x / totalSize) - 1;
-        final int idZ = x >= 0 ? z / totalSize : (z / totalSize) - 1;
+        final int idX = x >= 0 ? x / totalSize : ((x + 1) / totalSize) - 1;
+        final int idZ = z >= 0 ? z / totalSize : ((z + 1) / totalSize) - 1;
 
-        final int difX = x >= 0 ? x % totalSize : Math.abs((x - plotSize + 1) % totalSize);
-        final int difZ = z >= 0 ? z % totalSize : Math.abs((z - plotSize + 1) % totalSize);
+        final int difX = x >= 0 ? (x + 1) % totalSize : totalSize + ((x + 1) % totalSize);
+        final int difZ = z >= 0 ? (z + 1) % totalSize : totalSize + ((z + 1) % totalSize);
 
-        if((difX > plotSize - 1) || (difZ > plotSize - 1)) return null;
+        final boolean xOnRoad = difX > plotSize || difX == 0;
+        final boolean zOnRoad = difZ > plotSize || difZ == 0;
+
+        if(xOnRoad || zOnRoad) return null;
         return PlotId.of(idX, idZ);
     }
 
@@ -1162,21 +1168,16 @@ public class PlotManager {
         final int plotSize = this.levelSettings.getPlotSize();
         final ShapeType[] shapes = new ShapeType[256];
 
-        int posX;
-        if(x >= 0) posX = x % totalSize;
-        else posX = totalSize - Math.abs(x % totalSize);
+        int posX = x >= 0 ? x % totalSize : totalSize + (x % totalSize);
+        int posZ = z >= 0 ? z % totalSize : totalSize + (z % totalSize);
 
-        int posZ;
-        if(z >= 0) posZ = z % totalSize;
-        else posZ = totalSize - Math.abs(z % totalSize);
-
-        int startX = posX;
+        final int startX = posX;
         for(int zBlock = 0; zBlock < 16; zBlock++, posZ++) {
             if(posZ == totalSize) posZ = 0;
 
             final ShapeType typeZ;
             if(posZ < plotSize) typeZ = ShapeType.PLOT;
-            else if(posZ == plotSize || posZ == (totalSize - 1)) typeZ = ShapeType.WALL;
+            else if(posZ == plotSize || posZ == totalSize - 1) typeZ = ShapeType.WALL;
             else typeZ = ShapeType.ROAD;
 
             posX = startX;
@@ -1185,7 +1186,7 @@ public class PlotManager {
 
                 final ShapeType typeX;
                 if(posX < plotSize) typeX = ShapeType.PLOT;
-                else if(posX == plotSize || posX == (totalSize - 1)) typeX = ShapeType.WALL;
+                else if(posX == plotSize || posX == totalSize - 1) typeX = ShapeType.WALL;
                 else typeX = ShapeType.ROAD;
 
                 final ShapeType type;
