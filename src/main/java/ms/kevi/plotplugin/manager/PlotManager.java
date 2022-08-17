@@ -30,6 +30,7 @@ import cn.nukkit.math.BlockVector3;
 import cn.nukkit.math.SimpleAxisAlignedBB;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.utils.Config;
+import cn.nukkit.utils.ConfigSection;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
@@ -38,8 +39,12 @@ import ms.kevi.plotplugin.event.PlotClearEvent;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.util.*;
 import ms.kevi.plotplugin.util.async.AsyncLevelWorker;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -74,7 +79,32 @@ public class PlotManager {
         this.plugin = plugin;
         this.plotSchematic = new PlotSchematic(this);
         this.plotSchematic.init(this.plotSchematicFile = new File(this.plugin.getDataFolder(), "schems/" + levelName + ".road"));
-        this.config = new Config(new File(plugin.getDataFolder(), "worlds/" + levelName + ".yml"), Config.YAML);
+
+        final File configFile = new File(plugin.getDataFolder(), "worlds/" + levelName + ".yml");
+        if(configFile.exists()) {
+            final LoaderOptions loaderOptions = new LoaderOptions();
+            loaderOptions.setMaxAliasesForCollections(Integer.MAX_VALUE);
+            final Yaml yaml = new Yaml(loaderOptions);
+
+            Map<String, Object> map;
+            try(final FileInputStream inputStream = new FileInputStream(configFile)) {
+                //noinspection unchecked
+                map = yaml.loadAs(inputStream, Map.class);
+            } catch(IOException e) {
+                plugin.getLogger().error("Could not read config file for level " + levelName, e);
+                map = Collections.emptyMap();
+            }
+
+            if(!configFile.delete()) {
+                plugin.getLogger().error("Could not delete config file for level " + levelName);
+                throw new RuntimeException("Could not delete config file for level " + levelName);
+            }
+
+            this.config = new Config(configFile, Config.YAML, new ConfigSection(new LinkedHashMap<>(map)));
+        } else {
+            this.config = new Config(configFile, Config.YAML);
+        }
+
         this.plots = new HashMap<>();
         this.loadAllPlots();
         this.savePlots();
