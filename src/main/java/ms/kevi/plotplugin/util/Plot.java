@@ -40,8 +40,8 @@ public class Plot {
         plot.helpers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("helpers"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).toList());
         plot.config.putAll(Plot.<Map<String, Object>>getOrDefault(plotMap.get("config"), new HashMap<>()));
-        final List<Integer> homePositionList = Plot.<List<Integer>>getOrDefault(plotMap.get("home-position"), new ArrayList<>());
-        plot.homePosition = homePositionList.size() == 3 ? new BlockVector3(homePositionList.get(0), homePositionList.get(1), homePositionList.get(2)) : null;
+        final List<Number> homePositionList = Plot.<List<Number>>getOrDefault(plotMap.get("home-position"), new ArrayList<>());
+        plot.homePosition = homePositionList.size() == 3 ? new BlockVector3(homePositionList.get(0).intValue(), homePositionList.get(1).intValue(), homePositionList.get(2).intValue()) : null;
         for(int i = 0; i < plot.mergedPlots.length; i++)
             plot.mergedPlots[i] = (Boolean) ((List<?>) plotMap.getOrDefault("merges", new ArrayList<>())).get(i);
         return plot;
