@@ -77,7 +77,7 @@ public class RewriteUtil {
                 final List<?> mergedDirectionList = (List<?>) plotMap.get("merges");
                 final boolean[] mergedDirections = new boolean[mergedDirectionList.size()];
                 for(int i = 0; i < mergedDirectionList.size(); i++)
-                    mergedDirections[i] = (Boolean) mergedDirectionList.get(i);
+                    mergedDirections[i] = (boolean) mergedDirectionList.get(i);
 
                 databaseActions.add(database.insertPlot(
                         levelName,
@@ -97,9 +97,7 @@ public class RewriteUtil {
 
         final Map<?, ?> settings = (Map<?, ?>) map.get("Settings");
         if(settings != null && !settings.isEmpty() && configFile.delete()) {
-            System.out.println(settings);
             try {
-                System.out.println(configFile.exists());
                 final Config config = new Config(configFile, Config.YAML);
                 config.setAll(new LinkedHashMap<>(settings.entrySet().stream().collect(Collectors.toMap(e -> (String) e.getKey(), Map.Entry::getValue))));
                 config.save(configFile);

@@ -86,6 +86,9 @@ public class PlotManager {
         if(loadPlots) {
             for(Plot plot : this.plugin.getDatabase().getPlots(this))
                 this.plots.put(plot.getId(), plot);
+
+            for(Plot plot : this.plots.values())
+                plot.recalculateOrigin();
         }
 
         this.levelSettings = levelSettings;
