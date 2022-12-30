@@ -16,6 +16,7 @@
 
 package ms.kevi.plotplugin.util;
 
+import cn.nukkit.math.BlockVector3;
 import lombok.experimental.UtilityClass;
 import ms.kevi.plotplugin.PlotPlugin;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -23,9 +24,12 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Kevims KCodeYT
@@ -47,8 +51,40 @@ public class RewriteUtil {
             map = Collections.emptyMap();
         }
 
-        //TODO: Load "plots" with fromConfig and insert them into database.
-        //TODO: Load "Settings" and insert them into config directly.
+        final List<?> plots = (List<?>) map.get("plots");
+        if(plots != null && !plots.isEmpty()) {
+            for(Object plotObject : plots) {
+                final Map<?, ?> plotMap = (Map<?, ?>) plotObject;
+                final String ownerString = (String) plotMap.get("owner");
+                final int plotX = ((Number) plotMap.get("x")).intValue();
+                final int plotZ = ((Number) plotMap.get("z")).intValue();
+
+                final List<String> helpers = ((List<?>) plotMap.get("helpers")).stream().map(o -> (String) o).toList();
+                final List<String> deniedPlayers = ((List<?>) plotMap.get("denied")).stream().map(o -> (String) o).toList();
+                final Map<String, Object> config = ((Map<?, ?>) plotMap.get("config")).entrySet().stream().collect(Collectors.toMap(e -> (String) e.getKey(), Map.Entry::getValue));
+                final List<?> homePositionList = (List<?>) plotMap.get("home-position");
+                final BlockVector3 homePosition = homePositionList == null || homePositionList.size() != 3 ? null : new BlockVector3(
+                        ((Number) homePositionList.get(0)).intValue(),
+                        ((Number) homePositionList.get(1)).intValue(),
+                        ((Number) homePositionList.get(2)).intValue()
+                );
+
+                final List<?> mergedPlotsList = (List<?>) plotMap.get("merges");
+                final Boolean[] mergedPlots = new Boolean[mergedPlotsList.size()];
+                for(int i = 0; i < mergedPlotsList.size(); i++) mergedPlots[i] = (Boolean) mergedPlotsList.get(i);
+
+                //TODO: Insert plots into database.
+            }
+        }
+
+        final Map<?, ?> settings = (Map<?, ?>) map.get("Settings");
+        if(settings != null && !settings.isEmpty()) {
+            try(final FileWriter fileWriter = new FileWriter(configFile)) {
+                yaml.dump(settings, fileWriter);
+            } catch(IOException e) {
+                plugin.getLogger().error("Could not write new settings into config file for level " + levelName + "!", e);
+            }
+        }
     }
 
 }
