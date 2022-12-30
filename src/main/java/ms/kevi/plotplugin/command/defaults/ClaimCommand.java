@@ -84,7 +84,7 @@ public class ClaimCommand extends SubCommand {
         plot.setOwner(player.getUniqueId());
         if(plotPreClaimEvent.isBorderChanging())
             plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
 
         final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, false);
         this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);

@@ -70,7 +70,7 @@ public class UnlinkCommand extends SubCommand {
             }
         }
 
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
         player.sendMessage(this.translate(player, TranslationKey.UNLINK_SUCCESS));
         return true;
     }

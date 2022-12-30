@@ -54,7 +54,7 @@ public class DeleteHomeCommand extends SubCommand {
         }
 
         for(Plot mergedPlot : plotManager.getConnectedPlots(plot)) mergedPlot.setHomePosition(null);
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
         player.sendMessage(this.translate(player, TranslationKey.DELETEHOME_SUCCESS));
         return true;
     }

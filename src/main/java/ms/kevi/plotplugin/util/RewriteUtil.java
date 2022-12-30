@@ -17,18 +17,17 @@
 package ms.kevi.plotplugin.util;
 
 import cn.nukkit.math.BlockVector3;
+import cn.nukkit.utils.Config;
 import lombok.experimental.UtilityClass;
 import ms.kevi.plotplugin.PlotPlugin;
+import ms.kevi.plotplugin.database.Database;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -51,13 +50,19 @@ public class RewriteUtil {
             map = Collections.emptyMap();
         }
 
+        final Database database = plugin.getDatabase();
+        database.createPlotsTable(levelName);
+
         final List<?> plots = (List<?>) map.get("plots");
         if(plots != null && !plots.isEmpty()) {
+            final List<Database.DatabaseAction> databaseActions = new ArrayList<>();
+
             for(Object plotObject : plots) {
                 final Map<?, ?> plotMap = (Map<?, ?>) plotObject;
-                final String ownerString = (String) plotMap.get("owner");
+                final String owner = (String) plotMap.get("owner");
                 final int plotX = ((Number) plotMap.get("x")).intValue();
                 final int plotZ = ((Number) plotMap.get("z")).intValue();
+                final PlotId plotId = PlotId.of(plotX, plotZ);
 
                 final List<String> helpers = ((List<?>) plotMap.get("helpers")).stream().map(o -> (String) o).toList();
                 final List<String> deniedPlayers = ((List<?>) plotMap.get("denied")).stream().map(o -> (String) o).toList();
@@ -69,19 +74,36 @@ public class RewriteUtil {
                         ((Number) homePositionList.get(2)).intValue()
                 );
 
-                final List<?> mergedPlotsList = (List<?>) plotMap.get("merges");
-                final Boolean[] mergedPlots = new Boolean[mergedPlotsList.size()];
-                for(int i = 0; i < mergedPlotsList.size(); i++) mergedPlots[i] = (Boolean) mergedPlotsList.get(i);
+                final List<?> mergedDirectionList = (List<?>) plotMap.get("merges");
+                final boolean[] mergedDirections = new boolean[mergedDirectionList.size()];
+                for(int i = 0; i < mergedDirectionList.size(); i++)
+                    mergedDirections[i] = (Boolean) mergedDirectionList.get(i);
 
-                //TODO: Insert plots into database.
+                databaseActions.add(database.insertPlot(
+                        levelName,
+                        plotId,
+                        owner == null || owner.isBlank() || owner.equals("null") ? null : UUID.fromString(owner).toString(),
+                        helpers,
+                        deniedPlayers,
+                        config,
+                        mergedDirections,
+                        homePosition,
+                        plotId
+                ));
             }
+
+            database.executeActions(databaseActions);
         }
 
         final Map<?, ?> settings = (Map<?, ?>) map.get("Settings");
-        if(settings != null && !settings.isEmpty()) {
-            try(final FileWriter fileWriter = new FileWriter(configFile)) {
-                yaml.dump(settings, fileWriter);
-            } catch(IOException e) {
+        if(settings != null && !settings.isEmpty() && configFile.delete()) {
+            System.out.println(settings);
+            try {
+                System.out.println(configFile.exists());
+                final Config config = new Config(configFile, Config.YAML);
+                config.setAll(new LinkedHashMap<>(settings.entrySet().stream().collect(Collectors.toMap(e -> (String) e.getKey(), Map.Entry::getValue))));
+                config.save(configFile);
+            } catch(Exception e) {
                 plugin.getLogger().error("Could not write new settings into config file for level " + levelName + "!", e);
             }
         }

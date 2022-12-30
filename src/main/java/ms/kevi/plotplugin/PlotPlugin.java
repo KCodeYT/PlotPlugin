@@ -25,6 +25,7 @@ import cn.nukkit.utils.Config;
 import lombok.Getter;
 import lombok.Setter;
 import ms.kevi.plotplugin.command.PlotCommand;
+import ms.kevi.plotplugin.database.Database;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.lang.Language;
 import ms.kevi.plotplugin.listener.PlotLevelRegistrationListener;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
 public class PlotPlugin extends PluginBase {
 
     private static final String DEFAULT_LANGUAGE = "en_US";
+
     public static PlotPlugin INSTANCE;
 
     private Config worldsConfig;
@@ -60,6 +62,9 @@ public class PlotPlugin extends PluginBase {
 
     @Getter
     private Language language;
+
+    @Getter
+    private Database database;
 
     @Getter
     private Map<String, PlotManager> plotManagerMap;
@@ -126,29 +131,49 @@ public class PlotPlugin extends PluginBase {
 
         this.saveResource("config.yml");
         final Config config = this.getConfig();
+        boolean configNeedsToBeSaved = false;
 
         if(!config.exists("default_lang")) {
             config.set("default_lang", DEFAULT_LANGUAGE);
-            config.save();
+            configNeedsToBeSaved = true;
         }
+
+        if(!config.exists("mysql")) {
+            config.set("mysql.host", "127.0.0.1");
+            config.set("mysql.port", 3306);
+            config.set("mysql.parameters", Collections.emptyList());
+            config.set("mysql.user", "root");
+            config.set("mysql.password", "insert_your_password_here");
+            config.set("mysql.database", "plot_plugin");
+            configNeedsToBeSaved = true;
+        }
+
+        this.database = Database.builder().
+                host(config.getString("mysql.host")).
+                port(config.getInt("mysql.port")).
+                parameters(config.getStringList("mysql.parameters")).
+                user(config.getString("mysql.user")).
+                password(config.getString("mysql.password")).
+                database(config.getString("mysql.database")).
+                build();
 
         if(!config.exists("plots_per_page")) {
             config.set("plots_per_page", this.plotsPerPage);
-            config.save();
+            configNeedsToBeSaved = true;
         }
 
         this.plotsPerPage = config.getInt("plots_per_page");
 
         if(!config.exists("show_command_params")) {
             config.set("show_command_params", this.showCommandParams);
-            config.save();
+            configNeedsToBeSaved = true;
         }
 
         this.showCommandParams = config.getBoolean("show_command_params");
 
         if(!config.exists("add_other_commands")) {
             config.set("add_other_commands", this.addOtherCommands);
-            config.save();
+            configNeedsToBeSaved = true;
         }
 
         this.addOtherCommands = config.getBoolean("add_other_commands");
@@ -161,7 +186,7 @@ public class PlotPlugin extends PluginBase {
             defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data", "permission"), List.of("Gold", 41, 0, "plot.wall.gold", "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/7/72/Block_of_Gold_JE6_BE3.png")));
 
             config.set("borders", defaultWalls);
-            config.save();
+            configNeedsToBeSaved = true;
         }
 
         if(!config.exists("walls")) {
@@ -172,6 +197,10 @@ public class PlotPlugin extends PluginBase {
             defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data", "permission"), List.of("Gold", 41, 0, "plot.wall.gold", "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/7/72/Block_of_Gold_JE6_BE3.png")));
 
             config.set("walls", defaultWalls);
+            configNeedsToBeSaved = true;
+        }
+
+        if(configNeedsToBeSaved) {
             config.save();
         }
 
@@ -193,9 +222,25 @@ public class PlotPlugin extends PluginBase {
 
         final Server server = this.getServer();
 
+        try {
+            if(config.getString("mysql.password").equalsIgnoreCase("insert_your_password_here")) {
+                this.getLogger().info("This plugin has switched support from YAML to MySQL.");
+                this.getLogger().info("Please insert your MySQL Connection information in the config.yml!");
+                this.getLogger().info("All previous plots will be restored into this database, so you don't have to worry about losing them.");
+                this.getLogger().info("Shutting down the server...");
+                this.getServer().getScheduler().scheduleDelayedTask(this, server::shutdown, 1);
+                return;
+            }
+
+            this.database.createDatabase();
+        } catch(RuntimeException e) {
+            this.getLogger().error("Could not connect to the database!", e.getCause());
+            return;
+        }
+
         for(Object o : this.worldsConfig.getList("levels", new ArrayList<>())) {
             if(o instanceof final String levelName) {
-                final PlotManager plotManager = new PlotManager(this, levelName);
+                final PlotManager plotManager = new PlotManager(this, levelName, true);
                 this.plotManagerMap.put(levelName, plotManager);
 
                 if(!server.isLevelGenerated(levelName))
@@ -257,7 +302,9 @@ public class PlotPlugin extends PluginBase {
     public Level createLevel(String levelName, boolean defaultLevel, PlotLevelSettings levelSettings) {
         if(this.getServer().isLevelGenerated(levelName)) return null;
 
-        final PlotManager plotManager = new PlotManager(this, levelName, levelSettings);
+        TaskExecutor.executeAsync(() -> this.database.createPlotsTable(levelName));
+
+        final PlotManager plotManager = new PlotManager(this, levelName, levelSettings, false);
         this.plotManagerMap.put(levelName, plotManager);
 
         this.getServer().generateLevel(levelName, ThreadLocalRandom.current().nextLong(), PlotGenerator.class);

@@ -1,6 +1,17 @@
 # Language used by this plugin, corresponding file should exist in lang folder!
 default_lang: en_US
 
+# MySQL Database connection information
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  # A list of all sql connection parameters. For example:
+  # - useSSL=false
+  parameters: []
+  user: root
+  password: insert_your_password_here
+  database: plot_plugin
+
 # Plots per home page (/homes)
 plots_per_page: 5
 

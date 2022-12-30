@@ -62,18 +62,22 @@ public class Plot {
     private final Map<String, Object> config;
     private BlockVector3 homePosition;
 
-    private final Boolean[] mergedPlots;
+    private final boolean[] mergedDirections;
     private PlotId originId;
+
+    public Plot(PlotManager manager, PlotId id) {
+        this(manager, id, null);
+    }
 
     public Plot(PlotManager manager, PlotId id, UUID owner) {
         this.manager = manager;
         this.id = id;
-
         this.owner = owner;
         this.helpers = new ArrayList<>();
         this.deniedPlayers = new ArrayList<>();
         this.config = new HashMap<>();
-        Arrays.fill(this.mergedPlots = new Boolean[4], false);
+        Arrays.fill(this.mergedDirections = new boolean[4], false);
+        this.originId = id;
     }
 
     public boolean hasOwner() {
@@ -147,13 +151,13 @@ public class Plot {
     }
 
     public boolean hasNoMerges() {
-        for(boolean merged : this.mergedPlots)
+        for(boolean merged : this.mergedDirections)
             if(merged) return false;
         return true;
     }
 
     public boolean isFullyMerged() {
-        for(boolean merged : this.mergedPlots)
+        for(boolean merged : this.mergedDirections)
             if(!merged) return false;
         return true;
     }
@@ -161,7 +165,7 @@ public class Plot {
     public boolean isMerged(int direction) {
         if(direction < 0 || direction > 7) return false;
 
-        if(direction < 4) return this.mergedPlots[direction];
+        if(direction < 4) return this.mergedDirections[direction];
 
         final int f = direction - 4;
         final int s = direction == DIRECTION_NORTH_WEST ? 0 : direction - 3;
@@ -169,7 +173,7 @@ public class Plot {
     }
 
     public void setMerged(int direction, boolean bool) {
-        this.mergedPlots[direction] = bool;
+        this.mergedDirections[direction] = bool;
     }
 
     public PlotId getRelative(int direction) {
@@ -230,9 +234,13 @@ public class Plot {
         if(!this.helpers.isEmpty()) return false;
         if(!this.deniedPlayers.isEmpty()) return false;
         if(!this.config.isEmpty()) return false;
-        for(boolean mergedPlot : this.mergedPlots)
-            if(mergedPlot) return false;
+        for(boolean merged : this.mergedDirections)
+            if(merged) return false;
         return true;
+    }
+
+    public static Plot.Builder builder(PlotManager manager, PlotId id) {
+        return new Builder(manager, id);
     }
 
     @Setter
@@ -241,8 +249,7 @@ public class Plot {
     public static final class Builder {
 
         private final PlotManager manager;
-
-        private PlotId id;
+        private final PlotId id;
 
         private UUID owner;
         private List<UUID> helpers;
@@ -250,23 +257,28 @@ public class Plot {
         private Map<String, Object> config;
         private BlockVector3 homePosition;
 
-        private Boolean[] mergedPlots;
+        private boolean[] mergedDirections;
         private PlotId originId;
 
         public Plot build() {
             final Plot plot = new Plot(this.manager, this.id, this.owner);
             if(this.helpers != null && !this.helpers.isEmpty())
                 plot.helpers.addAll(this.helpers);
+
             if(this.deniedPlayers != null && !this.deniedPlayers.isEmpty())
                 plot.deniedPlayers.addAll(this.deniedPlayers);
+
             if(this.config != null && !this.config.isEmpty())
                 plot.config.putAll(this.config);
+
             if(this.homePosition != null)
                 plot.homePosition = homePosition;
-            if(this.mergedPlots != null) {
-                for(int i = 0; i < this.mergedPlots.length; i++)
-                    plot.mergedPlots[i] = this.mergedPlots[i];
+
+            if(this.mergedDirections != null) {
+                for(int i = 0; i < this.mergedDirections.length; i++)
+                    plot.mergedDirections[i] = this.mergedDirections[i];
             }
+
             if(this.originId != null)
                 plot.originId = this.originId;
 

@@ -96,7 +96,7 @@ public class SetOwnerCommand extends SubCommand {
         }
 
         plot.setOwner(targetId);
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
 
         target.sendMessage(this.translate(target, TranslationKey.SETOWNER_SUCCESS_TARGET, plot.getId()));
         player.sendMessage(this.translate(player, TranslationKey.SETOWNER_SUCCESS, this.plugin.getCorrectName(targetId)));

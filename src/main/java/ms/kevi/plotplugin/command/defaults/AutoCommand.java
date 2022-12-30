@@ -85,7 +85,7 @@ public class AutoCommand extends SubCommand {
         plot.setOwner(player.getUniqueId());
         if(plotPreClaimEvent.isBorderChanging())
             plotManager.changeBorder(plot, plotManager.getLevelSettings().getClaimPlotState());
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
 
         final PlotClaimEvent plotClaimEvent = new PlotClaimEvent(player, plot, true);
         this.plugin.getServer().getPluginManager().callEvent(plotClaimEvent);

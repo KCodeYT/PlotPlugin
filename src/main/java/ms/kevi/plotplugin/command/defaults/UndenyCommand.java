@@ -71,7 +71,7 @@ public class UndenyCommand extends SubCommand {
             return false;
         }
 
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
         player.sendMessage(this.translate(player, TranslationKey.UNDENY_SUCCESS, this.plugin.getCorrectName(targetId)));
         return true;
     }

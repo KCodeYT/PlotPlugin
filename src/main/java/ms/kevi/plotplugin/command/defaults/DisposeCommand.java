@@ -53,7 +53,7 @@ public class DisposeCommand extends SubCommand {
             return false;
         }
 
-        plotManager.savePlots();
+        plotManager.removePlot(plot);
         player.sendMessage(this.translate(player, TranslationKey.DISPOSE_SUCCESS));
         return true;
     }

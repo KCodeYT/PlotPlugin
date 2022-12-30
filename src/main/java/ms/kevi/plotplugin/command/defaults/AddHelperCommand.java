@@ -71,7 +71,7 @@ public class AddHelperCommand extends SubCommand {
             return false;
         }
 
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
         player.sendMessage(this.translate(player, TranslationKey.ADDED_HELPER, this.plugin.getCorrectName(targetId)));
         return true;
     }

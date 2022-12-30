@@ -28,6 +28,14 @@ public class PlotId {
     int x;
     int z;
 
+    public static PlotId fromLong(long id) {
+        return new PlotId((int) (id >> 32), (int) (id & 0xFFFFFFFFL));
+    }
+
+    public long asLong() {
+        return ((long) this.x << 32) | (this.z & 0xFFFFFFFFL);
+    }
+
     public PlotId add(int x, int z) {
         return new PlotId(this.x + x, this.z + z);
     }

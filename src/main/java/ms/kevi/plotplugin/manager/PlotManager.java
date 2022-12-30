@@ -34,10 +34,12 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
 import ms.kevi.plotplugin.PlotPlugin;
+import ms.kevi.plotplugin.database.Database;
 import ms.kevi.plotplugin.event.PlotClearEvent;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.util.*;
 import ms.kevi.plotplugin.util.async.AsyncLevelWorker;
+import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 import java.io.File;
 import java.util.*;
@@ -49,6 +51,8 @@ import java.util.*;
 public class PlotManager {
 
     private final PlotPlugin plugin;
+    @Getter
+    private final String levelName;
     @Getter
     private final PlotSchematic plotSchematic;
     @Getter
@@ -63,12 +67,13 @@ public class PlotManager {
     private Level level;
     private PlotGenerator plotGenerator;
 
-    public PlotManager(PlotPlugin plugin, String levelName) {
-        this(plugin, levelName, new PlotLevelSettings());
+    public PlotManager(PlotPlugin plugin, String levelName, boolean loadPlots) {
+        this(plugin, levelName, new PlotLevelSettings(), loadPlots);
     }
 
-    public PlotManager(PlotPlugin plugin, String levelName, PlotLevelSettings levelSettings) {
+    public PlotManager(PlotPlugin plugin, String levelName, PlotLevelSettings levelSettings, boolean loadPlots) {
         this.plugin = plugin;
+        this.levelName = levelName;
         this.plotSchematic = new PlotSchematic(this);
         this.plotSchematic.init(this.plotSchematicFile = new File(this.plugin.getDataFolder(), "schems/" + levelName + ".road"));
 
@@ -78,6 +83,11 @@ public class PlotManager {
         final Config settingsConfig = new Config(settingsFile, Config.YAML);
 
         this.plots = new HashMap<>();
+        if(loadPlots) {
+            for(Plot plot : this.plugin.getDatabase().getPlots(this))
+                this.plots.put(plot.getId(), plot);
+        }
+
         this.levelSettings = levelSettings;
 
         this.levelSettings.loadOrCreate(settingsConfig);
@@ -88,20 +98,32 @@ public class PlotManager {
         this.plotGenerator = (PlotGenerator) level.getGenerator();
     }
 
+    public void savePlot(Plot plot) {
+        this.savePlots(this.getConnectedPlots(plot));
+    }
+
     public void savePlots(Plot... plots) {
         this.savePlots(Arrays.asList(plots));
     }
 
     public void savePlots(Collection<Plot> plots) {
-        //TODO: Save plots inside sqlite or mysql database
-    }
+        final List<Database.DatabaseAction> databaseActions = new ArrayList<>();
+        final Database database = this.plugin.getDatabase();
 
-    public void addPlot(Plot plot) {
-        this.plots.put(plot.getId(), plot);
+        final Collection<Plot> plotsToSave = plots.isEmpty() ? this.plots.values() : plots;
+        for(Plot plot : plotsToSave)
+            databaseActions.add(database.updatePlot(plot));
+
+        TaskExecutor.executeAsync(() -> database.executeActions(databaseActions));
     }
 
     public void removePlot(Plot plot) {
         this.plots.remove(plot.getId());
+
+        TaskExecutor.executeAsync(() -> {
+            final Database database = this.plugin.getDatabase();
+            database.executeActions(Collections.singletonList(database.deletePlot(plot)));
+        });
     }
 
     public Plot getMergedPlot(int x, int z) {
@@ -1206,7 +1228,7 @@ public class PlotManager {
 
             if(plotVec != null) {
                 final Plot mergedPlot = this.getMergedPlot(plotVec.getFloorX(), plotVec.getFloorZ());
-                if(mergedPlot == null || !plot.getBasePlot().equals(mergedPlot.getBasePlot())) {
+                if(mergedPlot == null || !plot.getOriginId().equals(mergedPlot.getOriginId())) {
                     plot.setHomePosition(null);
                     this.savePlots();
                     plotVec = null;

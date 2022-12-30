@@ -74,18 +74,20 @@ public class DenyCommand extends SubCommand {
             return false;
         }
 
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
+
+        final Plot basePlot = plot.getBasePlot();
 
         if(target != null || isEveryone) {
             if(!isEveryone) {
-                final Plot plot1 = plotManager.getMergedPlot(target.getFloorX(), target.getFloorZ());
-                if(plot1 != null && (plot.getId().equals(plot1.getId())) && !target.hasPermission("plot.admin.bypass.deny"))
-                    plotManager.teleportPlayerToPlot(target, plot1, false);
+                final Plot plotOfTarget = plotManager.getMergedPlot(target.getFloorX(), target.getFloorZ());
+                if(plotOfTarget != null && (plot.getOriginId().equals(plotOfTarget.getOriginId())) && !target.hasPermission("plot.admin.bypass.deny"))
+                    plotManager.teleportPlayerToPlot(target, basePlot, false);
             } else {
                 for(Player onlinePlayer : this.plugin.getServer().getOnlinePlayers().values()) {
-                    final Plot plot1 = plotManager.getMergedPlot(onlinePlayer.getFloorX(), onlinePlayer.getFloorZ());
-                    if(!plot.isOwner(onlinePlayer.getUniqueId()) && !plot.isHelper(onlinePlayer.getUniqueId()) && plot1 != null && (plot.getId().equals(plot1.getId())) && !onlinePlayer.hasPermission("plot.admin.bypass.deny"))
-                        plotManager.teleportPlayerToPlot(onlinePlayer, plot1, false);
+                    final Plot plotOfTarget = plotManager.getMergedPlot(onlinePlayer.getFloorX(), onlinePlayer.getFloorZ());
+                    if(!plot.isOwner(onlinePlayer.getUniqueId()) && !plot.isHelper(onlinePlayer.getUniqueId()) && plotOfTarget != null && (plot.getOriginId().equals(plotOfTarget.getOriginId())) && !onlinePlayer.hasPermission("plot.admin.bypass.deny"))
+                        plotManager.teleportPlayerToPlot(onlinePlayer, basePlot, false);
                 }
             }
         }

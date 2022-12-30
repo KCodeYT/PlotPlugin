@@ -53,7 +53,7 @@ public class ClearCommand extends SubCommand {
             return false;
         }
 
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
         player.sendMessage(this.translate(player, TranslationKey.CLEAR_SUCCESS));
         return true;
     }

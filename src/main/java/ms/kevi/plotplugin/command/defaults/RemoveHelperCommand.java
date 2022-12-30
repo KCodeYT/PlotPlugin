@@ -71,7 +71,7 @@ public class RemoveHelperCommand extends SubCommand {
             return false;
         }
 
-        plotManager.savePlots();
+        plotManager.savePlot(plot);
         player.sendMessage(this.translate(player, TranslationKey.REMOVED_HELPER, this.plugin.getCorrectName(targetId)));
         return true;
     }

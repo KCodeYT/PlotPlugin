@@ -84,7 +84,7 @@ public class KickCommand extends SubCommand {
             return false;
         }
 
-        if(!targetPlot.getBasePlot().equals(plot.getBasePlot())) {
+        if(!targetPlot.getOriginId().equals(plot.getOriginId())) {
             player.sendMessage(this.translate(player, TranslationKey.KICK_CANNOT_PERFORM));
             return false;
         }
