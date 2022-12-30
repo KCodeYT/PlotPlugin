@@ -20,12 +20,11 @@ import cn.nukkit.block.Block;
 import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.biome.EnumBiome;
+import cn.nukkit.utils.Config;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Kevims KCodeYT
@@ -104,26 +103,26 @@ public class PlotLevelSettings {
         return this.plotSize + this.roadSize;
     }
 
-    public void fromMap(Map<String, Object> map) {
+    public void loadOrCreate(Config config) {
         for(Field field : this.getClass().getDeclaredFields()) {
             field.setAccessible(true);
+
             try {
-                field.set(this, map.get(field.getName()));
+                field.set(this, config.get(field.getName()));
             } catch(IllegalAccessException ignored) {
             }
         }
     }
 
-    public Map<String, Object> toMap() {
-        Map<String, Object> map = new HashMap<>();
+    public void saveToConfig(Config config) {
         for(Field field : this.getClass().getDeclaredFields()) {
             field.setAccessible(true);
+
             try {
-                map.put(field.getName(), field.get(this));
+                config.set(field.getName(), field.get(this));
             } catch(IllegalAccessException ignored) {
             }
         }
-        return map;
     }
 
 }

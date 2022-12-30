@@ -38,7 +38,6 @@ public class ReloadCommand extends SubCommand {
     @Override
     public boolean execute(Player player, String[] args) {
         try {
-            this.plugin.reloadPlots();
             this.plugin.getLanguage().reload();
         } catch(IOException e) {
             this.plugin.getLogger().warning("Could not reload configurations!", e);

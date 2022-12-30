@@ -245,11 +245,6 @@ public class PlotPlugin extends PluginBase {
 
     }
 
-    public void reloadPlots() {
-        for(PlotManager plotManager : this.plotManagerMap.values())
-            plotManager.reload();
-    }
-
     public PlotManager getPlotManager(Level level) {
         if(level == null) return null;
         return this.getPlotManager(level.getFolderName());

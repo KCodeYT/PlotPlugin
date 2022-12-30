@@ -30,7 +30,6 @@ import cn.nukkit.math.BlockVector3;
 import cn.nukkit.math.SimpleAxisAlignedBB;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.utils.Config;
-import cn.nukkit.utils.ConfigSection;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import lombok.Getter;
@@ -39,12 +38,8 @@ import ms.kevi.plotplugin.event.PlotClearEvent;
 import ms.kevi.plotplugin.generator.PlotGenerator;
 import ms.kevi.plotplugin.util.*;
 import ms.kevi.plotplugin.util.async.AsyncLevelWorker;
-import org.yaml.snakeyaml.LoaderOptions;
-import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -62,9 +57,6 @@ public class PlotManager {
     @Getter
     private final PlotLevelSettings levelSettings;
 
-    @Getter
-    private final Config config;
-
     private final Map<PlotId, Plot> plots;
 
     @Getter
@@ -80,41 +72,15 @@ public class PlotManager {
         this.plotSchematic = new PlotSchematic(this);
         this.plotSchematic.init(this.plotSchematicFile = new File(this.plugin.getDataFolder(), "schems/" + levelName + ".road"));
 
-        final File configFile = new File(plugin.getDataFolder(), "worlds/" + levelName + ".yml");
-        if(configFile.exists()) {
-            final LoaderOptions loaderOptions = new LoaderOptions();
-            loaderOptions.setMaxAliasesForCollections(Integer.MAX_VALUE);
-            final Yaml yaml = new Yaml(loaderOptions);
+        final File settingsFile = new File(plugin.getDataFolder(), "worlds/" + levelName + ".yml");
+        if(settingsFile.exists()) RewriteUtil.rewriteIfOld(plugin, settingsFile, levelName);
 
-            Map<String, Object> map;
-            try(final FileInputStream inputStream = new FileInputStream(configFile)) {
-                //noinspection unchecked
-                map = yaml.loadAs(inputStream, Map.class);
-            } catch(IOException e) {
-                plugin.getLogger().error("Could not read config file for level " + levelName, e);
-                map = Collections.emptyMap();
-            }
-
-            if(!configFile.delete()) {
-                plugin.getLogger().error("Could not delete config file for level " + levelName);
-                throw new RuntimeException("Could not delete config file for level " + levelName);
-            }
-
-            this.config = new Config(configFile, Config.YAML, new ConfigSection(new LinkedHashMap<>(map)));
-        } else {
-            this.config = new Config(configFile, Config.YAML);
-        }
+        final Config settingsConfig = new Config(settingsFile, Config.YAML);
 
         this.plots = new HashMap<>();
-        this.loadAllPlots();
-        this.savePlots();
         this.levelSettings = levelSettings;
-        if(!this.config.exists("Settings")) {
-            this.config.set("Settings", this.levelSettings.toMap());
-            this.config.save();
-        }
 
-        this.levelSettings.fromMap(this.config.get("Settings", new HashMap<>()));
+        this.levelSettings.loadOrCreate(settingsConfig);
     }
 
     public void initLevel(Level level) {
@@ -122,34 +88,19 @@ public class PlotManager {
         this.plotGenerator = (PlotGenerator) level.getGenerator();
     }
 
-    public void reload() {
-        this.plots.clear();
-        this.config.reload();
-        this.loadAllPlots();
+    public void savePlots(Plot... plots) {
+        this.savePlots(Arrays.asList(plots));
     }
 
-    public void savePlots() {
-        final List<Map<String, Object>> plotMapList = new ArrayList<>();
-        for(Plot plot : this.plots.values())
-            if(!plot.isDefault()) plotMapList.add(plot.toMap());
-        this.config.set("plots", plotMapList);
-        this.config.save();
-    }
-
-    private void loadAllPlots() {
-        for(Map<String, Object> plotMap : this.config.<List<Map<String, Object>>>get("plots", new ArrayList<>())) {
-            final Plot plot = Plot.fromConfig(this, plotMap);
-            this.plots.put(plot.getId(), plot);
-        }
-
-        this.plots.values().forEach(Plot::recalculateOrigin);
+    public void savePlots(Collection<Plot> plots) {
+        //TODO: Save plots inside sqlite or mysql database
     }
 
     public void addPlot(Plot plot) {
         this.plots.put(plot.getId(), plot);
     }
 
-    private void removePlot(Plot plot) {
+    public void removePlot(Plot plot) {
         this.plots.remove(plot.getId());
     }
 
@@ -168,13 +119,13 @@ public class PlotManager {
 
         final Plot plot = this.getPlotById(PlotId.of(idX, idZ));
         if(xOnRoad && zOnRoad) {
-            if(plot.isMerged(5)) return plot;
+            if(plot.isMerged(Plot.DIRECTION_SOUTH_EAST)) return plot;
             return null;
         } else if(xOnRoad) {
-            if(plot.isMerged(1)) return plot;
+            if(plot.isMerged(Plot.DIRECTION_EAST)) return plot;
             return null;
         } else if(zOnRoad) {
-            if(plot.isMerged(2)) return plot;
+            if(plot.isMerged(Plot.DIRECTION_SOUTH)) return plot;
             return null;
         } else {
             return plot;
@@ -260,12 +211,11 @@ public class PlotManager {
         final Set<Object> queueCache = new HashSet<>();
         tmpSet.add(plot);
         Plot tmp;
-        final int[] opposites = new int[]{2, 3, 0, 1};
         for(int iDir = 0; iDir < 4; iDir++) {
             if(plot.isMerged(iDir)) {
                 tmp = this.getPlotById(plot.getRelative(iDir));
-                if(!tmp.isMerged(opposites[iDir]))
-                    tmp.setMerged(opposites[iDir], true);
+                if(!tmp.isMerged(Plot.DIRECTION_OPPOSITES[iDir]))
+                    tmp.setMerged(Plot.DIRECTION_OPPOSITES[iDir], true);
                 queueCache.add(tmp);
                 frontier.add(tmp);
             }
@@ -306,7 +256,7 @@ public class PlotManager {
                 if(!other.equals(plot)) this.mergePlotData(plot, other);
             }
 
-            this.savePlots();
+            this.savePlots(plots);
         });
 
         int relativeDir;
@@ -375,17 +325,17 @@ public class PlotManager {
                 greaterPlot = tmp;
             }
 
-            if(!lesserPlot.isMerged(2)) {
-                lesserPlot.setMerged(2, true);
-                greaterPlot.setMerged(0, true);
+            if(!lesserPlot.isMerged(Plot.DIRECTION_SOUTH)) {
+                lesserPlot.setMerged(Plot.DIRECTION_SOUTH, true);
+                greaterPlot.setMerged(Plot.DIRECTION_NORTH, true);
 
                 this.removeRoadSouth(lesserPlot, whenDone);
-                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(1));
-                if(diagonal.isMerged(7))
+                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(Plot.DIRECTION_EAST));
+                if(diagonal.isMerged(Plot.DIRECTION_NORTH_WEST))
                     this.removeRoadSouthEast(lesserPlot, whenDone);
-                final Plot below = this.getPlotById(greaterPlot.getRelative(3));
-                if(below.isMerged(4))
-                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(0)), whenDone);
+                final Plot below = this.getPlotById(greaterPlot.getRelative(Plot.DIRECTION_WEST));
+                if(below.isMerged(Plot.DIRECTION_NORTH_EAST))
+                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(Plot.DIRECTION_NORTH)), whenDone);
             }
         } else {
             if(lesserPlot.getId().getX() > greaterPlot.getId().getX()) {
@@ -394,17 +344,17 @@ public class PlotManager {
                 greaterPlot = tmp;
             }
 
-            if(!lesserPlot.isMerged(1)) {
-                lesserPlot.setMerged(1, true);
-                greaterPlot.setMerged(3, true);
+            if(!lesserPlot.isMerged(Plot.DIRECTION_EAST)) {
+                lesserPlot.setMerged(Plot.DIRECTION_EAST, true);
+                greaterPlot.setMerged(Plot.DIRECTION_WEST, true);
 
-                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(2));
-                if(diagonal.isMerged(7))
+                final Plot diagonal = this.getPlotById(greaterPlot.getRelative(Plot.DIRECTION_SOUTH));
+                if(diagonal.isMerged(Plot.DIRECTION_NORTH_WEST))
                     this.removeRoadSouthEast(lesserPlot, whenDone);
                 this.removeRoadEast(lesserPlot, whenDone);
-                final Plot below = this.getPlotById(greaterPlot.getRelative(0));
-                if(below.isMerged(6))
-                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(3)), whenDone);
+                final Plot below = this.getPlotById(greaterPlot.getRelative(Plot.DIRECTION_NORTH));
+                if(below.isMerged(Plot.DIRECTION_SOUTH_WEST))
+                    this.removeRoadSouthEast(this.getPlotById(below.getRelative(Plot.DIRECTION_WEST)), whenDone);
             }
         }
     }
@@ -415,10 +365,10 @@ public class PlotManager {
         final WhenDone whenDone = new WhenDone(() -> this.finishPlotUnlinkFromNeighbors(centerPlot));
 
         final Int2ObjectMap<int[]> plotsToUnlink = new Int2ObjectOpenHashMap<>();
-        plotsToUnlink.put(-1, new int[]{1, 2, 5});
-        plotsToUnlink.put(0, new int[]{2, 5});
-        plotsToUnlink.put(3, new int[]{1, 5});
-        plotsToUnlink.put(7, new int[]{5});
+        plotsToUnlink.put(Plot.DIRECTION_SELF, new int[]{Plot.DIRECTION_EAST, Plot.DIRECTION_SOUTH, Plot.DIRECTION_SOUTH_EAST});
+        plotsToUnlink.put(Plot.DIRECTION_NORTH, new int[]{Plot.DIRECTION_SOUTH, Plot.DIRECTION_SOUTH_EAST});
+        plotsToUnlink.put(Plot.DIRECTION_WEST, new int[]{Plot.DIRECTION_EAST, Plot.DIRECTION_SOUTH_EAST});
+        plotsToUnlink.put(Plot.DIRECTION_NORTH_WEST, new int[]{Plot.DIRECTION_SOUTH_EAST});
 
         for(Int2ObjectMap.Entry<int[]> entry : plotsToUnlink.int2ObjectEntrySet()) {
             final Plot plot = this.getPlotById(centerPlot.getRelative(entry.getIntKey()));
@@ -427,9 +377,9 @@ public class PlotManager {
                 if(!plot.isMerged(unlinkDir)) continue;
 
                 switch(unlinkDir) {
-                    case 1 -> this.createRoadEast(plot, whenDone);
-                    case 2 -> this.createRoadSouth(plot, whenDone);
-                    case 5 -> this.createRoadSouthEast(plot, whenDone);
+                    case Plot.DIRECTION_EAST -> this.createRoadEast(plot, whenDone);
+                    case Plot.DIRECTION_SOUTH -> this.createRoadSouth(plot, whenDone);
+                    case Plot.DIRECTION_SOUTH_EAST -> this.createRoadSouthEast(plot, whenDone);
                 }
             }
         }
@@ -444,14 +394,14 @@ public class PlotManager {
         final WhenDone whenDone = new WhenDone(() -> this.finishPlotUnlinkFromAll(plots));
 
         for(Plot current : plots) {
-            if(current.isMerged(1)) {
+            if(current.isMerged(Plot.DIRECTION_EAST)) {
                 this.createRoadEast(current, whenDone);
-                if(current.isMerged(2)) {
+                if(current.isMerged(Plot.DIRECTION_SOUTH)) {
                     this.createRoadSouth(current, whenDone);
-                    if(current.isMerged(5))
+                    if(current.isMerged(Plot.DIRECTION_SOUTH_EAST))
                         this.createRoadSouthEast(current, whenDone);
                 }
-            } else if(current.isMerged(2))
+            } else if(current.isMerged(Plot.DIRECTION_SOUTH))
                 this.createRoadSouth(current, whenDone);
         }
 
@@ -466,12 +416,10 @@ public class PlotManager {
         final Set<Plot> plots = new HashSet<>(Collections.singleton(centerPlot));
         {
             for(int iDir = 0; iDir < 4; iDir++) {
-                final int oppositeDir = (iDir + 2) % 4;
-
                 final Plot plot = this.getPlotById(centerPlot.getRelative(iDir));
-                if(centerPlot.isMerged(iDir) && plot.isMerged(oppositeDir)) {
+                if(centerPlot.isMerged(iDir) && plot.isMerged(Plot.DIRECTION_OPPOSITES[iDir])) {
                     centerPlot.setMerged(iDir, false);
-                    plot.setMerged(oppositeDir, false);
+                    plot.setMerged(Plot.DIRECTION_OPPOSITES[iDir], false);
 
                     plots.add(plot);
                 }
@@ -826,10 +774,10 @@ public class PlotManager {
         final BlockVector3 top = this.getTopPlotPos(plot);
         if(plot.hasNoMerges()) return top;
 
-        if(plot.isMerged(2))
-            top.z = this.getBottomPlotPos(this.getPlotById(plot.getRelative(2))).getZ();
-        if(plot.isMerged(1))
-            top.x = this.getBottomPlotPos(this.getPlotById(plot.getRelative(1))).getX();
+        if(plot.isMerged(Plot.DIRECTION_SOUTH))
+            top.z = this.getBottomPlotPos(this.getPlotById(plot.getRelative(Plot.DIRECTION_SOUTH))).getZ();
+        if(plot.isMerged(Plot.DIRECTION_EAST))
+            top.x = this.getBottomPlotPos(this.getPlotById(plot.getRelative(Plot.DIRECTION_EAST))).getX();
         return top;
     }
 
@@ -837,23 +785,23 @@ public class PlotManager {
         final BlockVector3 bottom = this.getBottomPlotPos(plot);
         if(plot.hasNoMerges()) return bottom;
 
-        if(plot.isMerged(0))
-            bottom.z = this.getTopPlotPos(this.getPlotById(plot.getRelative(0))).getZ() + 2;
-        if(plot.isMerged(3))
-            bottom.x = this.getTopPlotPos(this.getPlotById(plot.getRelative(3))).getX() + 2;
+        if(plot.isMerged(Plot.DIRECTION_NORTH))
+            bottom.z = this.getTopPlotPos(this.getPlotById(plot.getRelative(Plot.DIRECTION_NORTH))).getZ() + 2;
+        if(plot.isMerged(Plot.DIRECTION_WEST))
+            bottom.x = this.getTopPlotPos(this.getPlotById(plot.getRelative(Plot.DIRECTION_WEST))).getX() + 2;
         return bottom;
     }
 
     public void changeBorder(Plot plot, BlockState blockState) {
         if(plot.isFullyMerged()) return;
 
-        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
+        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(Plot.DIRECTION_WEST) ? 1 : 0, 0, plot.isMerged(Plot.DIRECTION_NORTH) ? 1 : 0);
         final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
         final int y = minY + this.levelSettings.getGroundHeight() + 1;
 
-        if(!plot.isMerged(0)) {
+        if(!plot.isMerged(Plot.DIRECTION_NORTH)) {
             final int z = bottom.getZ();
             asyncLevelWorker.queueFill(
                     new BlockVector3(bottom.getX(), y, z),
@@ -861,8 +809,8 @@ public class PlotManager {
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(0));
-            if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_NORTH));
+            if(rPlot.isMerged(Plot.DIRECTION_EAST) && !plot.isMerged(Plot.DIRECTION_EAST)) {
                 final int z = bottom.getZ();
                 asyncLevelWorker.queueFill(
                         new BlockVector3(top.getX(), y, z),
@@ -872,7 +820,7 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(3)) {
+        if(!plot.isMerged(Plot.DIRECTION_WEST)) {
             final int x = bottom.getX();
             asyncLevelWorker.queueFill(
                     new BlockVector3(x, y, bottom.getZ()),
@@ -880,8 +828,8 @@ public class PlotManager {
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(3));
-            if(rPlot.isMerged(0) && !plot.isMerged(0)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_WEST));
+            if(rPlot.isMerged(Plot.DIRECTION_NORTH) && !plot.isMerged(Plot.DIRECTION_NORTH)) {
                 final int z = this.getBottomPlotPos(plot).getZ();
                 asyncLevelWorker.queueFill(
                         new BlockVector3(this.getBottomPlotPos(plot).getX(), y, z),
@@ -891,7 +839,7 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(2)) {
+        if(!plot.isMerged(Plot.DIRECTION_SOUTH)) {
             final int z = top.getZ();
             asyncLevelWorker.queueFill(
                     new BlockVector3(bottom.getX(), y, z),
@@ -899,8 +847,8 @@ public class PlotManager {
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(2));
-            if(rPlot.isMerged(3) && !plot.isMerged(3)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_SOUTH));
+            if(rPlot.isMerged(Plot.DIRECTION_WEST) && !plot.isMerged(Plot.DIRECTION_WEST)) {
                 final int z = top.getZ() - 1;
                 asyncLevelWorker.queueFill(
                         new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, y, z),
@@ -910,16 +858,16 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(1)) {
+        if(!plot.isMerged(Plot.DIRECTION_EAST)) {
             final int x = top.getX();
             asyncLevelWorker.queueFill(
                     new BlockVector3(x, y, bottom.getZ()),
-                    new BlockVector3(x, y, top.getZ() + (plot.isMerged(2) ? -1 : 0)),
+                    new BlockVector3(x, y, top.getZ() + (plot.isMerged(Plot.DIRECTION_SOUTH) ? -1 : 0)),
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(1));
-            if(rPlot.isMerged(2) && !plot.isMerged(2)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_EAST));
+            if(rPlot.isMerged(Plot.DIRECTION_SOUTH) && !plot.isMerged(Plot.DIRECTION_SOUTH)) {
                 final int x = top.getX() - 1;
                 asyncLevelWorker.queueFill(
                         new BlockVector3(x, y, top.getZ()),
@@ -936,13 +884,13 @@ public class PlotManager {
         if(plot.isFullyMerged()) return;
 
         final BlockState blockState = BlockState.AIR;
-        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
+        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(Plot.DIRECTION_WEST) ? 1 : 0, 0, plot.isMerged(Plot.DIRECTION_NORTH) ? 1 : 0);
         final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension()) + this.levelSettings.getGroundHeight() + 2;
         final int maxY = LevelUtils.getChunkMaxY(this.levelSettings.getDimension());
 
-        if(!plot.isMerged(0)) {
+        if(!plot.isMerged(Plot.DIRECTION_NORTH)) {
             final int z = bottom.getZ();
             asyncLevelWorker.queueFill(
                     new BlockVector3(bottom.getX(), minY, z),
@@ -950,8 +898,8 @@ public class PlotManager {
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(0));
-            if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_NORTH));
+            if(rPlot.isMerged(Plot.DIRECTION_EAST) && !plot.isMerged(Plot.DIRECTION_EAST)) {
                 final int z = bottom.getZ();
                 asyncLevelWorker.queueFill(
                         new BlockVector3(top.getX(), minY, z),
@@ -961,7 +909,7 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(3)) {
+        if(!plot.isMerged(Plot.DIRECTION_WEST)) {
             final int x = bottom.getX();
             asyncLevelWorker.queueFill(
                     new BlockVector3(x, minY, bottom.getZ()),
@@ -969,8 +917,8 @@ public class PlotManager {
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(3));
-            if(rPlot.isMerged(0) && !plot.isMerged(0)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_WEST));
+            if(rPlot.isMerged(Plot.DIRECTION_NORTH) && !plot.isMerged(Plot.DIRECTION_NORTH)) {
                 final int z = this.getBottomPlotPos(plot).getZ();
                 asyncLevelWorker.queueFill(
                         new BlockVector3(this.getBottomPlotPos(plot).getX(), minY, z),
@@ -980,16 +928,16 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(2)) {
+        if(!plot.isMerged(Plot.DIRECTION_SOUTH)) {
             final int z = top.getZ();
             asyncLevelWorker.queueFill(
                     new BlockVector3(bottom.getX(), minY, z),
-                    new BlockVector3(top.getX() + (plot.isMerged(1) ? -1 : 0), maxY, z),
+                    new BlockVector3(top.getX() + (plot.isMerged(Plot.DIRECTION_EAST) ? -1 : 0), maxY, z),
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(2));
-            if(rPlot.isMerged(3) && !plot.isMerged(3)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_SOUTH));
+            if(rPlot.isMerged(Plot.DIRECTION_WEST) && !plot.isMerged(Plot.DIRECTION_WEST)) {
                 final int z = top.getZ() - 1;
                 asyncLevelWorker.queueFill(
                         new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, minY, z),
@@ -999,16 +947,16 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(1)) {
+        if(!plot.isMerged(Plot.DIRECTION_EAST)) {
             final int x = top.getX();
             asyncLevelWorker.queueFill(
                     new BlockVector3(x, minY, bottom.getZ()),
-                    new BlockVector3(x, maxY, top.getZ() + (plot.isMerged(2) ? -1 : 0)),
+                    new BlockVector3(x, maxY, top.getZ() + (plot.isMerged(Plot.DIRECTION_SOUTH) ? -1 : 0)),
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(1));
-            if(rPlot.isMerged(2) && !plot.isMerged(2)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_EAST));
+            if(rPlot.isMerged(Plot.DIRECTION_SOUTH) && !plot.isMerged(Plot.DIRECTION_SOUTH)) {
                 final int x = top.getX() - 1;
                 asyncLevelWorker.queueFill(
                         new BlockVector3(x, minY, top.getZ()),
@@ -1024,13 +972,13 @@ public class PlotManager {
     public void changeWall(Plot plot, BlockState blockState) {
         if(plot.isFullyMerged()) return;
 
-        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(3) ? 1 : 0, 0, plot.isMerged(0) ? 1 : 0);
+        final BlockVector3 bottom = this.getExtendedBottomPlotPos(plot).subtract(plot.isMerged(Plot.DIRECTION_WEST) ? 1 : 0, 0, plot.isMerged(Plot.DIRECTION_NORTH) ? 1 : 0);
         final BlockVector3 top = this.getExtendedTopPlotPos(plot).add(1, 0, 1);
         final int minY = LevelUtils.getChunkMinY(this.levelSettings.getDimension());
 
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
 
-        if(!plot.isMerged(0)) {
+        if(!plot.isMerged(Plot.DIRECTION_NORTH)) {
             final int z = bottom.getZ();
             asyncLevelWorker.queueFill(
                     new BlockVector3(bottom.getX(), minY + 1, z),
@@ -1038,8 +986,8 @@ public class PlotManager {
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(0));
-            if(rPlot.isMerged(1) && !plot.isMerged(1)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_NORTH));
+            if(rPlot.isMerged(Plot.DIRECTION_EAST) && !plot.isMerged(Plot.DIRECTION_EAST)) {
                 final int z = bottom.getZ();
                 asyncLevelWorker.queueFill(
                         new BlockVector3(top.getX(), minY + 1, z),
@@ -1049,7 +997,7 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(3)) {
+        if(!plot.isMerged(Plot.DIRECTION_WEST)) {
             final int x = bottom.getX();
             asyncLevelWorker.queueFill(
                     new BlockVector3(x, minY + 1, bottom.getZ()),
@@ -1057,8 +1005,8 @@ public class PlotManager {
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(3));
-            if(rPlot.isMerged(0) && !plot.isMerged(0)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_WEST));
+            if(rPlot.isMerged(Plot.DIRECTION_NORTH) && !plot.isMerged(Plot.DIRECTION_NORTH)) {
                 final int z = this.getBottomPlotPos(plot).getZ();
                 asyncLevelWorker.queueFill(
                         new BlockVector3(this.getBottomPlotPos(plot).getX(), minY + 1, z),
@@ -1068,16 +1016,16 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(2)) {
+        if(!plot.isMerged(Plot.DIRECTION_SOUTH)) {
             final int z = top.getZ();
             asyncLevelWorker.queueFill(
                     new BlockVector3(bottom.getX(), minY + 1, z),
-                    new BlockVector3(top.getX() + (plot.isMerged(1) ? -1 : 0), minY + this.levelSettings.getGroundHeight(), z),
+                    new BlockVector3(top.getX() + (plot.isMerged(Plot.DIRECTION_EAST) ? -1 : 0), minY + this.levelSettings.getGroundHeight(), z),
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(2));
-            if(rPlot.isMerged(3) && !plot.isMerged(3)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_SOUTH));
+            if(rPlot.isMerged(Plot.DIRECTION_WEST) && !plot.isMerged(Plot.DIRECTION_WEST)) {
                 final int z = top.getZ() - 1;
                 asyncLevelWorker.queueFill(
                         new BlockVector3(this.getExtendedBottomPlotPos(rPlot).getX() - 1, minY + 1, z),
@@ -1087,16 +1035,16 @@ public class PlotManager {
             }
         }
 
-        if(!plot.isMerged(1)) {
+        if(!plot.isMerged(Plot.DIRECTION_EAST)) {
             final int x = top.getX();
             asyncLevelWorker.queueFill(
                     new BlockVector3(x, minY + 1, bottom.getZ()),
-                    new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), top.getZ() + (plot.isMerged(2) ? -1 : 0)),
+                    new BlockVector3(x, minY + this.levelSettings.getGroundHeight(), top.getZ() + (plot.isMerged(Plot.DIRECTION_SOUTH) ? -1 : 0)),
                     blockState
             );
         } else {
-            final Plot rPlot = this.getPlotById(plot.getRelative(1));
-            if(rPlot.isMerged(2) && !plot.isMerged(2)) {
+            final Plot rPlot = this.getPlotById(plot.getRelative(Plot.DIRECTION_EAST));
+            if(rPlot.isMerged(Plot.DIRECTION_SOUTH) && !plot.isMerged(Plot.DIRECTION_SOUTH)) {
                 final int x = top.getX() - 1;
                 asyncLevelWorker.queueFill(
                         new BlockVector3(x, minY + 1, top.getZ()),
@@ -1129,9 +1077,9 @@ public class PlotManager {
 
         final AsyncLevelWorker asyncLevelWorker = new AsyncLevelWorker(this.level);
         for(Plot plot : plots) {
-            if(plot.isMerged(1)) this.removeRoadEast(plot, whenDone);
-            if(plot.isMerged(2)) this.removeRoadSouth(plot, whenDone);
-            if(plot.isMerged(5)) this.removeRoadSouthEast(plot, whenDone);
+            if(plot.isMerged(Plot.DIRECTION_EAST)) this.removeRoadEast(plot, whenDone);
+            if(plot.isMerged(Plot.DIRECTION_SOUTH)) this.removeRoadSouth(plot, whenDone);
+            if(plot.isMerged(Plot.DIRECTION_SOUTH_EAST)) this.removeRoadSouthEast(plot, whenDone);
 
             final Vector3 plotPosition = this.getPosByPlot(plot);
 

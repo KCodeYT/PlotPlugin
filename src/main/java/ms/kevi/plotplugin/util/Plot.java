@@ -19,11 +19,12 @@ package ms.kevi.plotplugin.util;
 import cn.nukkit.math.BlockVector3;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.Accessors;
 import ms.kevi.plotplugin.manager.PlotManager;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Kevims KCodeYT
@@ -31,30 +32,26 @@ import java.util.stream.Collectors;
  */
 @Setter
 @Getter
-@EqualsAndHashCode(exclude = {"manager", "origin"})
+@EqualsAndHashCode(exclude = {"manager"})
 public class Plot {
 
-    public static Plot fromConfig(PlotManager plotManager, Map<String, Object> plotMap) {
-        final String ownerString = (String) plotMap.getOrDefault("owner", "null");
-        final Plot plot = new Plot(plotManager, Plot.getPlotVectorFromConfig(plotMap), ownerString.equals("null") ? null : UUID.fromString(ownerString));
-        plot.helpers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("helpers"), new ArrayList<>())).stream().map(UUID::fromString).toList());
-        plot.deniedPlayers.addAll((Plot.<Collection<? extends String>>getOrDefault(plotMap.get("denied"), new ArrayList<>())).stream().map(UUID::fromString).toList());
-        plot.config.putAll(Plot.<Map<String, Object>>getOrDefault(plotMap.get("config"), new HashMap<>()));
-        final List<Number> homePositionList = Plot.<List<Number>>getOrDefault(plotMap.get("home-position"), new ArrayList<>());
-        plot.homePosition = homePositionList.size() == 3 ? new BlockVector3(homePositionList.get(0).intValue(), homePositionList.get(1).intValue(), homePositionList.get(2).intValue()) : null;
-        for(int i = 0; i < plot.mergedPlots.length; i++)
-            plot.mergedPlots[i] = (Boolean) ((List<?>) plotMap.getOrDefault("merges", new ArrayList<>())).get(i);
-        return plot;
-    }
+    public static final int DIRECTION_SELF = -1;
 
-    public static PlotId getPlotVectorFromConfig(Map<String, Object> plotMap) {
-        return PlotId.of((int) plotMap.getOrDefault("x", 0), (int) plotMap.getOrDefault("z", 0));
-    }
+    public static final int DIRECTION_NORTH = 0;
+    public static final int DIRECTION_EAST = 1;
+    public static final int DIRECTION_SOUTH = 2;
+    public static final int DIRECTION_WEST = 3;
+    public static final int DIRECTION_NORTH_EAST = 4;
+    public static final int DIRECTION_SOUTH_EAST = 5;
+    public static final int DIRECTION_SOUTH_WEST = 6;
+    public static final int DIRECTION_NORTH_WEST = 7;
 
-    @SuppressWarnings("unchecked")
-    private static <C> C getOrDefault(Object o, C defaultValue) {
-        return o == null ? defaultValue : (C) o;
-    }
+    public static final int[] DIRECTION_OPPOSITES = new int[]{
+            Plot.DIRECTION_SOUTH,
+            Plot.DIRECTION_WEST,
+            Plot.DIRECTION_NORTH,
+            Plot.DIRECTION_EAST
+    };
 
     private final PlotManager manager;
     private final PlotId id;
@@ -66,7 +63,7 @@ public class Plot {
     private BlockVector3 homePosition;
 
     private final Boolean[] mergedPlots;
-    private Plot origin;
+    private PlotId originId;
 
     public Plot(PlotManager manager, PlotId id, UUID owner) {
         this.manager = manager;
@@ -162,15 +159,13 @@ public class Plot {
     }
 
     public boolean isMerged(int direction) {
-        if(direction < 0) return false;
-        if(direction < 4) return this.mergedPlots[direction];
-        if(direction < 8) {
-            final int f = direction - 4;
-            final int s = direction == 7 ? 0 : direction - 3;
-            return this.isMerged(f) && this.isMerged(s) && this.manager.getPlotById(this.getRelative(f)).isMerged(s) && this.manager.getPlotById(this.getRelative(s)).isMerged(f);
-        }
+        if(direction < 0 || direction > 7) return false;
 
-        return false;
+        if(direction < 4) return this.mergedPlots[direction];
+
+        final int f = direction - 4;
+        final int s = direction == DIRECTION_NORTH_WEST ? 0 : direction - 3;
+        return this.isMerged(f) && this.isMerged(s) && this.manager.getPlotById(this.getRelative(f)).isMerged(s) && this.manager.getPlotById(this.getRelative(s)).isMerged(f);
     }
 
     public void setMerged(int direction, boolean bool) {
@@ -179,14 +174,14 @@ public class Plot {
 
     public PlotId getRelative(int direction) {
         return switch(direction) {
-            case 0 -> this.id.subtract(0, 1);
-            case 1 -> this.id.add(1, 0);
-            case 2 -> this.id.add(0, 1);
-            case 3 -> this.id.subtract(1, 0);
-            case 4 -> this.id.add(1, -1);
-            case 5 -> this.id.add(1, 1);
-            case 6 -> this.id.add(-1, 1);
-            case 7 -> this.id.subtract(1, 1);
+            case DIRECTION_NORTH -> this.id.subtract(0, 1);
+            case DIRECTION_EAST -> this.id.add(1, 0);
+            case DIRECTION_SOUTH -> this.id.add(0, 1);
+            case DIRECTION_WEST -> this.id.subtract(1, 0);
+            case DIRECTION_NORTH_EAST -> this.id.add(1, -1);
+            case DIRECTION_SOUTH_EAST -> this.id.add(1, 1);
+            case DIRECTION_SOUTH_WEST -> this.id.add(-1, 1);
+            case DIRECTION_NORTH_WEST -> this.id.subtract(1, 1);
             default -> this.id;
         };
     }
@@ -195,34 +190,34 @@ public class Plot {
         final int x = this.id.getX() - other.getX();
         final int z = this.id.getZ() - other.getZ();
 
-        if(x == 0 && z == 1) return 0;
-        if(x == -1 && z == 0) return 1;
-        if(x == 0 && z == -1) return 2;
-        if(x == 1 && z == 0) return 3;
+        if(x == 0 && z == 1) return DIRECTION_NORTH;
+        if(x == -1 && z == 0) return DIRECTION_EAST;
+        if(x == 0 && z == -1) return DIRECTION_SOUTH;
+        if(x == 1 && z == 0) return DIRECTION_WEST;
         return -1;
     }
 
     public void recalculateOrigin() {
         if(this.hasNoMerges()) {
-            this.origin = this;
+            this.originId = this.id;
             return;
         }
 
         final Set<Plot> connectedPlots = this.manager.getConnectedPlots(this);
-        Plot min = this;
+        PlotId min = this.id;
         for(Plot plot : connectedPlots) {
-            if(plot.id.getZ() < min.id.getZ() || plot.id.getZ() == min.id.getZ() && plot.id.getX() < min.id.getX())
-                min = plot;
+            if(plot.id.getZ() < min.getZ() || plot.id.getZ() == min.getZ() && plot.id.getX() < min.getX())
+                min = plot.id;
         }
 
-        for(Plot plot : connectedPlots) plot.origin = min;
-        this.origin = min;
+        for(Plot plot : connectedPlots) plot.originId = min;
+        this.originId = min;
     }
 
     public Plot getBasePlot() {
-        if(this.origin != null) return this.origin;
+        if(this.originId != null) return this.manager.getPlotById(this.originId);
         this.recalculateOrigin();
-        return this.origin;
+        return this.manager.getPlotById(this.originId);
     }
 
     @Override
@@ -240,19 +235,44 @@ public class Plot {
         return true;
     }
 
-    public Map<String, Object> toMap() {
-        final Map<String, Object> map = new HashMap<>();
+    @Setter
+    @Accessors(fluent = true, chain = true)
+    @RequiredArgsConstructor
+    public static final class Builder {
 
-        map.put("x", this.id.getX());
-        map.put("z", this.id.getZ());
-        map.put("owner", this.owner == null ? "null" : this.owner.toString());
-        map.put("helpers", this.helpers.stream().map(UUID::toString).collect(Collectors.toList()));
-        map.put("denied", this.deniedPlayers.stream().map(UUID::toString).collect(Collectors.toList()));
-        map.put("config", this.config);
-        map.put("home-position", this.homePosition == null ? Collections.emptyList() : Arrays.asList(this.homePosition.getX(), this.homePosition.getY(), this.homePosition.getZ()));
-        map.put("merges", this.mergedPlots);
+        private final PlotManager manager;
 
-        return map;
+        private PlotId id;
+
+        private UUID owner;
+        private List<UUID> helpers;
+        private List<UUID> deniedPlayers;
+        private Map<String, Object> config;
+        private BlockVector3 homePosition;
+
+        private Boolean[] mergedPlots;
+        private PlotId originId;
+
+        public Plot build() {
+            final Plot plot = new Plot(this.manager, this.id, this.owner);
+            if(this.helpers != null && !this.helpers.isEmpty())
+                plot.helpers.addAll(this.helpers);
+            if(this.deniedPlayers != null && !this.deniedPlayers.isEmpty())
+                plot.deniedPlayers.addAll(this.deniedPlayers);
+            if(this.config != null && !this.config.isEmpty())
+                plot.config.putAll(this.config);
+            if(this.homePosition != null)
+                plot.homePosition = homePosition;
+            if(this.mergedPlots != null) {
+                for(int i = 0; i < this.mergedPlots.length; i++)
+                    plot.mergedPlots[i] = this.mergedPlots[i];
+            }
+            if(this.originId != null)
+                plot.originId = this.originId;
+
+            return plot;
+        }
+
     }
 
 }
