@@ -33,10 +33,7 @@ import ms.kevi.plotplugin.listener.PlotListener;
 import ms.kevi.plotplugin.manager.PlayerManager;
 import ms.kevi.plotplugin.manager.PlayerNameFunction;
 import ms.kevi.plotplugin.manager.PlotManager;
-import ms.kevi.plotplugin.util.BlockEntry;
-import ms.kevi.plotplugin.util.PlotLevelRegistration;
-import ms.kevi.plotplugin.util.PlotLevelSettings;
-import ms.kevi.plotplugin.util.Utils;
+import ms.kevi.plotplugin.util.*;
 import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 import java.io.BufferedReader;
@@ -45,7 +42,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 /**
  * @author Kevims KCodeYT
@@ -58,7 +54,6 @@ public class PlotPlugin extends PluginBase {
     public static PlotPlugin INSTANCE;
 
     private Config worldsConfig;
-    private Config playersConfig;
 
     @Getter
     private Language language;
@@ -108,7 +103,6 @@ public class PlotPlugin extends PluginBase {
     @Override
     public void onEnable() {
         this.worldsConfig = new Config(new File(this.getDataFolder(), "worlds.yml"), Config.YAML);
-        this.playersConfig = new Config(new File(this.getDataFolder(), "players.yml"), Config.YAML);
 
         final File langDir = new File(this.getDataFolder(), "lang");
         final File[] files = langDir.listFiles();
@@ -263,7 +257,11 @@ public class PlotPlugin extends PluginBase {
             }
         }
 
-        this.playerManager = new PlayerManager(this.playersConfig.getAll().keySet().stream().map(Object::toString).collect(Collectors.toList()));
+        if(PlayersMigrator.shouldMigrate(this)) {
+            PlayersMigrator.migratePlayers(this);
+        }
+
+        this.playerManager = new PlayerManager(this);
         server.getScheduler().scheduleDelayedTask(this, this::loadPlayerNames, 1);
 
         server.getPluginManager().registerEvents(new PlotListener(this), this);
@@ -328,11 +326,18 @@ public class PlotPlugin extends PluginBase {
     }
 
     public void registerPlayer(Player player) {
-        this.playersConfig.set(player.getName(), player.getUniqueId().toString());
-        this.playersConfig.save(true);
-
         final String playerName = player.getName();
-        TaskExecutor.executeAsync(() -> (this.nameFunction == null ? this.defaultNameFunction : this.nameFunction).execute(player.getName(), displayName -> this.playerManager.add(playerName, displayName)));
+
+        TaskExecutor.executeAsync(() -> {
+            if(!this.playerManager.has(player.getUniqueId())) {
+                this.database.executeActions(Collections.singletonList(
+                        this.database.addPlayer(player.getUniqueId(), playerName)
+                ));
+            }
+
+            (this.nameFunction == null ? this.defaultNameFunction : this.nameFunction)
+                    .execute(player.getName(), displayName -> this.playerManager.add(player.getUniqueId(), playerName, displayName));
+        });
     }
 
     public UUID getUniqueIdByName(String playerName) {
@@ -344,9 +349,9 @@ public class PlotPlugin extends PluginBase {
         if(allowEveryone && firstPlayerName.equals(Utils.STRING_EVERYONE))
             return Utils.UUID_EVERYONE;
 
-        for(Map.Entry<String, Object> entry : this.playersConfig.getAll().entrySet()) {
-            if(entry.getKey().equalsIgnoreCase(firstPlayerName))
-                return UUID.fromString((String) entry.getValue());
+        for(Map.Entry<UUID, String> entry : this.playerManager.getPlayers()) {
+            if(entry.getValue().equalsIgnoreCase(firstPlayerName))
+                return entry.getKey();
         }
 
         return null;
@@ -357,7 +362,7 @@ public class PlotPlugin extends PluginBase {
     }
 
     public String findPlayerName(String playerName) {
-        final String[] playerNames = this.playersConfig.getAll().keySet().toArray(new String[0]);
+        final Collection<String> playerNames = this.playerManager.getPlayerNames();
         for(String name : playerNames) {
             if(name.equalsIgnoreCase(playerName))
                 return name;
@@ -372,12 +377,7 @@ public class PlotPlugin extends PluginBase {
     }
 
     private String getNameByUniqueId(UUID uniqueId) {
-        for(Map.Entry<String, Object> entry : this.playersConfig.getAll().entrySet()) {
-            final String playerName = entry.getKey();
-            if(UUID.fromString((String) entry.getValue()).equals(uniqueId)) return playerName;
-        }
-
-        return null;
+        return this.playerManager.get(uniqueId);
     }
 
 }

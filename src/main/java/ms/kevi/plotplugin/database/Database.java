@@ -250,6 +250,61 @@ public final class Database {
         };
     }
 
+    public void createPlayersTable() {
+        try(final Connection connection = this.createConnection(true);
+            final PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS plot_players (" +
+                                                                            "id VARCHAR(36) NOT NULL, " +
+                                                                            "name VARCHAR(256) NOT NULL, " +
+                                                                            "PRIMARY KEY (id), " +
+                                                                            "UNIQUE (id))")) {
+            statement.executeUpdate();
+        } catch(SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Map<UUID, String> getPlayers() {
+        try(final Connection connection = this.createConnection(true);
+            final PreparedStatement statement = connection.prepareStatement("SELECT * FROM plot_players")) {
+            final ResultSet resultSet = statement.executeQuery();
+
+            final Map<UUID, String> names = new HashMap<>();
+
+            while(resultSet.next()) {
+                names.put(UUID.fromString(resultSet.getString("id")), resultSet.getString("name"));
+            }
+
+            return names;
+        } catch(SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public DatabaseAction addPlayer(UUID uniqueId, String name) {
+        return connection -> {
+            try(final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO plot_players (id, name) VALUES (?, ?)")) {
+                insertStatement.setString(1, uniqueId.toString());
+                insertStatement.setString(2, name);
+                insertStatement.executeUpdate();
+            }
+        };
+    }
+
+    public void addPlayers(Map<UUID, String> players) {
+        try(final Connection connection = this.createConnection(true);
+            final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO plot_players (id, name) VALUES (?, ?)")) {
+            for(Map.Entry<UUID, String> entry : players.entrySet()) {
+                insertStatement.setString(1, entry.getKey().toString());
+                insertStatement.setString(2, entry.getValue());
+                insertStatement.addBatch();
+            }
+
+            insertStatement.executeLargeBatch();
+        } catch(SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public interface DatabaseAction {
         void execute(Connection connection) throws Exception;
     }
