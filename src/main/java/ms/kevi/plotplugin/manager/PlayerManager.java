@@ -30,10 +30,9 @@ public class PlayerManager {
     private final Map<String, String> nameMap;
 
     public PlayerManager(PlotPlugin plugin) {
+        plugin.getDatabase().createPlayersTable();
         this.players = plugin.getDatabase().getPlayers();
         this.nameMap = new HashMap<>();
-
-        plugin.getDatabase().createPlayersTable();
     }
 
     public void load(PlayerNameFunction nameFunction) {

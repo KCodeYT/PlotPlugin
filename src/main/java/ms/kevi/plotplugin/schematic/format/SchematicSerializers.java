@@ -22,8 +22,7 @@ package ms.kevi.plotplugin.schematic.format;
 public class SchematicSerializers {
 
     private static final SchematicSerializer[] SERIALIZERS = {
-            SchematicSerializerV1.INSTANCE,
-            SchematicSerializerV2.INSTANCE
+            SchematicSerializerV3.INSTANCE
     };
 
     public static SchematicSerializer getLatest() {

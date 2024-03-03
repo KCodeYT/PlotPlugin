@@ -17,10 +17,10 @@
 package ms.kevi.plotplugin.util.async;
 
 import cn.nukkit.Player;
-import cn.nukkit.blockstate.BlockState;
+import cn.nukkit.block.BlockAir;
+import cn.nukkit.block.BlockState;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.format.FullChunk;
-import cn.nukkit.level.format.generic.BaseFullChunk;
+import cn.nukkit.level.format.IChunk;
 import cn.nukkit.math.BlockVector3;
 import ms.kevi.plotplugin.util.WhenDone;
 
@@ -37,7 +37,7 @@ import java.util.function.Supplier;
 public class AsyncLevelWorker {
 
     private final Level level;
-    private final Set<FullChunk> usedChunks;
+    private final Set<IChunk> usedChunks;
     private final Queue<Runnable> queue;
 
     public AsyncLevelWorker(Level level) {
@@ -48,33 +48,33 @@ public class AsyncLevelWorker {
 
     public void queueFill(BlockVector3 startPos, BlockVector3 endPos, BlockState blockState) {
         this.queue.add(() -> {
-            for(int x = startPos.getX(); x <= endPos.getX(); x++) {
-                for(int z = startPos.getZ(); z <= endPos.getZ(); z++) {
-                    final BaseFullChunk fullChunk = this.level.getChunk(x >> 4, z >> 4);
-                    if(fullChunk == null) continue;
-                    this.addChunk(fullChunk);
+            for (int x = startPos.getX(); x <= endPos.getX(); x++) {
+                for (int z = startPos.getZ(); z <= endPos.getZ(); z++) {
+                    final IChunk IChunk = this.level.getChunk(x >> 4, z >> 4);
+                    if (IChunk == null) continue;
+                    this.addChunk(IChunk);
 
-                    for(int y = startPos.getY(); y <= endPos.getY(); y++) {
-                        fullChunk.setBlockStateAtLayer(x & 15, y, z & 15, 0, blockState);
-                        fullChunk.setBlockStateAtLayer(x & 15, y, z & 15, 1, BlockState.AIR);
+                    for (int y = startPos.getY(); y <= endPos.getY(); y++) {
+                        IChunk.setBlockState(x & 15, y, z & 15, blockState, 0);
+                        IChunk.setBlockState(x & 15, y, z & 15, BlockAir.STATE, 1);
                     }
                 }
             }
         });
     }
 
-    public void addTask(Supplier<Set<FullChunk>> chunkTask) {
+    public void addTask(Supplier<Set<IChunk>> chunkTask) {
         this.queue.add(() -> {
-            for(FullChunk usedChunk : chunkTask.get())
+            for (IChunk usedChunk : chunkTask.get())
                 this.addChunk(usedChunk);
         });
     }
 
-    private void addChunk(FullChunk fullChunk) {
-        for(FullChunk fullChunkB : this.usedChunks)
-            if(fullChunkB != null && fullChunk.getX() == fullChunkB.getX() && fullChunk.getZ() == fullChunkB.getZ())
+    private void addChunk(IChunk IChunk) {
+        for (IChunk fullChunkB : this.usedChunks)
+            if (fullChunkB != null && IChunk.getX() == fullChunkB.getX() && IChunk.getZ() == fullChunkB.getZ())
                 return;
-        this.usedChunks.add(fullChunk);
+        this.usedChunks.add(IChunk);
     }
 
     public void runQueue() {
@@ -82,21 +82,21 @@ public class AsyncLevelWorker {
     }
 
     public void runQueue(WhenDone whenDone) {
-        if(whenDone != null) whenDone.addTask();
+        if (whenDone != null) whenDone.addTask();
         TaskExecutor.executeAsync(() -> {
             this.queue.forEach(Runnable::run);
 
             TaskExecutor.execute(() -> {
-                for(FullChunk fullChunk : this.usedChunks) {
-                    if(fullChunk.getProvider() == null || fullChunk.getProvider().getLevel() == null) continue;
-                    final Level level = fullChunk.getProvider().getLevel();
-                    for(Player player : level.getChunkPlayers(fullChunk.getX(), fullChunk.getZ()).values())
-                        level.requestChunk(fullChunk.getX(), fullChunk.getZ(), player);
+                for (IChunk IChunk : this.usedChunks) {
+                    if (IChunk.getProvider() == null || IChunk.getProvider().getLevel() == null) continue;
+                    final Level level = IChunk.getProvider().getLevel();
+                    for (Player player : level.getChunkPlayers(IChunk.getX(), IChunk.getZ()).values())
+                        level.requestChunk(IChunk.getX(), IChunk.getZ(), player);
                 }
 
                 this.queue.clear();
                 this.usedChunks.clear();
-                if(whenDone != null) whenDone.done();
+                if (whenDone != null) whenDone.done();
             });
         });
     }

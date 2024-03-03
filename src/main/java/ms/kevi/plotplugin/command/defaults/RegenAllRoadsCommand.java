@@ -20,7 +20,7 @@ import cn.nukkit.Player;
 import cn.nukkit.command.data.CommandParamType;
 import cn.nukkit.command.data.CommandParameter;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.format.FullChunk;
+import cn.nukkit.level.format.IChunk;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
@@ -60,8 +60,8 @@ public class RegenAllRoadsCommand extends SubCommand {
         TaskExecutor.executeAsync(() -> {
             for(int chunkX = -chunkRadius; chunkX <= chunkRadius; chunkX++) {
                 for(int chunkZ = -chunkRadius; chunkZ <= chunkRadius; chunkZ++) {
-                    final FullChunk fullChunk = level.getChunk(pChunkX + chunkX, pChunkZ + chunkZ, false);
-                    if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk);
+                    final IChunk IChunk = level.getChunk(pChunkX + chunkX, pChunkZ + chunkZ, false);
+                    if (IChunk != null) plotGenerator.regenerateChunk(plotManager, IChunk);
                 }
             }
 

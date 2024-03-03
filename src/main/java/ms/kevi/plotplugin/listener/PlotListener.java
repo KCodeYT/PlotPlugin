@@ -173,8 +173,8 @@ public class PlotListener implements Listener {
             }
 
             if((block != null && ((!player.isSneaking() || item == null || item.isNull()) && block.canBeActivated())) || (item != null && item.canBeActivated())) {
-                final int x = (block == null || block.getId() == 0 ? player : block).getFloorX();
-                final int z = (block == null || block.getId() == 0 ? player : block).getFloorZ();
+                final int x = (block == null || block.isAir() ? player : block).getFloorX();
+                final int z = (block == null || block.isAir() ? player : block).getFloorZ();
                 final Plot plot = plotManager.getMergedPlot(x, z);
 
                 if(plot != null) {

@@ -16,7 +16,7 @@
 
 package ms.kevi.plotplugin.schematic;
 
-import cn.nukkit.blockstate.BlockState;
+import cn.nukkit.block.BlockState;
 import lombok.Value;
 
 /**
@@ -25,8 +25,6 @@ import lombok.Value;
  */
 @Value
 public class SchematicBlock {
-
     BlockState layer0;
     BlockState layer1;
-
 }

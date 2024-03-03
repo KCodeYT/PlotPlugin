@@ -16,7 +16,8 @@
 
 package ms.kevi.plotplugin.util;
 
-import cn.nukkit.blockstate.BlockState;
+import cn.nukkit.block.Block;
+import cn.nukkit.block.BlockState;
 import lombok.Builder;
 import lombok.Value;
 
@@ -38,14 +39,19 @@ public class BlockEntry {
     String permission;
 
     public static BlockEntry of(Map<?, ?> map) {
-        return BlockEntry.builder().
+        BlockEntryBuilder builder = BlockEntry.builder().
                 isDefault(map.get("name").equals("reset_to_default")).
                 name((String) map.get("name")).
-                blockState(map.containsKey("block_id") ? BlockState.of((int) map.get("block_id"), (int) map.get("block_data")) : null).
                 imageType((String) map.get("image_type")).
                 imageData((String) map.get("image_data")).
-                permission((String) map.get("permission")).
-                build();
-    }
+                permission((String) map.get("permission"));
 
+        if (!builder.isDefault) {
+            Block block = Block.get(builder.name);
+            Number data = (Number) map.get("block_data");
+            builder.blockState(block.getProperties().getBlockState(data.shortValue()));
+        }
+
+        return builder.build();
+    }
 }

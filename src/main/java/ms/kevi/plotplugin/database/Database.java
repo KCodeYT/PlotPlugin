@@ -45,14 +45,14 @@ public final class Database {
 
     private Connection createConnection(boolean withDatabase) throws SQLException {
         final StringBuilder queryBuilder = new StringBuilder();
-        if(this.parameters != null && !this.parameters.isEmpty()) {
+        if (this.parameters != null && !this.parameters.isEmpty()) {
             queryBuilder.append('?');
 
             final Iterator<String> parameterIterator = this.parameters.iterator();
-            while(parameterIterator.hasNext()) {
+            while (parameterIterator.hasNext()) {
                 queryBuilder.append(parameterIterator.next());
 
-                if(parameterIterator.hasNext())
+                if (parameterIterator.hasNext())
                     queryBuilder.append("&");
             }
         }
@@ -61,65 +61,68 @@ public final class Database {
     }
 
     public void executeActions(List<DatabaseAction> actions) {
-        try(final Connection connection = this.createConnection(true)) {
-            for(DatabaseAction action : actions)
+        try (final Connection connection = this.createConnection(true)) {
+            for (DatabaseAction action : actions)
                 action.execute(connection);
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     public void createDatabase() {
-        try(final Connection connection = this.createConnection(false);
-            final Statement statement = connection.createStatement()) {
+        try (final Connection connection = this.createConnection(false);
+             final Statement statement = connection.createStatement()) {
             statement.executeUpdate("CREATE DATABASE IF NOT EXISTS " + this.database);
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public void createPlotsTable(String levelName) {
-        try(final Connection connection = this.createConnection(true);
-            final PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + levelName + " (" +
-                                                                            "id BIGINT NOT NULL, " +
-                                                                            "x INT NOT NULL, " +
-                                                                            "z INT NOT NULL, " +
-                                                                            "owner VARCHAR(36), " +
-                                                                            "helpers TEXT DEFAULT '[]', " +
-                                                                            "denied TEXT DEFAULT '[]', " +
-                                                                            "config TEXT DEFAULT '{}', " +
-                                                                            "merged TINYINT NOT NULL DEFAULT '0', " +
-                                                                            "home_position VARCHAR(100), " +
-                                                                            "origin BIGINT NOT NULL, " +
-                                                                            "PRIMARY KEY (id))")) {
+        try (final Connection connection = this.createConnection(true);
+             final PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS " + levelName + " (" +
+                     "id BIGINT NOT NULL, " +
+                     "x INT NOT NULL, " +
+                     "z INT NOT NULL, " +
+                     "owner VARCHAR(36), " +
+                     "helpers TEXT, " +
+                     "denied TEXT, " +
+                     "config TEXT, " +
+                     "merged TINYINT NOT NULL DEFAULT '0', " +
+                     "home_position VARCHAR(100), " +
+                     "origin BIGINT NOT NULL, " +
+                     "PRIMARY KEY (id))")) {
             statement.executeUpdate();
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public List<Plot> getPlots(PlotManager manager) {
-        try(final Connection connection = this.createConnection(true);
-            final PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + manager.getLevelName())) {
+        try (final Connection connection = this.createConnection(true);
+             final PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + manager.getLevelName())) {
             final ResultSet resultSet = statement.executeQuery();
             final List<Plot> plots = new ArrayList<>();
 
-            while(resultSet.next()) {
+            while (resultSet.next()) {
                 final PlotId plotId = PlotId.fromLong(resultSet.getLong("id"));
                 final String owner = resultSet.getString("owner");
-                final String helpers = resultSet.getString("helpers");
-                final String denied = resultSet.getString("denied");
-                final String config = resultSet.getString("config");
+                String helpers = resultSet.getString("helpers");
+                helpers = helpers == null ? "[]" : helpers;
+                String denied = resultSet.getString("denied");
+                denied = denied == null ? "[]" : denied;
+                String config = resultSet.getString("config");
+                config = config == null ? "{}" : config;
                 final byte mergedByte = resultSet.getByte("merged");
                 final String homePosition = resultSet.getString("home_position");
                 final PlotId origin = PlotId.fromLong(resultSet.getLong("origin"));
 
                 final boolean[] mergedDirections = new boolean[4];
-                for(int i = 0; i < 4; i++)
+                for (int i = 0; i < 4; i++)
                     mergedDirections[i] = (mergedByte & (1 << i)) != 0;
 
                 final BlockVector3 homePositionVector;
-                if(homePosition != null) {
+                if (homePosition != null) {
                     final String[] split = homePosition.split(";");
                     homePositionVector = new BlockVector3(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Integer.parseInt(split[2]));
                 } else
@@ -137,7 +140,7 @@ public final class Database {
             }
 
             return plots;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
@@ -146,15 +149,15 @@ public final class Database {
         return connection -> {
             final String levelName = plot.getManager().getLevel().getName();
 
-            try(final PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM " + levelName + " WHERE id = ?")) {
+            try (final PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM " + levelName + " WHERE id = ?")) {
                 selectStatement.setLong(1, plot.getId().asLong());
 
                 final ResultSet resultSet = selectStatement.executeQuery();
 
-                if(!resultSet.next()) {
-                    if(!plot.hasOwner() && plot.isDefault()) return;
+                if (!resultSet.next()) {
+                    if (!plot.hasOwner() && plot.isDefault()) return;
 
-                    try(final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO " + levelName + " (id, x, z, owner, helpers, denied, config, merged, home_position, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    try (final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO " + levelName + " (id, x, z, owner, helpers, denied, config, merged, home_position, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                         insertStatement.setLong(1, plot.getId().asLong());
                         insertStatement.setInt(2, plot.getId().getX());
                         insertStatement.setInt(3, plot.getId().getZ());
@@ -164,12 +167,12 @@ public final class Database {
                         insertStatement.setString(7, GSON.toJson(plot.getConfig()));
 
                         byte mergedByte = 0;
-                        for(int i = 0; i < 4; i++) if(plot.isMerged(i)) mergedByte |= 1 << i;
+                        for (int i = 0; i < 4; i++) if (plot.isMerged(i)) mergedByte |= 1 << i;
 
                         insertStatement.setByte(8, mergedByte);
 
                         final BlockVector3 homePosition = plot.getHomePosition();
-                        if(homePosition != null)
+                        if (homePosition != null)
                             insertStatement.setString(9, homePosition.getX() + ";" + homePosition.getY() + ";" + homePosition.getZ());
                         else
                             insertStatement.setString(9, null);
@@ -178,27 +181,27 @@ public final class Database {
                         insertStatement.executeUpdate();
                     }
                 } else {
-                    if(!plot.hasOwner() && plot.isDefault()) {
-                        try(final PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM " + levelName + " WHERE id = ?")) {
+                    if (!plot.hasOwner() && plot.isDefault()) {
+                        try (final PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM " + levelName + " WHERE id = ?")) {
                             deleteStatement.setLong(1, plot.getId().asLong());
                             deleteStatement.executeUpdate();
                         }
                         return;
                     }
 
-                    try(final PreparedStatement updateStatement = connection.prepareStatement("UPDATE " + levelName + " SET owner = ?, helpers = ?, denied = ?, config = ?, merged = ?, home_position = ?, origin = ? WHERE id = ?")) {
+                    try (final PreparedStatement updateStatement = connection.prepareStatement("UPDATE " + levelName + " SET owner = ?, helpers = ?, denied = ?, config = ?, merged = ?, home_position = ?, origin = ? WHERE id = ?")) {
                         updateStatement.setString(1, plot.getOwner() == null ? null : plot.getOwner().toString());
                         updateStatement.setString(2, GSON.toJson(plot.getHelpers().stream().map(UUID::toString).toList()));
                         updateStatement.setString(3, GSON.toJson(plot.getDeniedPlayers().stream().map(UUID::toString).toList()));
                         updateStatement.setString(4, GSON.toJson(plot.getConfig()));
 
                         byte mergedByte = 0;
-                        for(int i = 0; i < 4; i++) if(plot.isMerged(i)) mergedByte |= 1 << i;
+                        for (int i = 0; i < 4; i++) if (plot.isMerged(i)) mergedByte |= 1 << i;
 
                         updateStatement.setByte(5, mergedByte);
 
                         final BlockVector3 homePosition = plot.getHomePosition();
-                        if(homePosition != null)
+                        if (homePosition != null)
                             updateStatement.setString(6, homePosition.getX() + ";" + homePosition.getY() + ";" + homePosition.getZ());
                         else
                             updateStatement.setString(6, null);
@@ -214,7 +217,7 @@ public final class Database {
 
     public DatabaseAction insertPlot(String levelName, PlotId plotId, String owner, List<String> helpers, List<String> denied, Map<String, Object> config, boolean[] mergedDirections, BlockVector3 homePosition, PlotId originId) {
         return connection -> {
-            try(final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO " + levelName + " (id, x, z, owner, helpers, denied, config, merged, home_position, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            try (final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO " + levelName + " (id, x, z, owner, helpers, denied, config, merged, home_position, origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 insertStatement.setLong(1, plotId.asLong());
                 insertStatement.setInt(2, plotId.getX());
                 insertStatement.setInt(3, plotId.getZ());
@@ -224,11 +227,11 @@ public final class Database {
                 insertStatement.setString(7, GSON.toJson(config));
 
                 byte mergedByte = 0;
-                for(int i = 0; i < 4; i++) if(mergedDirections[i]) mergedByte |= 1 << i;
+                for (int i = 0; i < 4; i++) if (mergedDirections[i]) mergedByte |= 1 << i;
 
                 insertStatement.setByte(8, mergedByte);
 
-                if(homePosition != null)
+                if (homePosition != null)
                     insertStatement.setString(9, homePosition.getX() + ";" + homePosition.getY() + ";" + homePosition.getZ());
                 else
                     insertStatement.setString(9, null);
@@ -243,7 +246,7 @@ public final class Database {
         return connection -> {
             final String levelName = plot.getManager().getLevel().getName();
 
-            try(final PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM " + levelName + " WHERE id = ?")) {
+            try (final PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM " + levelName + " WHERE id = ?")) {
                 deleteStatement.setLong(1, plot.getId().asLong());
                 deleteStatement.executeUpdate();
             }
@@ -251,38 +254,38 @@ public final class Database {
     }
 
     public void createPlayersTable() {
-        try(final Connection connection = this.createConnection(true);
-            final PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS plot_players (" +
-                                                                            "id VARCHAR(36) NOT NULL, " +
-                                                                            "name VARCHAR(256) NOT NULL, " +
-                                                                            "PRIMARY KEY (id), " +
-                                                                            "UNIQUE (id))")) {
+        try (final Connection connection = this.createConnection(true);
+             final PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS plot_players (" +
+                     "id VARCHAR(36) NOT NULL, " +
+                     "name VARCHAR(256) NOT NULL, " +
+                     "PRIMARY KEY (id), " +
+                     "UNIQUE (id))")) {
             statement.executeUpdate();
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public Map<UUID, String> getPlayers() {
-        try(final Connection connection = this.createConnection(true);
-            final PreparedStatement statement = connection.prepareStatement("SELECT * FROM plot_players")) {
+        try (final Connection connection = this.createConnection(true);
+             final PreparedStatement statement = connection.prepareStatement("SELECT * FROM plot_players")) {
             final ResultSet resultSet = statement.executeQuery();
 
             final Map<UUID, String> names = new HashMap<>();
 
-            while(resultSet.next()) {
+            while (resultSet.next()) {
                 names.put(UUID.fromString(resultSet.getString("id")), resultSet.getString("name"));
             }
 
             return names;
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
     public DatabaseAction addPlayer(UUID uniqueId, String name) {
         return connection -> {
-            try(final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO plot_players (id, name) VALUES (?, ?)")) {
+            try (final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO plot_players (id, name) VALUES (?, ?)")) {
                 insertStatement.setString(1, uniqueId.toString());
                 insertStatement.setString(2, name);
                 insertStatement.executeUpdate();
@@ -291,16 +294,16 @@ public final class Database {
     }
 
     public void addPlayers(Map<UUID, String> players) {
-        try(final Connection connection = this.createConnection(true);
-            final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO plot_players (id, name) VALUES (?, ?)")) {
-            for(Map.Entry<UUID, String> entry : players.entrySet()) {
+        try (final Connection connection = this.createConnection(true);
+             final PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO plot_players (id, name) VALUES (?, ?)")) {
+            for (Map.Entry<UUID, String> entry : players.entrySet()) {
                 insertStatement.setString(1, entry.getKey().toString());
                 insertStatement.setString(2, entry.getValue());
                 insertStatement.addBatch();
             }
 
             insertStatement.executeLargeBatch();
-        } catch(SQLException e) {
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }

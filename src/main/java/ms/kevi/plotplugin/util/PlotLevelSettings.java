@@ -17,14 +17,16 @@
 package ms.kevi.plotplugin.util;
 
 import cn.nukkit.block.Block;
-import cn.nukkit.blockstate.BlockState;
+import cn.nukkit.block.BlockState;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.biome.EnumBiome;
-import cn.nukkit.utils.Config;
+import cn.nukkit.level.biome.BiomeID;
+import cn.nukkit.registry.Registries;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Kevims KCodeYT
@@ -36,93 +38,113 @@ public class PlotLevelSettings {
 
     private int dimension = Level.DIMENSION_OVERWORLD;
 
-    private int plotBiome = EnumBiome.PLAINS.id;
-    private int roadBiome = EnumBiome.PLAINS.id;
+    private int plotBiome = BiomeID.PLAINS;
+    private int roadBiome = BiomeID.PLAINS;
 
     private int groundHeight = 64;
     private int plotSize = 35;
     private int roadSize = 7;
 
-    private int firstLayerBlockId = Block.BEDROCK;
-    private int firstLayerBlockMeta = 0;
+    private String firstLayerBlockId = Block.BEDROCK;
+    private short firstLayerBlockMeta = 0;
 
-    private int middleLayerBlockId = Block.DIRT;
-    private int middleLayerBlockMeta = 0;
+    private String middleLayerBlockId = Block.DIRT;
+    private short middleLayerBlockMeta = 0;
 
-    private int lastLayerBlockId = Block.GRASS;
-    private int lastLayerBlockMeta = 0;
+    private String lastLayerBlockId = Block.GRASS;
+    private short lastLayerBlockMeta = 0;
 
-    private int wallFillingBlockId = Block.STONE;
-    private int wallFillingBlockMeta = 0;
+    private String wallFillingBlockId = Block.STONE;
+    private short wallFillingBlockMeta = 0;
 
-    private int wallPlotBlockId = Block.STONE_SLAB;
-    private int wallPlotBlockMeta = 0;
+    private String wallPlotBlockId = Block.STONE_BLOCK_SLAB;
+    private short wallPlotBlockMeta = 0;
 
-    private int claimPlotBlockId = Block.STONE_SLAB;
-    private int claimPlotBlockMeta = 1;
+    private String claimPlotBlockId = Block.STONE_BLOCK_SLAB;
+    private short claimPlotBlockMeta = 1;
 
-    private int roadBlockId = Block.PLANKS;
-    private int roadBlockMeta = 0;
+    private String roadBlockId = Block.OAK_PLANKS;
+    private short roadBlockMeta = 0;
 
-    private int roadFillingBlockId = Block.DIRT;
-    private int roadFillingBlockMeta = 0;
+    private String roadFillingBlockId = Block.DIRT;
+    private short roadFillingBlockMeta = 0;
 
     public BlockState getFirstLayerState() {
-        return BlockState.of(this.firstLayerBlockId, this.firstLayerBlockMeta);
+        return Registries.BLOCK.getBlockProperties(firstLayerBlockId).getBlockState(this.firstLayerBlockMeta);
     }
 
     public BlockState getMiddleLayerState() {
-        return BlockState.of(this.middleLayerBlockId, this.middleLayerBlockMeta);
+        return Registries.BLOCK.getBlockProperties(middleLayerBlockId).getBlockState(this.middleLayerBlockMeta);
     }
 
     public BlockState getLastLayerState() {
-        return BlockState.of(this.lastLayerBlockId, this.lastLayerBlockMeta);
+        return Registries.BLOCK.getBlockProperties(lastLayerBlockId).getBlockState(this.lastLayerBlockMeta);
     }
 
     public BlockState getWallFillingState() {
-        return BlockState.of(this.wallFillingBlockId, this.wallFillingBlockMeta);
+        return Registries.BLOCK.getBlockProperties(wallFillingBlockId).getBlockState(this.wallFillingBlockMeta);
     }
 
     public BlockState getWallPlotState() {
-        return BlockState.of(this.wallPlotBlockId, this.wallPlotBlockMeta);
+        return Registries.BLOCK.getBlockProperties(wallPlotBlockId).getBlockState(this.wallPlotBlockMeta);
     }
 
     public BlockState getClaimPlotState() {
-        return BlockState.of(this.claimPlotBlockId, this.claimPlotBlockMeta);
+        return Registries.BLOCK.getBlockProperties(claimPlotBlockId).getBlockState(this.claimPlotBlockMeta);
     }
 
     public BlockState getRoadState() {
-        return BlockState.of(this.roadBlockId, this.roadBlockMeta);
+        return Registries.BLOCK.getBlockProperties(roadBlockId).getBlockState(this.roadBlockMeta);
     }
 
     public BlockState getRoadFillingState() {
-        return BlockState.of(this.roadFillingBlockId, this.roadFillingBlockMeta);
+        return Registries.BLOCK.getBlockProperties(roadFillingBlockId).getBlockState(this.roadFillingBlockMeta);
     }
 
     public int getTotalSize() {
         return this.plotSize + this.roadSize;
     }
 
-    public void loadOrCreate(Config config) {
-        for(Field field : this.getClass().getDeclaredFields()) {
+    public void fromMap(Map<String, Object> map) {
+        for (Field field : this.getClass().getDeclaredFields()) {
             field.setAccessible(true);
-
             try {
-                field.set(this, config.get(field.getName()));
-            } catch(IllegalAccessException ignored) {
+                Class<?> type = field.getType();
+                if (field.getType() == Integer.class || type == int.class) {
+                    Number number = (Number) map.get(field.getName());
+                    field.set(this, number.intValue());
+                } else if (type == Short.class || type == short.class) {
+                    Number number = (Number) map.get(field.getName());
+                    field.set(this, number.shortValue());
+                } else if (type == Byte.class || type == byte.class) {
+                    Number number = (Number) map.get(field.getName());
+                    field.set(this, number.byteValue());
+                } else if (type == Double.class || type == double.class) {
+                    Number number = (Number) map.get(field.getName());
+                    field.set(this, number.doubleValue());
+                } else if (type == Float.class || type == float.class) {
+                    Number number = (Number) map.get(field.getName());
+                    field.set(this, number.floatValue());
+                } else if (type == Long.class || type == long.class) {
+                    Number number = (Number) map.get(field.getName());
+                    field.set(this, number.longValue());
+                } else {
+                    field.set(this, map.get(field.getName()));
+                }
+            } catch (IllegalAccessException ignored) {
             }
         }
     }
 
-    public void saveToConfig(Config config) {
-        for(Field field : this.getClass().getDeclaredFields()) {
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new HashMap<>();
+        for (Field field : this.getClass().getDeclaredFields()) {
             field.setAccessible(true);
-
             try {
-                config.set(field.getName(), field.get(this));
-            } catch(IllegalAccessException ignored) {
+                map.put(field.getName(), field.get(this));
+            } catch (IllegalAccessException ignored) {
             }
         }
+        return map;
     }
-
 }

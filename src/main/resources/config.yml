@@ -1,17 +1,6 @@
 # Language used by this plugin, corresponding file should exist in lang folder!
 default_lang: en_US
 
-# MySQL Database connection information
-mysql:
-  host: 127.0.0.1
-  port: 3306
-  # A list of all sql connection parameters. For example:
-  # - useSSL=false
-  parameters: []
-  user: root
-  password: insert_your_password_here
-  database: plot_plugin
-
 # Plots per home page (/homes)
 plots_per_page: 5
 
@@ -26,19 +15,16 @@ borders:
   - name: "reset_to_default"
     image_type: PATH
     image_data: "textures/ui/undoArrow"
-  - name: "Diamond"
-    block_id: 57
+  - name: "minecraft:diamond_block"
     block_data: 0
     image_type: URL
     image_data: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/c/c8/Block_of_Diamond_JE5_BE3.png"
-  - name: "Emerald"
-    block_id: 133
+  - name: "minecraft:emerald_block"
     block_data: 0
     permission: "plot.wall.emerald"
     image_type: URL
     image_data: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/0/0b/Block_of_Emerald_JE4_BE3.png"
-  - name: "Gold"
-    block_id: 41
+  - name: "minecraft:gold_block"
     block_data: 0
     permission: "plot.wall.gold"
     image_type: URL
@@ -49,19 +35,16 @@ walls:
   - name: "reset_to_default"
     image_type: PATH
     image_data: "textures/ui/undoArrow"
-  - name: "Diamond"
-    block_id: 57
+  - name: "minecraft:diamond_block"
     block_data: 0
     image_type: URL
     image_data: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/c/c8/Block_of_Diamond_JE5_BE3.png"
-  - name: "Emerald"
-    block_id: 133
+  - name: "minecraft:emerald_block"
     block_data: 0
     permission: "plot.wall.emerald"
     image_type: URL
     image_data: "https://static.wikia.nocookie.net/minecraft_gamepedia/images/0/0b/Block_of_Emerald_JE4_BE3.png"
-  - name: "Gold"
-    block_id: 41
+  - name: "minecraft:gold_block"
     block_data: 0
     permission: "plot.wall.gold"
     image_type: URL

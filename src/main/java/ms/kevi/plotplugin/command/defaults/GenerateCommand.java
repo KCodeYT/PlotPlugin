@@ -50,7 +50,7 @@ public class GenerateCommand extends SubCommand {
             return false;
         }
 
-        if(this.plugin.getServer().isLevelGenerated(levelName)) {
+        if (this.plugin.getServer().isLevelLoaded(levelName)) {
             player.sendMessage(this.translate(player, TranslationKey.GENERATE_FAILURE));
             return false;
         }

@@ -17,7 +17,7 @@
 package ms.kevi.plotplugin.listener;
 
 import cn.nukkit.Player;
-import cn.nukkit.blockstate.BlockState;
+import cn.nukkit.block.BlockState;
 import cn.nukkit.event.EventHandler;
 import cn.nukkit.event.EventPriority;
 import cn.nukkit.event.Listener;
@@ -42,17 +42,17 @@ public class PlotLevelRegistrationListener implements Listener {
     public void onChat(PlayerChatEvent event) {
         final Player player = event.getPlayer();
 
-        if(this.plugin.getLevelRegistrationMap().containsKey(player)) {
+        if (this.plugin.getLevelRegistrationMap().containsKey(player)) {
             event.setCancelled(true);
 
             final PlotLevelRegistration registration = this.plugin.getLevelRegistrationMap().get(player);
 
-            switch(registration.getState()) {
+            switch (registration.getState()) {
                 case DIMENSION -> {
                     final int dimension;
                     try {
                         dimension = Integer.parseInt(event.getMessage());
-                    } catch(NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         break;
                     }
 
@@ -62,7 +62,7 @@ public class PlotLevelRegistrationListener implements Listener {
                     final int biome;
                     try {
                         biome = Integer.parseInt(event.getMessage());
-                    } catch(NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         break;
                     }
 
@@ -72,57 +72,65 @@ public class PlotLevelRegistrationListener implements Listener {
                     final int biome;
                     try {
                         biome = Integer.parseInt(event.getMessage());
-                    } catch(NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         break;
                     }
 
                     registration.getLevelSettings().setRoadBiome(biome);
                 }
                 case FIRST_LAYER -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setFirstLayerBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setFirstLayerBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setFirstLayerBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setFirstLayerBlockMeta(blockState.specialValue());
                 }
                 case MIDDLE_LAYER -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setMiddleLayerBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setMiddleLayerBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setMiddleLayerBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setMiddleLayerBlockMeta(blockState.specialValue());
                 }
                 case LAST_LAYER -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setLastLayerBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setLastLayerBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setLastLayerBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setLastLayerBlockMeta(blockState.specialValue());
                 }
                 case ROAD -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setRoadBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setRoadBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setRoadBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setRoadBlockMeta(blockState.specialValue());
                 }
                 case ROAD_FILLING -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setRoadFillingBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setRoadFillingBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setRoadFillingBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setRoadFillingBlockMeta(blockState.specialValue());
                 }
                 case WALL_UNOWNED -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setWallPlotBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setWallPlotBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setWallPlotBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setWallPlotBlockMeta(blockState.specialValue());
                 }
                 case WALL_CLAIMED -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setClaimPlotBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setClaimPlotBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setClaimPlotBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setClaimPlotBlockMeta(blockState.specialValue());
                 }
                 case WALL_FILLING -> {
-                    final BlockState blockState = Item.fromString(event.getMessage()).getBlock().getCurrentState();
-                    registration.getLevelSettings().setWallFillingBlockId(blockState.getBlockId());
-                    registration.getLevelSettings().setWallFillingBlockMeta(blockState.getHugeDamage().intValue());
+                    if (!event.getMessage().contains(":")) break;
+                    final BlockState blockState = Item.get(event.getMessage()).getBlock().getBlockState();
+                    registration.getLevelSettings().setWallFillingBlockId(blockState.getIdentifier());
+                    registration.getLevelSettings().setWallFillingBlockMeta(blockState.specialValue());
                 }
                 case PLOT_SIZE -> {
                     final int number;
                     try {
                         number = Integer.parseInt(event.getMessage());
-                    } catch(NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         break;
                     }
 
@@ -132,7 +140,7 @@ public class PlotLevelRegistrationListener implements Listener {
                     final int number;
                     try {
                         number = Integer.parseInt(event.getMessage());
-                    } catch(NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         break;
                     }
 
@@ -142,7 +150,7 @@ public class PlotLevelRegistrationListener implements Listener {
                     final int number;
                     try {
                         number = Integer.parseInt(event.getMessage());
-                    } catch(NumberFormatException e) {
+                    } catch (NumberFormatException e) {
                         break;
                     }
 
@@ -152,16 +160,16 @@ public class PlotLevelRegistrationListener implements Listener {
 
             final PlotLevelRegistration.RegistrationState[] states = PlotLevelRegistration.RegistrationState.values();
             final int nextStage = registration.getState().ordinal() + 1;
-            if(nextStage >= states.length) {
+            if (nextStage >= states.length) {
                 this.plugin.getLevelRegistrationMap().remove(player);
                 Level level;
-                if((level = this.plugin.createLevel(registration.getLevelName(), registration.isDefaultLevel(), registration.getLevelSettings())) != null) {
+                if ((level = this.plugin.createLevel(registration.getLevelName(), registration.isDefaultLevel(), registration.getLevelSettings())) != null) {
                     player.sendMessage(this.plugin.getLanguage().translate(
                             player,
                             registration.isDefaultLevel() ? TranslationKey.GENERATE_SUCCESS_DEFAULT : TranslationKey.GENERATE_SUCCESS,
                             registration.getLevelName())
                     );
-                    player.teleport(level.getSafeSpawn(level.getGenerator().getSpawn()));
+                    player.teleport(level.getSafeSpawn(level.getSpawnLocation()));
                 } else {
                     player.sendMessage(this.plugin.getLanguage().translate(player, TranslationKey.GENERATE_FAILURE, registration.getLevelName()));
                 }
@@ -169,7 +177,7 @@ public class PlotLevelRegistrationListener implements Listener {
             }
 
             registration.setState(states[nextStage]);
-            switch(registration.getState()) {
+            switch (registration.getState()) {
                 case PLOT_BIOME -> player.sendMessage(this.plugin.getLanguage().translate(player,
                         TranslationKey.GENERATE_PLOT_BIOME,
                         registration.getLevelSettings().getPlotBiome()

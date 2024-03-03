@@ -18,8 +18,8 @@ package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
 import cn.nukkit.block.Block;
+import cn.nukkit.block.BlockState;
 import cn.nukkit.blockentity.BlockEntity;
-import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.level.Level;
 import cn.nukkit.math.Vector3;
 import ms.kevi.plotplugin.PlotPlugin;
@@ -36,6 +36,7 @@ import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Kevims KCodeYT
@@ -51,7 +52,7 @@ public class SetRoadsCommand extends SubCommand {
     @Override
     public boolean execute(Player player, String[] args) {
         final PlotManager plotManager = this.plugin.getPlotManager(player.getLevel());
-        if(plotManager == null) {
+        if (plotManager == null) {
             player.sendMessage(this.translate(player, TranslationKey.NO_PLOT_WORLD));
             return false;
         }
@@ -69,24 +70,24 @@ public class SetRoadsCommand extends SubCommand {
             final Vector3 endPos = plotArea[1];
             final Map<ChunkVector, ShapeType[]> chunkShapes = new LinkedHashMap<>();
 
-            for(int x = startPos.getFloorX(); x <= endPos.getFloorX(); x++) {
-                for(int z = startPos.getFloorZ(); z <= endPos.getFloorZ(); z++) {
+            for (int x = startPos.getFloorX(); x <= endPos.getFloorX(); x++) {
+                for (int z = startPos.getFloorZ(); z <= endPos.getFloorZ(); z++) {
                     final ChunkVector chunkVector = new ChunkVector(x >> 4, z >> 4);
 
-                    for(int y = startPos.getFloorY(); y <= endPos.getFloorY(); y++) {
+                    for (int y = startPos.getFloorY(); y <= endPos.getFloorY(); y++) {
                         final Vector3 defaultBlockVector = new Vector3(x, y, z);
                         final Vector3 blockVector = new Vector3(x - startPos.getFloorX(), y - startPos.getFloorY(), z - startPos.getFloorZ());
 
                         final BlockState blockState0 = level.getBlockStateAt(x, y, z, 0);
                         final BlockState blockState1 = level.getBlockStateAt(x, y, z, 1);
 
-                        if(blockState1.getBlockId() == Block.AIR) {
+                        if (Objects.equals(blockState1.getIdentifier(), Block.AIR)) {
                             final ShapeType[] shapes;
-                            if(!chunkShapes.containsKey(chunkVector))
+                            if (!chunkShapes.containsKey(chunkVector))
                                 chunkShapes.put(chunkVector, shapes = plotManager.getShapes(chunkVector.getX() << 4, chunkVector.getZ() << 4));
                             else shapes = chunkShapes.get(chunkVector);
 
-                            if(plotGenerator.isDefaultBlockStateAt(plotManager, shapes, defaultBlockVector, blockState0))
+                            if (plotGenerator.isDefaultBlockStateAt(plotManager, shapes, defaultBlockVector, blockState0))
                                 continue;
                         }
 
@@ -96,14 +97,14 @@ public class SetRoadsCommand extends SubCommand {
                         ));
 
                         final BlockEntity blockEntity = level.getBlockEntity(new Vector3(x, y, z));
-                        if(blockEntity != null)
+                        if (blockEntity != null)
                             schematic.addBlockEntity(blockVector.asBlockVector3(), blockEntity.getSaveId(), blockEntity.namedTag.copy().remove("x").remove("y").remove("z"));
                     }
                 }
             }
 
-            if(schematic.isEmpty()) {
-                if(plotManager.getPlotSchematic().getSchematic() != null) {
+            if (schematic.isEmpty()) {
+                if (plotManager.getPlotSchematic().getSchematic() != null) {
                     plotManager.getPlotSchematic().remove(plotManager.getPlotSchematicFile());
                     player.sendMessage(this.translate(player, TranslationKey.SETROADS_ROAD_REMOVED));
                     return;

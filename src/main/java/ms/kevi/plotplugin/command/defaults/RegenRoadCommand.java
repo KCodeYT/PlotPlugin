@@ -18,7 +18,7 @@ package ms.kevi.plotplugin.command.defaults;
 
 import cn.nukkit.Player;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.format.FullChunk;
+import cn.nukkit.level.format.IChunk;
 import ms.kevi.plotplugin.PlotPlugin;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.command.SubCommand;
@@ -53,8 +53,8 @@ public class RegenRoadCommand extends SubCommand {
         final int pChunkZ = player.getChunkZ();
 
         TaskExecutor.executeAsync(() -> {
-            final FullChunk fullChunk = level.getChunk(pChunkX, pChunkZ, false);
-            if(fullChunk != null) plotGenerator.regenerateChunk(plotManager, fullChunk);
+            final IChunk IChunk = level.getChunk(pChunkX, pChunkZ, false);
+            if (IChunk != null) plotGenerator.regenerateChunk(plotManager, IChunk);
             player.sendMessage(this.translate(player, TranslationKey.REGENROAD_FINISHED));
         });
 

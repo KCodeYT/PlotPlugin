@@ -18,15 +18,19 @@ package ms.kevi.plotplugin;
 
 import cn.nukkit.Player;
 import cn.nukkit.Server;
+import cn.nukkit.level.DimensionEnum;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.generator.Generator;
+import cn.nukkit.level.format.LevelConfig;
 import cn.nukkit.plugin.PluginBase;
+import cn.nukkit.registry.RegisterException;
+import cn.nukkit.registry.Registries;
 import cn.nukkit.utils.Config;
 import lombok.Getter;
 import lombok.Setter;
 import ms.kevi.plotplugin.command.PlotCommand;
 import ms.kevi.plotplugin.database.Database;
 import ms.kevi.plotplugin.generator.PlotGenerator;
+import ms.kevi.plotplugin.generator.PlotStage;
 import ms.kevi.plotplugin.lang.Language;
 import ms.kevi.plotplugin.listener.PlotLevelRegistrationListener;
 import ms.kevi.plotplugin.listener.PlotListener;
@@ -96,8 +100,14 @@ public class PlotPlugin extends PluginBase {
 
     @Override
     public void onLoad() {
+        this.plotManagerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         INSTANCE = this;
-        Generator.addGenerator(PlotGenerator.class, "Plot", Generator.TYPE_FLAT);
+        try {
+            Registries.GENERATE_STAGE.register(PlotStage.NAME, PlotStage.class);
+            Registries.GENERATOR.register("plot", PlotGenerator.class);
+        } catch (RegisterException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -106,18 +116,18 @@ public class PlotPlugin extends PluginBase {
 
         final File langDir = new File(this.getDataFolder(), "lang");
         final File[] files = langDir.listFiles();
-        if(!langDir.exists() || files == null || files.length == 0) {
-            if(!langDir.exists() && !langDir.mkdirs()) {
+        if (!langDir.exists() || files == null || files.length == 0) {
+            if (!langDir.exists() && !langDir.mkdirs()) {
                 this.getLogger().error("Could not create the language directory for this plugin!");
                 return;
             }
 
-            try(final InputStreamReader inputReader = new InputStreamReader(this.getResource("lang/lang_list.txt"));
-                final BufferedReader bufferedReader = new BufferedReader(inputReader)) {
+            try (final InputStreamReader inputReader = new InputStreamReader(this.getResource("lang/lang_list.txt"));
+                 final BufferedReader bufferedReader = new BufferedReader(inputReader)) {
                 String line;
-                while((line = bufferedReader.readLine()) != null)
+                while ((line = bufferedReader.readLine()) != null)
                     this.saveResource("lang/" + line + ".txt");
-            } catch(Exception e) {
+            } catch (Exception e) {
                 this.getLogger().error("Could not find the language resources of this plugin!", e);
                 return;
             }
@@ -127,12 +137,12 @@ public class PlotPlugin extends PluginBase {
         final Config config = this.getConfig();
         boolean configNeedsToBeSaved = false;
 
-        if(!config.exists("default_lang")) {
+        if (!config.exists("default_lang")) {
             config.set("default_lang", DEFAULT_LANGUAGE);
             configNeedsToBeSaved = true;
         }
 
-        if(!config.exists("mysql")) {
+        if (!config.exists("mysql")) {
             config.set("mysql.host", "127.0.0.1");
             config.set("mysql.port", 3306);
             config.set("mysql.parameters", Collections.emptyList());
@@ -151,28 +161,28 @@ public class PlotPlugin extends PluginBase {
                 database(config.getString("mysql.database")).
                 build();
 
-        if(!config.exists("plots_per_page")) {
+        if (!config.exists("plots_per_page")) {
             config.set("plots_per_page", this.plotsPerPage);
             configNeedsToBeSaved = true;
         }
 
         this.plotsPerPage = config.getInt("plots_per_page");
 
-        if(!config.exists("show_command_params")) {
+        if (!config.exists("show_command_params")) {
             config.set("show_command_params", this.showCommandParams);
             configNeedsToBeSaved = true;
         }
 
         this.showCommandParams = config.getBoolean("show_command_params");
 
-        if(!config.exists("add_other_commands")) {
+        if (!config.exists("add_other_commands")) {
             config.set("add_other_commands", this.addOtherCommands);
             configNeedsToBeSaved = true;
         }
 
         this.addOtherCommands = config.getBoolean("add_other_commands");
 
-        if(!config.exists("borders")) {
+        if (!config.exists("borders")) {
             final List<Map<String, Object>> defaultWalls = new ArrayList<>();
             defaultWalls.add(Utils.createMap(List.of("name", "image_type", "image_data"), List.of("reset_to_default", "PATH", "textures/ui/undoArrow")));
             defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data"), List.of("Diamond", 57, 0, "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/c/c8/Block_of_Diamond_JE5_BE3.png")));
@@ -183,7 +193,7 @@ public class PlotPlugin extends PluginBase {
             configNeedsToBeSaved = true;
         }
 
-        if(!config.exists("walls")) {
+        if (!config.exists("walls")) {
             final List<Map<String, Object>> defaultWalls = new ArrayList<>();
             defaultWalls.add(Utils.createMap(List.of("name", "image_type", "image_data"), List.of("reset_to_default", "PATH", "textures/ui/undoArrow")));
             defaultWalls.add(Utils.createMap(List.of("name", "block_id", "block_data", "image_type", "image_data"), List.of("Diamond", 57, 0, "URL", "https://static.wikia.nocookie.net/minecraft_gamepedia/images/c/c8/Block_of_Diamond_JE5_BE3.png")));
@@ -194,7 +204,7 @@ public class PlotPlugin extends PluginBase {
             configNeedsToBeSaved = true;
         }
 
-        if(configNeedsToBeSaved) {
+        if (configNeedsToBeSaved) {
             config.save();
         }
 
@@ -206,18 +216,17 @@ public class PlotPlugin extends PluginBase {
 
             this.language = new Language(langDir, defaultLang);
             this.getLogger().info("This plugin is using the " + this.language.getDefaultLang() + " as default language file!");
-        } catch(IOException e) {
+        } catch (IOException e) {
             this.getLogger().error(e.getMessage(), e);
             return;
         }
 
-        this.plotManagerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
         this.levelRegistrationMap = new HashMap<>();
 
         final Server server = this.getServer();
 
         try {
-            if(config.getString("mysql.password").equalsIgnoreCase("insert_your_password_here")) {
+            if (config.getString("mysql.password").equalsIgnoreCase("insert_your_password_here")) {
                 this.getLogger().info("This plugin has switched support from YAML to MySQL.");
                 this.getLogger().info("Please insert your MySQL Connection information in the config.yml!");
                 this.getLogger().info("All previous plots will be restored into this database, so you don't have to worry about losing them.");
@@ -227,37 +236,41 @@ public class PlotPlugin extends PluginBase {
             }
 
             this.database.createDatabase();
-        } catch(RuntimeException e) {
+        } catch (RuntimeException e) {
             this.getLogger().error("Could not connect to the database!", e.getCause());
             return;
         }
 
-        for(Object o : this.worldsConfig.getList("levels", new ArrayList<>())) {
-            if(o instanceof final String levelName) {
+        for (Object o : this.worldsConfig.getList("levels", new ArrayList<>())) {
+            if (o instanceof final String levelName) {
                 final PlotManager plotManager = new PlotManager(this, levelName, true);
                 this.plotManagerMap.put(levelName, plotManager);
 
-                if(!server.isLevelGenerated(levelName))
-                    server.generateLevel(levelName, ThreadLocalRandom.current().nextLong(), PlotGenerator.class);
+                if (!server.isLevelLoaded(levelName)) {
+                    LevelConfig.GeneratorConfig plot = new LevelConfig.GeneratorConfig("plot", ThreadLocalRandom.current().nextLong(),
+                            DimensionEnum.OVERWORLD.getDimensionData(), Collections.emptyMap());
+                    LevelConfig levelConfig = new LevelConfig("leveldb", Map.of(0, plot));
+                    server.generateLevel(levelName, levelConfig);
+                }
 
                 Level level;
-                if((level = server.getLevelByName(levelName)) == null) {
+                if ((level = server.getLevelByName(levelName)) == null) {
                     server.loadLevel(levelName);
                     level = server.getLevelByName(levelName);
                 }
 
-                if(level == null) {
+                if (level == null) {
                     this.plotManagerMap.remove(levelName);
                     continue;
                 }
 
-                if(this.worldsConfig.getString("default", "").equalsIgnoreCase(levelName))
+                if (this.worldsConfig.getString("default", "").equalsIgnoreCase(levelName))
                     this.defaultPlotLevel = level;
                 plotManager.initLevel(level);
             }
         }
 
-        if(PlayersMigrator.shouldMigrate(this)) {
+        if (PlayersMigrator.shouldMigrate(this)) {
             PlayersMigrator.migratePlayers(this);
         }
 
@@ -270,14 +283,14 @@ public class PlotPlugin extends PluginBase {
         server.getCommandMap().register("plot", new PlotCommand(this));
 
         server.getScheduler().scheduleDelayedTask(this, () -> {
-            for(PlotManager plotManager : this.plotManagerMap.values()) {
+            for (PlotManager plotManager : this.plotManagerMap.values()) {
                 plotManager.savePlots();
             }
         }, 6000);
     }
 
     private void loadPlayerNames() {
-        if(!this.namesLoad) {
+        if (!this.namesLoad) {
             this.namesLoad = true;
             this.playerManager.load(this.nameFunction == null ? this.defaultNameFunction : this.nameFunction);
         }
@@ -289,8 +302,8 @@ public class PlotPlugin extends PluginBase {
     }
 
     public PlotManager getPlotManager(Level level) {
-        if(level == null) return null;
-        return this.getPlotManager(level.getFolderName());
+        if (level == null) return null;
+        return this.getPlotManager(new File(level.getFolderPath()).getName());
     }
 
     public PlotManager getPlotManager(String levelName) {
@@ -298,17 +311,21 @@ public class PlotPlugin extends PluginBase {
     }
 
     public Level createLevel(String levelName, boolean defaultLevel, PlotLevelSettings levelSettings) {
-        if(this.getServer().isLevelGenerated(levelName)) return null;
+        if (this.getServer().isLevelLoaded(levelName)) this.getServer().getLevelByName(levelName);
 
         TaskExecutor.executeAsync(() -> this.database.createPlotsTable(levelName));
 
         final PlotManager plotManager = new PlotManager(this, levelName, levelSettings, false);
         this.plotManagerMap.put(levelName, plotManager);
 
-        this.getServer().generateLevel(levelName, ThreadLocalRandom.current().nextLong(), PlotGenerator.class);
+        int dimension = levelSettings.getDimension();
+        LevelConfig.GeneratorConfig plot = new LevelConfig.GeneratorConfig("plot", ThreadLocalRandom.current().nextLong(),
+                DimensionEnum.getDataFromId(dimension), Collections.emptyMap());
+        LevelConfig levelConfig = new LevelConfig("leveldb", Map.of(dimension, plot));
+        this.getServer().generateLevel(levelName, levelConfig);
         final Level level = this.getServer().getLevelByName(levelName);
 
-        if(level == null) return null;
+        if (level == null) return null;
 
         plotManager.initLevel(level);
 
@@ -316,7 +333,7 @@ public class PlotPlugin extends PluginBase {
         levels.add(levelName);
         this.worldsConfig.set("levels", levels);
 
-        if(defaultLevel) {
+        if (defaultLevel) {
             this.worldsConfig.set("default", levelName);
             this.defaultPlotLevel = level;
         }
@@ -329,7 +346,7 @@ public class PlotPlugin extends PluginBase {
         final String playerName = player.getName();
 
         TaskExecutor.executeAsync(() -> {
-            if(!this.playerManager.has(player.getUniqueId())) {
+            if (!this.playerManager.has(player.getUniqueId())) {
                 this.database.executeActions(Collections.singletonList(
                         this.database.addPlayer(player.getUniqueId(), playerName)
                 ));
@@ -346,11 +363,11 @@ public class PlotPlugin extends PluginBase {
 
     public UUID getUniqueIdByName(String playerName, boolean allowEveryone) {
         final String firstPlayerName = playerName.trim();
-        if(allowEveryone && firstPlayerName.equals(Utils.STRING_EVERYONE))
+        if (allowEveryone && firstPlayerName.equals(Utils.STRING_EVERYONE))
             return Utils.UUID_EVERYONE;
 
-        for(Map.Entry<UUID, String> entry : this.playerManager.getPlayers()) {
-            if(entry.getValue().equalsIgnoreCase(firstPlayerName))
+        for (Map.Entry<UUID, String> entry : this.playerManager.getPlayers()) {
+            if (entry.getValue().equalsIgnoreCase(firstPlayerName))
                 return entry.getKey();
         }
 
@@ -363,13 +380,13 @@ public class PlotPlugin extends PluginBase {
 
     public String findPlayerName(String playerName) {
         final Collection<String> playerNames = this.playerManager.getPlayerNames();
-        for(String name : playerNames) {
-            if(name.equalsIgnoreCase(playerName))
+        for (String name : playerNames) {
+            if (name.equalsIgnoreCase(playerName))
                 return name;
         }
 
-        for(String name : playerNames) {
-            if(name.toLowerCase().startsWith(playerName.toLowerCase()))
+        for (String name : playerNames) {
+            if (name.toLowerCase().startsWith(playerName.toLowerCase()))
                 return name;
         }
 

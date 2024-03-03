@@ -16,10 +16,10 @@
 
 package ms.kevi.plotplugin.schematic.format;
 
-import cn.nukkit.blockstate.BlockState;
 import cn.nukkit.math.BlockVector3;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.nbt.tag.CompoundTag;
+import cn.nukkit.registry.Registries;
 import cn.nukkit.utils.BinaryStream;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import lombok.AccessLevel;
@@ -34,19 +34,16 @@ import java.util.Map;
  * @author Kevims KCodeYT
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class SchematicSerializerV2 implements SchematicSerializer {
-
-    public static final SchematicSerializer INSTANCE = new SchematicSerializerV2();
+public class SchematicSerializerV3 implements SchematicSerializer {
+    public static final SchematicSerializer INSTANCE = new SchematicSerializerV3();
 
     @Override
     public void serialize(Schematic schematic, BinaryStream binaryStream) {
         binaryStream.putLInt(schematic.getBlockPalette().size());
 
         for(SchematicBlock block : schematic.getBlockPalette()) {
-            binaryStream.putLInt(block.getLayer0().getBlockId());
-            binaryStream.putLInt(block.getLayer0().getHugeDamage().intValue());
-            binaryStream.putLInt(block.getLayer1().getBlockId());
-            binaryStream.putLInt(block.getLayer1().getHugeDamage().intValue());
+            binaryStream.putLInt(block.getLayer0().blockStateHash());
+            binaryStream.putLInt(block.getLayer1().blockStateHash());
         }
 
         binaryStream.putLInt(schematic.getBlocks().size());
@@ -80,11 +77,8 @@ public class SchematicSerializerV2 implements SchematicSerializer {
         final int blockPaletteCount = binaryStream.getLInt();
         for(int i = 0; i < blockPaletteCount; i++) {
             final int blockLayer0Id = binaryStream.getLInt();
-            final int blockLayer0Meta = binaryStream.getLInt();
             final int blockLayer1Id = binaryStream.getLInt();
-            final int blockLayer1Meta = binaryStream.getLInt();
-
-            schematic.getBlockPalette().add(new SchematicBlock(BlockState.of(blockLayer0Id, blockLayer0Meta), BlockState.of(blockLayer1Id, blockLayer1Meta)));
+            schematic.getBlockPalette().add(new SchematicBlock(Registries.BLOCKSTATE.get(blockLayer0Id), Registries.BLOCKSTATE.get(blockLayer1Id)));
         }
 
         final int blockCount = binaryStream.getLInt();
@@ -112,7 +106,7 @@ public class SchematicSerializerV2 implements SchematicSerializer {
 
     @Override
     public int version() {
-        return 2;
+        return 3;
     }
 
 }
