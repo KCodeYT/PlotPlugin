@@ -147,7 +147,7 @@ public final class Database {
 
     public DatabaseAction updatePlot(Plot plot) {
         return connection -> {
-            final String levelName = plot.getManager().getLevel().getName();
+            final String levelName = plot.getManager().getLevel().getFolderName();
 
             try (final PreparedStatement selectStatement = connection.prepareStatement("SELECT * FROM " + levelName + " WHERE id = ?")) {
                 selectStatement.setLong(1, plot.getId().asLong());
@@ -244,7 +244,7 @@ public final class Database {
 
     public DatabaseAction deletePlot(Plot plot) {
         return connection -> {
-            final String levelName = plot.getManager().getLevel().getName();
+            final String levelName = plot.getManager().getLevel().getFolderName();
 
             try (final PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM " + levelName + " WHERE id = ?")) {
                 deleteStatement.setLong(1, plot.getId().asLong());

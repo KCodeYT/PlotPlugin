@@ -73,7 +73,7 @@ public class HomesCommand extends SubCommand {
             player.sendMessage(this.translate(player, TranslationKey.HOMES_ENTRY,
                     plots.get(plot.getManager()).indexOf(plot) + 1,
                     plot.getId(),
-                    plot.getManager().getLevel().getName()
+                    plot.getManager().getLevel().getFolderName()
             ));
 
         player.sendMessage(this.translate(player, TranslationKey.HOMES_END));
