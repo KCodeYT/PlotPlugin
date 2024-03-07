@@ -270,11 +270,11 @@ public class PlotPlugin extends PluginBase {
             }
         }
 
+        this.playerManager = new PlayerManager(this);
         if (PlayersMigrator.shouldMigrate(this)) {
             PlayersMigrator.migratePlayers(this);
         }
 
-        this.playerManager = new PlayerManager(this);
         server.getScheduler().scheduleDelayedTask(this, this::loadPlayerNames, 1);
 
         server.getPluginManager().registerEvents(new PlotListener(this), this);

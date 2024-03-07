@@ -16,8 +16,9 @@
 
 package ms.kevi.plotplugin.util;
 
-import cn.nukkit.block.Block;
-import cn.nukkit.block.BlockState;
+import cn.nukkit.block.*;
+import cn.nukkit.block.property.CommonBlockProperties;
+import cn.nukkit.block.property.enums.MinecraftVerticalHalf;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.biome.BiomeID;
 import cn.nukkit.registry.Registries;
@@ -35,70 +36,52 @@ import java.util.Map;
 @Getter
 @Setter
 public class PlotLevelSettings {
-
     private int dimension = Level.DIMENSION_OVERWORLD;
-
     private int plotBiome = BiomeID.PLAINS;
     private int roadBiome = BiomeID.PLAINS;
-
     private int groundHeight = 64;
     private int plotSize = 35;
     private int roadSize = 7;
 
-    private String firstLayerBlockId = Block.BEDROCK;
-    private short firstLayerBlockMeta = 0;
-
-    private String middleLayerBlockId = Block.DIRT;
-    private short middleLayerBlockMeta = 0;
-
-    private String lastLayerBlockId = Block.GRASS;
-    private short lastLayerBlockMeta = 0;
-
-    private String wallFillingBlockId = Block.STONE;
-    private short wallFillingBlockMeta = 0;
-
-    private String wallPlotBlockId = Block.STONE_BLOCK_SLAB;
-    private short wallPlotBlockMeta = 0;
-
-    private String claimPlotBlockId = Block.STONE_BLOCK_SLAB;
-    private short claimPlotBlockMeta = 1;
-
-    private String roadBlockId = Block.OAK_PLANKS;
-    private short roadBlockMeta = 0;
-
-    private String roadFillingBlockId = Block.DIRT;
-    private short roadFillingBlockMeta = 0;
+    private int firstLayerBlockHash = BlockBedrock.PROPERTIES.getDefaultState().blockStateHash();
+    private int middleLayerBlockHash = BlockDirt.PROPERTIES.getDefaultState().blockStateHash();
+    private int lastLayerBlockHash = BlockGrass.PROPERTIES.getDefaultState().blockStateHash();
+    private int wallFillingBlockHash = BlockStone.PROPERTIES.getDefaultState().blockStateHash();
+    private int wallPlotBlockHash = BlockStoneBlockSlab.PROPERTIES.getBlockState(CommonBlockProperties.MINECRAFT_VERTICAL_HALF.createValue(MinecraftVerticalHalf.BOTTOM)).blockStateHash();
+    private int claimPlotBlockHash = BlockStoneBlockSlab2.PROPERTIES.getBlockState(CommonBlockProperties.MINECRAFT_VERTICAL_HALF.createValue(MinecraftVerticalHalf.BOTTOM)).blockStateHash();
+    private int roadBlockHash = BlockOakPlanks.PROPERTIES.getDefaultState().blockStateHash();
+    private int roadFillingBlockHash = BlockDirt.PROPERTIES.getDefaultState().blockStateHash();
 
     public BlockState getFirstLayerState() {
-        return Registries.BLOCK.getBlockProperties(firstLayerBlockId).getBlockState(this.firstLayerBlockMeta);
+        return Registries.BLOCKSTATE.get(firstLayerBlockHash);
     }
 
     public BlockState getMiddleLayerState() {
-        return Registries.BLOCK.getBlockProperties(middleLayerBlockId).getBlockState(this.middleLayerBlockMeta);
+        return Registries.BLOCKSTATE.get(middleLayerBlockHash);
     }
 
     public BlockState getLastLayerState() {
-        return Registries.BLOCK.getBlockProperties(lastLayerBlockId).getBlockState(this.lastLayerBlockMeta);
+        return Registries.BLOCKSTATE.get(lastLayerBlockHash);
     }
 
     public BlockState getWallFillingState() {
-        return Registries.BLOCK.getBlockProperties(wallFillingBlockId).getBlockState(this.wallFillingBlockMeta);
+        return Registries.BLOCKSTATE.get(wallFillingBlockHash);
     }
 
     public BlockState getWallPlotState() {
-        return Registries.BLOCK.getBlockProperties(wallPlotBlockId).getBlockState(this.wallPlotBlockMeta);
+        return Registries.BLOCKSTATE.get(wallPlotBlockHash);
     }
 
     public BlockState getClaimPlotState() {
-        return Registries.BLOCK.getBlockProperties(claimPlotBlockId).getBlockState(this.claimPlotBlockMeta);
+        return Registries.BLOCKSTATE.get(claimPlotBlockHash);
     }
 
     public BlockState getRoadState() {
-        return Registries.BLOCK.getBlockProperties(roadBlockId).getBlockState(this.roadBlockMeta);
+        return Registries.BLOCKSTATE.get(roadBlockHash);
     }
 
     public BlockState getRoadFillingState() {
-        return Registries.BLOCK.getBlockProperties(roadFillingBlockId).getBlockState(this.roadFillingBlockMeta);
+        return Registries.BLOCKSTATE.get(roadFillingBlockHash);
     }
 
     public int getTotalSize() {
