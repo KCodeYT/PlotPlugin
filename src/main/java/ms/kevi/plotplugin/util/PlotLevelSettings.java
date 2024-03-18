@@ -45,7 +45,7 @@ public class PlotLevelSettings {
 
     private int firstLayerBlockHash = BlockBedrock.PROPERTIES.getDefaultState().blockStateHash();
     private int middleLayerBlockHash = BlockDirt.PROPERTIES.getDefaultState().blockStateHash();
-    private int lastLayerBlockHash = BlockGrass.PROPERTIES.getDefaultState().blockStateHash();
+    private int lastLayerBlockHash = BlockGrassBlock.PROPERTIES.getDefaultState().blockStateHash();
     private int wallFillingBlockHash = BlockStone.PROPERTIES.getDefaultState().blockStateHash();
     private int wallPlotBlockHash = BlockStoneBlockSlab.PROPERTIES.getBlockState(CommonBlockProperties.MINECRAFT_VERTICAL_HALF.createValue(MinecraftVerticalHalf.BOTTOM)).blockStateHash();
     private int claimPlotBlockHash = BlockStoneBlockSlab2.PROPERTIES.getBlockState(CommonBlockProperties.MINECRAFT_VERTICAL_HALF.createValue(MinecraftVerticalHalf.BOTTOM)).blockStateHash();

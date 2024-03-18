@@ -19,7 +19,6 @@ public class PlotStage extends GenerateStage {
     @Override
     public void apply(ChunkGenerateContext chunkGenerateContext) {
         final IChunk chunk = chunkGenerateContext.getChunk();
-        chunk.setChunkState(ChunkState.FINISHED);
         LevelProvider provider = chunk.getProvider();
         Level level = provider.getLevel();
         if (level == null) return;
@@ -31,6 +30,7 @@ public class PlotStage extends GenerateStage {
         final Schematic schematic = plotManager.getPlotSchematic().getSchematic();
         if (schematic != null)
             placeChunkSchematic(plotManager, schematic, chunk, shapes, GENERATE_ALLOWED, null, null, null, null);
+        chunk.setChunkState(ChunkState.POPULATED);
     }
 
     @Override
