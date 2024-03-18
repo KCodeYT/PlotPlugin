@@ -44,6 +44,7 @@ import ms.kevi.plotplugin.util.async.TaskExecutor;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Kevims KCodeYT
@@ -84,7 +85,8 @@ public class PlotManager {
             new Config(settingsFile, Config.YAML, new ConfigSection(levelSettings.toMap())).save();
         }
         final Config settingsConfig = new Config(settingsFile, Config.YAML);
-        this.plots = new HashMap<>();
+        this.plots = new ConcurrentHashMap<>();
+
         if (loadPlots) {
             for (Plot plot : this.plugin.getDatabase().getPlots(this))
                 this.plots.put(plot.getId(), plot);
@@ -92,7 +94,6 @@ public class PlotManager {
             for (Plot plot : this.plots.values())
                 plot.recalculateOrigin();
         }
-
         this.levelSettings = levelSettings;
         this.levelSettings.fromMap(settingsConfig.getAll());
     }
